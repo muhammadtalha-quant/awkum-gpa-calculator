@@ -1,6 +1,6 @@
 /* --- 1. Logic & Data --- */
 
-// Generates the visual chart based on ranges
+// Generates the visual chart cards based on ranges
 const gradeRanges = [
     { label: 'A+', min: 90, max: 100, gp: '4.00'      },
     { label: 'A',  min: 85, max: 89,  gp: '3.75-3.95' },
@@ -26,15 +26,14 @@ function calculateGradePoint(marks) {
 function getLetterFromGP(gp) {
     gp = parseFloat(gp);
     if (gp >= 4.00) return 'A+';
-    if (gp >= 3.85) return 'A';
-    if (gp >= 3.60) return 'A-';
-    if (gp >= 3.35) return 'B+';
-    if (gp >= 3.10) return 'B';
-    if (gp >= 2.85) return 'B-';
-    if (gp >= 2.60) return 'C+';
-    if (gp >= 2.35) return 'C';
-    if (gp >= 2.10) return 'C-';
-    if (gp >= 2.00) return 'D';
+    if (gp >= 3.75) return 'A';
+    if (gp >= 3.50) return 'A-';
+    if (gp >= 3.25) return 'B+';
+    if (gp >= 3.00) return 'B';
+    if (gp >= 2.75) return 'B-';
+    if (gp >= 2.50) return 'C+';
+    if (gp >= 2.25) return 'C';
+    if (gp >= 2.00) return 'C-';
     return 'F';
 }
 

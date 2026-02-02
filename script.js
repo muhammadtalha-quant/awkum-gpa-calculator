@@ -2,17 +2,16 @@
 
 // Generates the visual chart based on ranges
 const gradeRanges = [
-    { label: 'A+', min: 90, max: 100, gp: '4.00' },
-    { label: 'A', min: 87, max: 89, gp: '3.85-3.95' },
-    { label: 'A-', min: 82, max: 86, gp: '3.60-3.80' },
-    { label: 'B+', min: 77, max: 81, gp: '3.35-3.55' },
-    { label: 'B', min: 72, max: 76, gp: '3.10-3.30' },
-    { label: 'B-', min: 67, max: 71, gp: '2.85-3.05' },
-    { label: 'C+', min: 62, max: 66, gp: '2.60-2.80' },
-    { label: 'C', min: 57, max: 61, gp: '2.35-2.55' },
-    { label: 'C-', min: 52, max: 56, gp: '2.10-2.30' },
-    { label: 'D', min: 50, max: 51, gp: '2.00-2.05' },
-    { label: 'F', min: 0, max: 49, gp: '0.00' }
+    { label: 'A+', min: 90, max: 100, gp: '4.00'      },
+    { label: 'A',  min: 85, max: 89,  gp: '3.75-3.95' },
+    { label: 'A-', min: 80, max: 84,  gp: '3.50-3.70' },
+    { label: 'B+', min: 75, max: 79,  gp: '3.25-3.45' },
+    { label: 'B',  min: 70, max: 74,  gp: '3.00-3.20' },
+    { label: 'B-', min: 65, max: 69,  gp: '2.75-2.95' },
+    { label: 'C+', min: 60, max: 64,  gp: '2.50-2.70' },
+    { label: 'C',  min: 55, max: 59,  gp: '2.25-2.45' },
+    { label: 'C-', min: 50, max: 54,  gp: '2.00-2.20' },
+    { label: 'F',  min: 0,  max: 49,  gp: '0.00'      }
 ];
 
 // The core calculation logic for a single subject
@@ -20,7 +19,6 @@ function calculateGradePoint(marks) {
     marks = Math.round(parseFloat(marks)); // Round to nearest integer as per standard practice
     if (marks >= 90) return 4.00;
     if (marks < 50) return 0.00;
-    
     // Linear Formula based on AWKUM table
     return 2.00 + ((marks - 50) * 0.05);
 }
@@ -55,7 +53,6 @@ function renderGradingChart() {
 function switchTab(tabId) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    
     event.target.classList.add('active');
     document.getElementById(tabId).classList.add('active');
 }
@@ -211,7 +208,6 @@ function calculateCGPA() {
     document.getElementById('cgpa-value').textContent = cgpa.toFixed(2);
     document.getElementById('cgpa-letter').textContent = `Grade: ${getLetterFromGP(cgpa)}`;
     document.getElementById('cgpa-result').classList.add('visible');
-    
     const statusEl = document.getElementById('cgpa-status');
     if (cgpa < 2.0) {
         statusEl.textContent = "Status: Warning - Below Degree Requirement (2.00)";
@@ -239,7 +235,6 @@ function removeRow(id) {
 async function exportPDF(type) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    
     // --- LOGO INSERTION LOGIC ---
     // We use the image element from the HTML directly.
     // Wrapped in try/catch to ensure PDF generates even if CORS blocks the image.
@@ -283,10 +278,17 @@ async function exportPDF(type) {
         });
         summary = [
             [`Semester GPA: ${document.getElementById('sgpa-value').textContent}`],
-            [`Letter Grade: ${document.getElementById('sgpa-letter').textContent.replace('Grade: ', '')}`]
+            [`Grade Letter: ${document.getElementById('sgpa-letter').textContent.replace('Grade: ', '')}`]
         ];
     } else {
-        head = [['Semester', 'Obtained GPA', 'Credits', 'Weighted Contribution']];
+        head = [
+	       	[
+			  'Semester',
+			  'Obtained GPA',
+			  'Credits',
+			  'Weighted Contribution'
+		]
+	];
         const rows = document.querySelectorAll('#cgpa-body tr');
         rows.forEach(row => {
             const name = row.querySelector('.cgpa-name').value;
@@ -297,7 +299,7 @@ async function exportPDF(type) {
         });
          summary = [
             [`Cumulative GPA: ${document.getElementById('cgpa-value').textContent}`],
-            [`Letter Grade: ${document.getElementById('cgpa-letter').textContent.replace('Grade: ', '')}`]
+            [`Grade Letter: ${document.getElementById('cgpa-letter').textContent.replace('Grade: ', '')}`]
         ];
     }
 
@@ -323,7 +325,7 @@ async function exportPDF(type) {
     // -- Footer --
     doc.setFontSize(8);
     doc.setTextColor(100);
-    doc.text("Generated via AWKUM Static Web Calculator. This document is computer-generated.", 105, 280, null, null, "center");
+    doc.text("This is a computer-generated document. To be verified against the result in MIS.", 105, 280, null, null, "center");
 
     // -- Save --
     doc.save(`AWKUM_${type}_Report.pdf`);

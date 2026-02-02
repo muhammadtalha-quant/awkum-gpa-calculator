@@ -3,14 +3,14 @@
 // Generates the visual chart cards based on ranges
 const gradeRanges = [
     { label: 'A+', min: 90, max: 100, gp: '4.00'      },
-    { label: 'A',  min: 85, max: 89,  gp: '3.75-3.95' },
-    { label: 'A-', min: 80, max: 84,  gp: '3.50-3.70' },
-    { label: 'B+', min: 75, max: 79,  gp: '3.25-3.45' },
-    { label: 'B',  min: 70, max: 74,  gp: '3.00-3.20' },
-    { label: 'B-', min: 65, max: 69,  gp: '2.75-2.95' },
-    { label: 'C+', min: 60, max: 64,  gp: '2.50-2.70' },
-    { label: 'C',  min: 55, max: 59,  gp: '2.25-2.45' },
-    { label: 'C-', min: 50, max: 54,  gp: '2.00-2.20' },
+    { label: 'A',  min: 85, max: 89,  gp: '3.75 -- 3.95' },
+    { label: 'A-', min: 80, max: 84,  gp: '3.50 -- 3.70' },
+    { label: 'B+', min: 75, max: 79,  gp: '3.25 -- 3.45' },
+    { label: 'B',  min: 70, max: 74,  gp: '3.00 -- 3.20' },
+    { label: 'B-', min: 65, max: 69,  gp: '2.75 -- 2.95' },
+    { label: 'C+', min: 60, max: 64,  gp: '2.50 -- 2.70' },
+    { label: 'C',  min: 55, max: 59,  gp: '2.25 -- 2.45' },
+    { label: 'C-', min: 50, max: 54,  gp: '2.00 -- 2.20' },
     { label: 'F',  min: 0,  max: 49,  gp: '0.00'      }
 ];
 
@@ -44,7 +44,7 @@ function renderGradingChart() {
     gradeRanges.forEach(g => {
         const div = document.createElement('div');
         div.className = 'grade-item';
-        div.innerHTML = `Grade Letter: <strong>${g.label}</strong><span>GPA Range: ${g.min} -- ${g.max}</span><br><span style="color:#005AC1; font-weight:500">${g.gp}</span>`;
+        div.innerHTML = `<strong>${g.label}</strong><span>: ${g.min} -- ${g.max}</span><br><span style="color:#005AC1; font-weight:500">${g.gp}</span>`;
         container.appendChild(div);
     });
 }

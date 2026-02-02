@@ -60,6 +60,7 @@ To convert marks into grade points, **AWKUM** uses a table in which each mark ha
 ### Formula for Calculating Semester GPA (SGPA).
 
 To calculate the GPA, you should know your grade point and credit hours.
+
 $$
 \text{SGPA} = \frac{\sum_{i=1}^{n}(G_i\times C_i)}{\sum_{i=1}^{n}(C_i)}
 $$

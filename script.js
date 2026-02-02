@@ -44,7 +44,7 @@ function renderGradingChart() {
     gradeRanges.forEach(g => {
         const div = document.createElement('div');
         div.className = 'grade-item';
-        div.innerHTML = `<strong>${g.label}</strong><span>: ${g.min} -- ${g.max}</span><br><span style="color:#005AC1; font-weight:500">${g.gp}</span>`;
+        div.innerHTML = `<strong>${g.label}</strong><span>${g.min} -- ${g.max}</span><br><span style="color:#005AC1; font-weight:500">${g.gp}</span>`;
         container.appendChild(div);
     });
 }

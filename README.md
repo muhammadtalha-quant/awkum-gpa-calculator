@@ -95,6 +95,6 @@ The symbols used in above formula are broken down into the following table.
 | $i$    | *Semester*                            |
 | $S_i$  | *SGPA of a semester*                  |
 | $T_i$  | *Total credit hours of a semester*    |
-| $n$    | *Result of Freshly Finished Semester* |
+| $n$    | *Last Freshly Finished Semester* |
 
 ---

@@ -1,8 +1,9 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { SGPASubject } from '../types';
+import React, { useState } from 'react';
+import { SGPASubject, UserInfo } from '../types';
 import { calculateGradePoint, getLetterFromGP } from '../utils/gradingLogic';
 import { exportSGPA_PDF } from '../services/pdfService';
+import UserInfoModal from './UserInfoModal';
 
 const SGPACalculator: React.FC = () => {
   const [subjects, setSubjects] = useState<SGPASubject[]>([
@@ -11,6 +12,7 @@ const SGPACalculator: React.FC = () => {
   const [sgpa, setSgpa] = useState(0);
   const [finalGrade, setFinalGrade] = useState('F');
   const [isCalculated, setIsCalculated] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const addRow = () => {
     const newId = (subjects.length + 1).toString();
@@ -28,7 +30,6 @@ const SGPACalculator: React.FC = () => {
       if (s.id === id) {
         const updated = { ...s, [field]: value };
         
-        // Auto-recalc row GP/Grade if marks change
         if (field === 'marks') {
           const marks = parseFloat(value);
           if (!isNaN(marks) && marks >= 0 && marks <= 100) {
@@ -82,8 +83,19 @@ const SGPACalculator: React.FC = () => {
     setIsCalculated(false);
   };
 
+  const handlePdfExport = (userInfo: UserInfo) => {
+    exportSGPA_PDF(subjects, sgpa, finalGrade, userInfo);
+  };
+
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+      <UserInfoModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handlePdfExport}
+        title="Semester Grade Sheet Details"
+      />
+
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-gray-800">Semester GPA</h2>
         <button 
@@ -173,7 +185,7 @@ const SGPACalculator: React.FC = () => {
           Calculate SGPA
         </button>
         <button 
-          onClick={() => exportSGPA_PDF(subjects, sgpa, finalGrade)}
+          onClick={() => setIsModalOpen(true)}
           disabled={!isCalculated}
           className={`px-6 py-2.5 font-medium rounded-full transition-all flex items-center gap-2 ${
             isCalculated 

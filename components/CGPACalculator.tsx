@@ -1,8 +1,9 @@
 
 import React, { useState } from 'react';
-import { CGPASemester } from '../types';
+import { CGPASemester, UserInfo } from '../types';
 import { getLetterFromGP } from '../utils/gradingLogic';
 import { exportCGPA_PDF } from '../services/pdfService';
+import UserInfoModal from './UserInfoModal';
 
 const CGPACalculator: React.FC = () => {
   const [semesters, setSemesters] = useState<CGPASemester[]>([
@@ -11,6 +12,7 @@ const CGPACalculator: React.FC = () => {
   const [cgpa, setCgpa] = useState(0);
   const [overallGrade, setOverallGrade] = useState('F');
   const [isCalculated, setIsCalculated] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const addRow = () => {
     const newId = (semesters.length + 1).toString();
@@ -77,8 +79,19 @@ const CGPACalculator: React.FC = () => {
     setIsCalculated(false);
   };
 
+  const handlePdfExport = (userInfo: UserInfo) => {
+    exportCGPA_PDF(semesters, cgpa, overallGrade, userInfo);
+  };
+
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+      <UserInfoModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handlePdfExport}
+        title="Cumulative Grade Sheet Details"
+      />
+
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-gray-800">Cumulative GPA</h2>
         <button 
@@ -160,7 +173,7 @@ const CGPACalculator: React.FC = () => {
           Calculate CGPA
         </button>
         <button 
-          onClick={() => exportCGPA_PDF(semesters, cgpa, overallGrade)}
+          onClick={() => setIsModalOpen(true)}
           disabled={!isCalculated}
           className={`px-6 py-2.5 font-medium rounded-full transition-all flex items-center gap-2 ${
             isCalculated 

@@ -22,3 +22,9 @@ export interface GradeRange {
   max: number;
   gpRange: string;
 }
+
+export interface UserInfo {
+  name: string;
+  fatherName: string;
+  registrationNumber: string;
+}

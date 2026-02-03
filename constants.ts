@@ -2,7 +2,7 @@
 import { GradeRange } from './types';
 
 // Using local file as requested
-export const AWKUM_LOGO_URL = 'AWKUM.png';
+export const AWKUM_LOGO_URL = '/AWKUM.png';
 
 export const PROGRAMMES = [
   "Undergraduate (BS)",

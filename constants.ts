@@ -2,8 +2,7 @@
 import { GradeRange } from './types';
 
 // Using local file as requested
-import AWKUM_LOGO from './assets/AWKUM.png';
-export const AWKUM_LOGO_URL = AWKUM_LOGO;
+export const AWKUM_LOGO_URL = '/AWKUM.png';
 
 
 export const PROGRAMMES = [

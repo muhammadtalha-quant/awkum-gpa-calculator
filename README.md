@@ -74,7 +74,7 @@ The symbols used in above formula is broken down into the following table.
 | $i$    | *Subject*                 |
 | $G_i$  | *Grade Point of Subject*  |
 | $C_i$  | *Credit Hours of Subject* |
-| n      | *The Last Subject*        |
+| $n$    | *The Last Subject*        |
 
 ### Formula for Calculating Cumulative GPA (CGPA)
 
@@ -98,3 +98,10 @@ The symbols used in above formula are broken down into the following table.
 | $n$    | *Last Freshly Finished Semester* |
 
 ---
+
+## Contributions
+
+Contributions will be welcomed via pull requests.
+
+## License
+This webapp is licensed under the permissible MIT License.

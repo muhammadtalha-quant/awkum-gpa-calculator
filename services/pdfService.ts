@@ -9,63 +9,101 @@ type jsPDFWithAutoTable = jsPDF & {
   lastAutoTable: { finalY: number };
 };
 
-const drawHeader = (doc: jsPDFWithAutoTable, title: string, userInfo: UserInfo) => {
-  // Logo
+/**
+ * Loads an image from a URL and returns a Promise that resolves to the image data
+ */
+const loadImage = (url: string): Promise<HTMLImageElement> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.src = url;
+    img.onload = () => resolve(img);
+    img.onerror = (err) => reject(err);
+  });
+};
+
+const drawHeader = async (doc: jsPDFWithAutoTable, title: string, userInfo: UserInfo) => {
+  // Logo with fallback
   try {
-    doc.addImage(AWKUM_LOGO_URL, 'PNG', 15, 10, 25, 25);
+    const img = await loadImage(AWKUM_LOGO_URL);
+    doc.addImage(img, 'PNG', 15, 12, 22, 22);
   } catch (e) {
-    console.warn("Logo failed to load for PDF", e);
+    console.warn("Logo failed to load for PDF. Ensure AWKUM.png is in the public root.", e);
+    // Draw a placeholder box if image fails
+    doc.setDrawColor(0, 90, 193);
+    doc.setLineWidth(0.5);
+    doc.rect(15, 12, 22, 22);
+    doc.setFontSize(6);
+    doc.text("AWKUM", 20, 24);
   }
 
   // University Name
   doc.setFontSize(18);
   doc.setTextColor(0, 90, 193); // AWKUM Blue
   doc.setFont("helvetica", "bold");
-  doc.text("Abdul Wali Khan University Mardan", 45, 20);
+  doc.text("Abdul Wali Khan University Mardan", 42, 20);
 
   // Document Title
-  doc.setFontSize(12);
-  doc.setTextColor(60, 60, 60);
+  doc.setFontSize(11);
+  doc.setTextColor(100, 100, 100);
   doc.setFont("helvetica", "normal");
-  doc.text(title, 45, 27);
+  doc.text(title, 42, 27);
 
-  // Divider
+  // Top Divider
   doc.setDrawColor(0, 90, 193);
-  doc.setLineWidth(0.5);
+  doc.setLineWidth(0.8);
   doc.line(15, 38, 195, 38);
 
-  // Student Info Block
-  doc.setFontSize(10);
+  // Info Section Setup
+  doc.setFontSize(9);
   doc.setTextColor(0, 0, 0);
-  
   const startX = 15;
-  const startY = 46;
-  const rowHeight = 6;
+  const col2X = 110;
+  let currentY = 46;
+  const lineHeight = 6;
 
-  doc.setFont("helvetica", "bold");
-  doc.text("Name:", startX, startY);
-  doc.text("Father's Name:", startX, startY + rowHeight);
-  doc.text("Registration No:", startX, startY + (rowHeight * 2));
+  // Formatting Subject / Degree
+  const degreeText = userInfo.programme === "Undergraduate (BS)" 
+    ? `BS ${userInfo.subject}${userInfo.minor ? ' - ' + userInfo.minor : ''}`
+    : `${userInfo.programme} ${userInfo.subject}`;
 
-  doc.setFont("helvetica", "normal");
-  doc.text(userInfo.name.toUpperCase(), startX + 35, startY);
-  doc.text(userInfo.fatherName.toUpperCase(), startX + 35, startY + rowHeight);
-  doc.text(userInfo.registrationNumber.toUpperCase(), startX + 35, startY + (rowHeight * 2));
+  // Column 1
+  doc.setFont("helvetica", "bold"); doc.text("Student Name:", startX, currentY);
+  doc.setFont("helvetica", "normal"); doc.text(userInfo.name.toUpperCase() || 'N/A', startX + 30, currentY);
+  
+  currentY += lineHeight;
+  doc.setFont("helvetica", "bold"); doc.text("Father's Name:", startX, currentY);
+  doc.setFont("helvetica", "normal"); doc.text(userInfo.fatherName.toUpperCase() || 'N/A', startX + 30, currentY);
 
-  // Secondary Divider
-  doc.setDrawColor(220, 220, 220);
-  doc.setLineWidth(0.1);
-  doc.line(15, 65, 195, 65);
+  currentY += lineHeight;
+  doc.setFont("helvetica", "bold"); doc.text("Registration No:", startX, currentY);
+  doc.setFont("helvetica", "normal"); doc.text(userInfo.registrationNumber || 'N/A', startX + 30, currentY);
 
-  return 70; // Return next Y position
+  // Column 2
+  currentY = 46;
+  doc.setFont("helvetica", "bold"); doc.text("Degree/Major:", col2X, currentY);
+  doc.setFont("helvetica", "normal"); doc.text(degreeText, col2X + 25, currentY);
+
+  currentY += lineHeight;
+  doc.setFont("helvetica", "bold"); doc.text("Semester:", col2X, currentY);
+  doc.setFont("helvetica", "normal"); doc.text(userInfo.semester || 'N/A', col2X + 25, currentY);
+
+  currentY += lineHeight;
+  doc.setFont("helvetica", "bold"); doc.text("Section:", col2X, currentY);
+  doc.setFont("helvetica", "normal"); doc.text(userInfo.section || 'N/A', col2X + 25, currentY);
+
+  // Bottom Divider for Header
+  doc.setDrawColor(230, 230, 230);
+  doc.setLineWidth(0.2);
+  doc.line(15, 68, 195, 68);
+
+  return 75; // Starting Y for table
 };
 
 export async function exportSGPA_PDF(subjects: SGPASubject[], gpa: number, grade: string, userInfo: UserInfo) {
   const doc = new jsPDF() as jsPDFWithAutoTable;
-  
-  const startY = drawHeader(doc, "Provisional Semester Grade Sheet", userInfo);
+  const startY = await drawHeader(doc, "PROVISIONAL SEMESTER GRADE SHEET", userInfo);
 
-  const head = [['Subject', 'Credit Hours', 'Obtained Marks', 'Grade Point', 'Grade']];
+  const head = [['Subject Description', 'Credits', 'Marks', 'Grade Point', 'Grade']];
   const body = subjects.map(s => [
     s.name || 'Untitled Subject',
     s.credits,
@@ -78,9 +116,11 @@ export async function exportSGPA_PDF(subjects: SGPASubject[], gpa: number, grade
     startY: startY,
     head: head,
     body: body,
-    theme: 'grid',
+    theme: 'striped',
     headStyles: { fillColor: [0, 90, 193], halign: 'center' },
+    styles: { fontSize: 9 },
     columnStyles: {
+      0: { cellWidth: 80 },
       1: { halign: 'center' },
       2: { halign: 'center' },
       3: { halign: 'center' },
@@ -90,30 +130,33 @@ export async function exportSGPA_PDF(subjects: SGPASubject[], gpa: number, grade
 
   const finalY = doc.lastAutoTable.finalY + 15;
   
-  // Results Box
+  // Results summary box
+  doc.setFillColor(245, 247, 255);
+  doc.rect(15, finalY, 180, 22, 'F');
   doc.setDrawColor(0, 90, 193);
   doc.setLineWidth(0.5);
-  doc.rect(15, finalY, 180, 20);
+  doc.rect(15, finalY, 180, 22, 'S');
   
-  doc.setFontSize(12);
+  doc.setFontSize(14);
+  doc.setTextColor(0, 0, 0);
   doc.setFont("helvetica", "bold");
-  doc.text(`SEMESTER GPA: ${gpa.toFixed(2)}`, 20, finalY + 12);
-  doc.text(`LETTER GRADE: ${grade}`, 130, finalY + 12);
+  doc.text(`Semester GPA: ${gpa.toFixed(2)}`, 25, finalY + 14);
+  doc.text(`Grade: ${grade}`, 140, finalY + 14);
 
+  // Footer note
   doc.setFontSize(8);
   doc.setFont("helvetica", "italic");
   doc.setTextColor(150);
-  doc.text("This is a provisional computer-generated document. Original DMC will be issued by the Controller of Examinations.", 105, 285, { align: 'center' });
+  doc.text("Note: This is a computer-generated provisional document. Accuracy is subject to verification with the original Controller record.", 105, 285, { align: 'center' });
 
-  doc.save(`${userInfo.registrationNumber}_SGPA.pdf`);
+  doc.save(`${userInfo.registrationNumber}_SGPA_DMC.pdf`);
 }
 
 export async function exportCGPA_PDF(semesters: CGPASemester[], cgpa: number, grade: string, userInfo: UserInfo) {
   const doc = new jsPDF() as jsPDFWithAutoTable;
-  
-  const startY = drawHeader(doc, "Provisional Cumulative Grade Sheet", userInfo);
+  const startY = await drawHeader(doc, "PROVISIONAL CUMULATIVE GRADE SHEET", userInfo);
 
-  const head = [['Semester', 'Obtained SGPA', 'Total Credits', 'Weighted Score']];
+  const head = [['Semester Order', 'Semester SGPA', 'Credit Hours', 'Weighted Score']];
   const body = semesters.map(s => [
     s.name || 'Untitled Semester',
     Number(s.sgpa).toFixed(2),
@@ -127,6 +170,7 @@ export async function exportCGPA_PDF(semesters: CGPASemester[], cgpa: number, gr
     body: body,
     theme: 'grid',
     headStyles: { fillColor: [0, 90, 193], halign: 'center' },
+    styles: { fontSize: 9 },
     columnStyles: {
       1: { halign: 'center' },
       2: { halign: 'center' },
@@ -136,20 +180,21 @@ export async function exportCGPA_PDF(semesters: CGPASemester[], cgpa: number, gr
 
   const finalY = doc.lastAutoTable.finalY + 15;
 
-  // Results Box
+  doc.setFillColor(245, 247, 255);
+  doc.rect(15, finalY, 180, 22, 'F');
   doc.setDrawColor(0, 90, 193);
   doc.setLineWidth(0.5);
-  doc.rect(15, finalY, 180, 20);
+  doc.rect(15, finalY, 180, 22, 'S');
   
-  doc.setFontSize(12);
+  doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
-  doc.text(`CUMULATIVE GPA: ${cgpa.toFixed(2)}`, 20, finalY + 12);
-  doc.text(`OVERALL GRADE: ${grade}`, 130, finalY + 12);
+  doc.text(`Cumulative GPA: ${cgpa.toFixed(2)}`, 25, finalY + 14);
+  doc.text(`Overall Grade: ${grade}`, 140, finalY + 14);
 
   doc.setFontSize(8);
   doc.setFont("helvetica", "italic");
   doc.setTextColor(150);
-  doc.text("This is a provisional computer-generated document. Original Transcript will be issued by the Controller of Examinations.", 105, 285, { align: 'center' });
+  doc.text("Note: This is a provisional transcript generated for student use. Official documents are issued by AWKUM Exam Dept.", 105, 285, { align: 'center' });
 
-  doc.save(`${userInfo.registrationNumber}_CGPA.pdf`);
+  doc.save(`${userInfo.registrationNumber}_CGPA_Transcript.pdf`);
 }

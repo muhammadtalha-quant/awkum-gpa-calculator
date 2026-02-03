@@ -1,7 +1,15 @@
 
 import { GradeRange } from './types';
 
+// Using local file as requested
 export const AWKUM_LOGO_URL = 'AWKUM.png';
+
+export const PROGRAMMES = [
+  "Undergraduate (BS)",
+  "Graduation(MS)",
+  "M.Phil",
+  "Ph.D"
+];
 
 export const GRADE_RANGES: GradeRange[] = [
   { label: 'A+', min: 90, max: 100, gpRange: '4.00' },

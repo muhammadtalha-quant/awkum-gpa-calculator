@@ -27,4 +27,9 @@ export interface UserInfo {
   name: string;
   fatherName: string;
   registrationNumber: string;
+  programme: string;
+  semester: string;
+  section: string;
+  subject: string;
+  minor?: string;
 }

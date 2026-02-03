@@ -31,8 +31,8 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ isOpen, onClose, onSubmit
   useEffect(() => {
     if (info.programme === "Undergraduate (BS)") {
       setInfo(prev => ({ ...prev, semester: prev.isCompleted ? '8' : '1' }));
-    } else {
-      setInfo(prev => ({ ...prev, semester: '' }));
+    } else if (!info.isCompleted) {
+      setInfo(prev => ({ ...prev, semester: '1' }));
     }
   }, [info.programme, info.isCompleted]);
 
@@ -67,7 +67,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ isOpen, onClose, onSubmit
         } else {
           const duration = parseInt(info.totalDuration || '0');
           if (isNaN(duration) || duration <= 0) {
-            setError('Please provide a valid total duration for your programme.');
+            setError('Please provide the total number of semesters for your programme.');
             return;
           }
           if (rowCount !== duration) {
@@ -87,12 +87,16 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ isOpen, onClose, onSubmit
 
     const finalInfo = {
       ...info,
-      registrationNumber: `AWKUM-${info.registrationNumber}`
+      registrationNumber: `AWKUM-${info.registrationNumber}`,
+      // Use totalDuration as the semester string for transcript if completed and not BS
+      semester: (info.isCompleted && info.programme !== "Undergraduate (BS)") ? info.totalDuration : info.semester
     };
 
-    onSubmit(finalInfo);
+    onSubmit(finalInfo as UserInfo);
     onClose();
   };
+
+  const isCompletedNonBS = isCGPA && info.isCompleted && info.programme !== "Undergraduate (BS)";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
@@ -156,37 +160,43 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ isOpen, onClose, onSubmit
               <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
                 {info.isCompleted ? 'Total Semesters' : 'Current Semester'}
               </label>
-              <select
-                disabled={info.isCompleted && info.programme === "Undergraduate (BS)"}
-                value={info.semester}
-                onChange={(e) => setInfo({ ...info, semester: e.target.value })}
-                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm disabled:opacity-50"
-              >
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(s => (
-                  <option key={s} value={s.toString()}>Semester {s}</option>
-                ))}
-              </select>
+              {isCompletedNonBS ? (
+                <input
+                  type="number"
+                  min="1"
+                  max="12"
+                  placeholder="e.g. 4"
+                  value={info.totalDuration}
+                  onChange={(e) => setInfo({ ...info, totalDuration: e.target.value })}
+                  className="w-full px-4 py-2 bg-white border-2 border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold text-blue-700 animate-in fade-in zoom-in-95"
+                />
+              ) : (
+                <select
+                  disabled={info.isCompleted && info.programme === "Undergraduate (BS)"}
+                  value={info.semester}
+                  onChange={(e) => setInfo({ ...info, semester: e.target.value })}
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm disabled:opacity-50"
+                >
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(s => (
+                    <option key={s} value={s.toString()}>Semester {s}</option>
+                  ))}
+                </select>
+              )}
             </div>
           </div>
 
           {isCGPA && (
-            <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-xl">
+            <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-xl border border-blue-100">
               <input 
                 type="checkbox" 
                 id="isCompleted"
                 checked={info.isCompleted}
                 onChange={(e) => setInfo({ ...info, isCompleted: e.target.checked })}
-                className="w-4 h-4 text-blue-600 rounded"
+                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
               />
-              <label htmlFor="isCompleted" className="text-sm font-semibold text-blue-800">Completed Graduation</label>
-              {info.isCompleted && info.programme !== "Undergraduate (BS)" && (
-                <input 
-                  type="number"
-                  placeholder="Total Semesters"
-                  value={info.totalDuration}
-                  onChange={(e) => setInfo({ ...info, totalDuration: e.target.value })}
-                  className="ml-auto w-20 px-2 py-1 text-xs border border-blue-200 rounded"
-                />
+              <label htmlFor="isCompleted" className="text-sm font-bold text-blue-800 cursor-pointer select-none">Completed Graduation</label>
+              {isCompletedNonBS && (
+                <span className="ml-auto text-[10px] text-blue-600 italic font-medium">Enter total semesters above</span>
               )}
             </div>
           )}
@@ -238,7 +248,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ isOpen, onClose, onSubmit
           </div>
 
           {error && (
-            <div className="text-red-600 text-[11px] font-bold bg-red-50 p-3 rounded-xl border border-red-100 animate-pulse">
+            <div className="text-red-600 text-[11px] font-bold bg-red-50 p-3 rounded-xl border border-red-100 animate-in fade-in slide-in-from-top-1">
               ⚠️ {error}
             </div>
           )}

@@ -32,4 +32,7 @@ export interface UserInfo {
   section: string;
   subject: string;
   minor?: string;
+  isCompleted?: boolean;
+  totalDuration?: string;
+  isVerified?: boolean;
 }

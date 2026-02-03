@@ -168,7 +168,8 @@ export async function exportCGPA_PDF(semesters: CGPASemester[], cgpa: number, gr
   const doc = new jsPDF() as jsPDFWithAutoTable;
   const startY = await drawHeader(doc, "PROVISIONAL CUMULATIVE GRADE SHEET", userInfo);
 
-  const head = [['Semester Order', 'Semester SGPA', 'Credit Hours', 'Weighted Score']];
+  // Updated header to "Quality Points"
+  const head = [['Semester Order', 'Semester SGPA', 'Credit Hours', 'Quality Points']];
   const body = semesters.map(s => [
     s.name || 'Untitled Semester',
     Number(s.sgpa).toFixed(2),

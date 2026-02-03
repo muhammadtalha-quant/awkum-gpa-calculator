@@ -15,20 +15,39 @@ const CGPACalculator: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const addRow = () => {
-    const newId = (semesters.length + 1).toString();
-    setSemesters([...semesters, { id: newId, name: `Semester ${newId}`, sgpa: '', credits: 18, gradeLetter: 'F' }]);
+    const nextNum = semesters.length + 1;
+    setSemesters([...semesters, { 
+      id: nextNum.toString(), 
+      name: `Semester ${nextNum}`, 
+      sgpa: '', 
+      credits: 18, 
+      gradeLetter: 'F' 
+    }]);
   };
 
   const removeRow = (id: string) => {
     if (semesters.length > 1) {
-      setSemesters(semesters.filter(s => s.id !== id));
+      // Re-map names to maintain order
+      const filtered = semesters.filter(s => s.id !== id);
+      const remapped = filtered.map((s, index) => ({
+        ...s,
+        id: (index + 1).toString(),
+        name: `Semester ${index + 1}`
+      }));
+      setSemesters(remapped);
     }
   };
 
   const handleInputChange = (id: string, field: keyof CGPASemester, value: string) => {
     setSemesters(prev => prev.map(s => {
       if (s.id === id) {
-        const updated = { ...s, [field]: value };
+        let finalVal = value;
+        if (field === 'credits') {
+          const num = parseFloat(value);
+          if (num > 21) finalVal = '21';
+        }
+
+        const updated = { ...s, [field]: finalVal };
         if (field === 'sgpa') {
           const val = parseFloat(value);
           if (!isNaN(val) && val >= 0 && val <= 4.00) {
@@ -53,7 +72,7 @@ const CGPACalculator: React.FC = () => {
       const gpa = parseFloat(s.sgpa.toString());
       const credits = parseFloat(s.credits.toString());
 
-      if (isNaN(gpa) || gpa < 0 || gpa > 4.00 || isNaN(credits) || credits <= 0) {
+      if (isNaN(gpa) || gpa < 0 || gpa > 4.00 || isNaN(credits) || credits <= 0 || credits > 21) {
         hasError = true;
       } else {
         totalWeightedSGPA += (gpa * credits);
@@ -62,7 +81,7 @@ const CGPACalculator: React.FC = () => {
     });
 
     if (hasError || totalCredits === 0) {
-      alert("Check inputs: SGPA (0-4.00) and Credits (>0) are required for all semesters.");
+      alert("Check inputs: SGPA (0-4.00) and Credits (1-21) are required for all semesters.");
       return;
     }
 
@@ -90,6 +109,8 @@ const CGPACalculator: React.FC = () => {
         onClose={() => setIsModalOpen(false)}
         onSubmit={handlePdfExport}
         title="Cumulative Grade Sheet Details"
+        isCGPA={true}
+        rowCount={semesters.length}
       />
 
       <div className="flex justify-between items-center mb-6">
@@ -106,9 +127,9 @@ const CGPACalculator: React.FC = () => {
         <table className="w-full text-left min-w-[600px] border-collapse">
           <thead>
             <tr className="bg-gray-50 border-y border-gray-100">
-              <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[40%]">Semester</th>
-              <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[25%]">Obtained SGPA</th>
-              <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[25%]">Total Credits</th>
+              <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[40%]">Semester Order</th>
+              <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[25%] text-center">Obtained SGPA</th>
+              <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[25%] text-center">Total Credits</th>
               <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[10%]"></th>
             </tr>
           </thead>
@@ -118,9 +139,9 @@ const CGPACalculator: React.FC = () => {
                 <td className="px-6 py-3">
                   <input
                     type="text"
+                    disabled
                     value={sem.name}
-                    onChange={(e) => handleInputChange(sem.id, 'name', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-500 font-semibold text-sm cursor-not-allowed"
                   />
                 </td>
                 <td className="px-4 py-3">
@@ -130,7 +151,7 @@ const CGPACalculator: React.FC = () => {
                     placeholder="0.00 - 4.00"
                     value={sem.sgpa}
                     onChange={(e) => handleInputChange(sem.id, 'sgpa', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm ${
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-center ${
                       (Number(sem.sgpa) > 4 || Number(sem.sgpa) < 0) ? 'border-red-500' : 'border-gray-200'
                     }`}
                   />
@@ -138,10 +159,11 @@ const CGPACalculator: React.FC = () => {
                 <td className="px-4 py-3">
                   <input
                     type="number"
-                    placeholder="e.g. 18"
+                    max="21"
+                    placeholder="Max 21"
                     value={sem.credits}
                     onChange={(e) => handleInputChange(sem.id, 'credits', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-center"
                   />
                 </td>
                 <td className="px-6 py-3 text-right">

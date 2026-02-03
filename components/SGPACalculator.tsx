@@ -28,7 +28,13 @@ const SGPACalculator: React.FC = () => {
   const handleInputChange = (id: string, field: keyof SGPASubject, value: string) => {
     setSubjects(prev => prev.map(s => {
       if (s.id === id) {
-        const updated = { ...s, [field]: value };
+        let finalVal = value;
+        if (field === 'credits') {
+          const num = parseFloat(value);
+          if (num > 6) finalVal = '6';
+        }
+        
+        const updated = { ...s, [field]: finalVal };
         
         if (field === 'marks') {
           const marks = parseFloat(value);
@@ -57,7 +63,7 @@ const SGPACalculator: React.FC = () => {
       const credits = parseFloat(s.credits.toString());
       const marks = parseFloat(s.marks.toString());
 
-      if (isNaN(credits) || credits <= 0 || isNaN(marks) || marks < 0 || marks > 100) {
+      if (isNaN(credits) || credits <= 0 || credits > 6 || isNaN(marks) || marks < 0 || marks > 100) {
         hasError = true;
       } else {
         totalWeightedGP += (s.gradePoint * credits);
@@ -66,7 +72,7 @@ const SGPACalculator: React.FC = () => {
     });
 
     if (hasError || totalCredits === 0) {
-      alert("Please ensure all subjects have valid credits (>0) and marks (0-100).");
+      alert("Please ensure all subjects have valid credits (1-6) and marks (0-100).");
       return;
     }
 
@@ -111,10 +117,10 @@ const SGPACalculator: React.FC = () => {
           <thead>
             <tr className="bg-gray-50 border-y border-gray-100">
               <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[35%]">Subject</th>
-              <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[15%]">Credits</th>
-              <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[15%]">Marks</th>
-              <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[15%]">Grade Point</th>
-              <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[10%]">Grade</th>
+              <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[15%] text-center">Credits</th>
+              <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[15%] text-center">Marks</th>
+              <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[15%] text-center">Grade Point</th>
+              <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[10%] text-center">Grade</th>
               <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[10%]"></th>
             </tr>
           </thead>
@@ -124,7 +130,7 @@ const SGPACalculator: React.FC = () => {
                 <td className="px-6 py-3">
                   <input
                     type="text"
-                    placeholder={`e.g. Maths ${sub.id}`}
+                    placeholder={`Subject Name`}
                     value={sub.name}
                     onChange={(e) => handleInputChange(sub.id, 'name', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm"
@@ -133,27 +139,28 @@ const SGPACalculator: React.FC = () => {
                 <td className="px-4 py-3">
                   <input
                     type="number"
+                    max="6"
                     placeholder="3"
                     value={sub.credits}
                     onChange={(e) => handleInputChange(sub.id, 'credits', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-center"
                   />
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 text-center">
                   <input
                     type="number"
                     placeholder="0-100"
                     value={sub.marks}
                     onChange={(e) => handleInputChange(sub.id, 'marks', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm ${
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-center ${
                       (Number(sub.marks) > 100 || Number(sub.marks) < 0) ? 'border-red-500' : 'border-gray-200'
                     }`}
                   />
                 </td>
-                <td className="px-4 py-3 font-mono text-blue-600 font-semibold text-sm">
+                <td className="px-4 py-3 font-mono text-blue-600 font-semibold text-sm text-center">
                   {sub.gradePoint.toFixed(2)}
                 </td>
-                <td className="px-4 py-3 font-bold text-gray-700 text-sm">
+                <td className="px-4 py-3 font-bold text-gray-700 text-sm text-center">
                   {sub.gradeLetter}
                 </td>
                 <td className="px-6 py-3 text-right">

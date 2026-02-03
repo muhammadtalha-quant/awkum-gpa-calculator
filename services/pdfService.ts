@@ -10,11 +10,12 @@ type jsPDFWithAutoTable = jsPDF & {
 };
 
 /**
- * Loads an image from a URL and returns a Promise that resolves to the image data
+ * Loads an image from a URL and returns a Promise that resolves to the image data.
  */
 const loadImage = (url: string): Promise<HTMLImageElement> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
+    img.crossOrigin = 'anonymous'; 
     img.src = url;
     img.onload = () => resolve(img);
     img.onerror = (err) => reject(err);
@@ -22,17 +23,29 @@ const loadImage = (url: string): Promise<HTMLImageElement> => {
 };
 
 const drawHeader = async (doc: jsPDFWithAutoTable, title: string, userInfo: UserInfo) => {
-  // Logo with fallback
+  // Logo with fallback chain
+  let logoLoaded = false;
   try {
     const img = await loadImage(AWKUM_LOGO_URL);
     doc.addImage(img, 'PNG', 15, 12, 22, 22);
+    logoLoaded = true;
   } catch (e) {
-    console.warn("Logo failed to load for PDF. Ensure AWKUM.png is in the public root.", e);
-    // Draw a placeholder box if image fails
+    try {
+       const fallbackImg = await loadImage('AWKUM.png');
+       doc.addImage(fallbackImg, 'PNG', 15, 12, 22, 22);
+       logoLoaded = true;
+    } catch (innerE) {
+      console.warn("Logo failed to load for PDF. Ensure AWKUM.png is in the correct location.", innerE);
+    }
+  }
+
+  // Draw placeholder ONLY if image failed
+  if (!logoLoaded) {
     doc.setDrawColor(0, 90, 193);
     doc.setLineWidth(0.5);
     doc.rect(15, 12, 22, 22);
     doc.setFontSize(6);
+    doc.setTextColor(0, 90, 193);
     doc.text("AWKUM", 20, 24);
   }
 
@@ -143,7 +156,6 @@ export async function exportSGPA_PDF(subjects: SGPASubject[], gpa: number, grade
   doc.text(`Semester GPA: ${gpa.toFixed(2)}`, 25, finalY + 14);
   doc.text(`Grade: ${grade}`, 140, finalY + 14);
 
-  // Footer note
   doc.setFontSize(8);
   doc.setFont("helvetica", "italic");
   doc.setTextColor(150);

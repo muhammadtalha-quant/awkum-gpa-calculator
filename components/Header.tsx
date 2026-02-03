@@ -4,18 +4,28 @@ import { AWKUM_LOGO_URL } from '../constants';
 
 const Header: React.FC = () => {
   const [imageError, setImageError] = useState(false);
+  const [currentSrc, setCurrentSrc] = useState(AWKUM_LOGO_URL);
+
+  const handleImageError = () => {
+    if (currentSrc === AWKUM_LOGO_URL) {
+      // Try root relative if absolute path failed
+      setCurrentSrc('AWKUM.png');
+    } else {
+      setImageError(true);
+    }
+  };
 
   return (
     <header className="flex flex-col items-center mb-8 text-center">
       {!imageError ? (
         <img 
-          src={AWKUM_LOGO_URL} 
+          src={currentSrc} 
           alt="AWKUM Logo" 
-          className="w-24 h-24 object-contain mb-4"
-          onError={() => setImageError(true)}
+          className="w-24 h-24 object-contain mb-4 transition-opacity duration-300"
+          onError={handleImageError}
         />
       ) : (
-        <div className="w-24 h-24 bg-blue-50 border-2 border-blue-200 rounded-full flex items-center justify-center mb-4">
+        <div className="w-24 h-24 bg-blue-50 border-2 border-blue-200 rounded-full flex items-center justify-center mb-4 shadow-sm">
           <span className="text-blue-600 font-bold text-xs">AWKUM</span>
         </div>
       )}

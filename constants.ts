@@ -1,9 +1,8 @@
 
 import { GradeRange } from './types';
 
-// Using local file as requested
+// Absolute path from root, which usually works best with Vite/Public folder setups
 export const AWKUM_LOGO_URL = '/AWKUM.png';
-
 
 export const PROGRAMMES = [
   "Undergraduate (BS)",

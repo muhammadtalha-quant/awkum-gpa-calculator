@@ -209,7 +209,7 @@ const SGPACalculator: React.FC = () => {
         <div className="bg-blue-600 rounded-3xl p-8 text-center text-white transform transition-all animate-in fade-in slide-in-from-bottom-4">
           <p className="text-xs uppercase tracking-[0.2em] font-bold opacity-80 mb-2">Semester Grade Point Average</p>
           <h3 className="text-6xl font-black mb-2">{sgpa.toFixed(2)}</h3>
-          <p className="text-xl font-medium opacity-90">Letter Grade: <span className="underline decoration-wavy decoration-blue-300">{finalGrade}</span></p>
+          <p className="text-xl font-medium opacity-90">Letter Grade: <span className="font-bold border-b-2 border-blue-300 px-1">{finalGrade}</span></p>
         </div>
       )}
     </div>

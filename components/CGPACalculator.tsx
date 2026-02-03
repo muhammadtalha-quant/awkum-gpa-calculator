@@ -212,7 +212,7 @@ const CGPACalculator: React.FC = () => {
         <div className="bg-blue-900 rounded-3xl p-8 text-center text-white transform transition-all animate-in zoom-in-95">
           <p className="text-xs uppercase tracking-[0.2em] font-bold opacity-80 mb-2">Cumulative Grade Point Average</p>
           <h3 className="text-6xl font-black mb-2">{cgpa.toFixed(2)}</h3>
-          <p className="text-xl font-medium opacity-90">Overall Standing: <span className="underline decoration-wavy decoration-blue-500">{overallGrade}</span></p>
+          <p className="text-xl font-medium opacity-90">Overall Standing: <span className="font-bold border-b-2 border-blue-500 px-1">{overallGrade}</span></p>
           <div className="mt-4 inline-block px-4 py-1 bg-white/10 rounded-full text-sm">
             {cgpa < 2.0 ? '⚠️ Academic Warning: Below Graduation Requirement' : '✅ Satisfactory Standing'}
           </div>

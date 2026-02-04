@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Header from './components/Header';
 import SGPACalculator from './components/SGPACalculator';
@@ -19,7 +18,8 @@ const App: React.FC = () => {
       <div className="max-w-4xl mx-auto px-4 pt-8">
         
         {/* Theme Controls */}
-        <div className="flex flex-wrap justify-center items-center gap-4 mb-8 p-4 rounded-2xl bg-black/5 backdrop-blur-sm">
+        <div className="flex flex-col items-center gap-2 mb-8 p-4 rounded-2xl bg-black/5 backdrop-blur-sm">
+          <span className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-40">Colorscheme</span>
           <div className="flex gap-2 bg-black/10 p-1 rounded-xl">
             {(['tokyonight', 'catppuccin', 'gruvbox'] as ThemeType[]).map((t) => (
               <button

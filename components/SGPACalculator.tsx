@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { SGPASubject, UserInfo } from '../types';
 import { calculateGradePoint, getLetterFromGP } from '../utils/gradingLogic';
@@ -27,13 +26,11 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
   };
 
   const editRow = (id: string) => {
-    const idx = subjects.findIndex(s => s.id === id);
-    setSubjects(prev => prev.map((s, i) => {
-      if (s.id === id) return { ...s, isLocked: false };
-      // All rows BELOW (i > idx) the focused row become totally immutable
-      if (i > idx) return { ...s, isLocked: true };
-      return s;
-    }));
+    // When editing a row, all other rows (above AND below) must become totally immutable
+    setSubjects(prev => prev.map((s) => ({
+      ...s,
+      isLocked: s.id !== id
+    })));
   };
 
   const removeRow = (id: string) => {
@@ -294,7 +291,7 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
           }`}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-          Export DMC
+          Export DMC (PDF)
         </button>
       </div>
 

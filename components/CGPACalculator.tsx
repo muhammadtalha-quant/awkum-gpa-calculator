@@ -31,13 +31,11 @@ const CGPACalculator: React.FC<Props> = ({ theme }) => {
   };
 
   const editRow = (id: string) => {
-    const idx = semesters.findIndex(s => s.id === id);
-    setSemesters(prev => prev.map((s, i) => {
-      if (s.id === id) return { ...s, isLocked: false };
-      // All rows BELOW (i > idx) the focused row become totally immutable
-      if (i > idx) return { ...s, isLocked: true };
-      return s;
-    }));
+    // When editing a row, all other rows (above AND below) must become totally immutable
+    setSemesters(prev => prev.map((s) => ({
+      ...s,
+      isLocked: s.id !== id
+    })));
   };
 
   const removeRow = (id: string) => {

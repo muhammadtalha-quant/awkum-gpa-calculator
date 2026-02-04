@@ -1,11 +1,11 @@
 
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { SGPASubject, CGPASemester, UserInfo } from '../types';
 import { AWKUM_LOGO_URL } from '../constants';
 
+// Extending jsPDF type to include the lastAutoTable property added by the plugin
 type jsPDFWithAutoTable = jsPDF & {
-  autoTable: (options: any) => void;
   lastAutoTable: { finalY: number };
 };
 
@@ -19,7 +19,7 @@ const loadImage = (url: string): Promise<HTMLImageElement> => {
   });
 };
 
-const drawHeader = async (doc: jsPDFWithAutoTable, title: string, userInfo: UserInfo) => {
+const drawHeader = async (doc: jsPDF, title: string, userInfo: UserInfo) => {
   let logoLoaded = false;
   try {
     const img = await loadImage(AWKUM_LOGO_URL);
@@ -99,7 +99,7 @@ const drawHeader = async (doc: jsPDFWithAutoTable, title: string, userInfo: User
   doc.setFont("helvetica", "normal"); doc.text(degreeText, col2X + 25, currentY);
 
   currentY += lineHeight;
-  doc.setFont("helvetica", "bold"); doc.text("Semester-Section:", col2X, currentY);
+  doc.setFont("helvetica", "bold"); doc.text("Semester:", col2X, currentY);
   doc.setFont("helvetica", "normal"); doc.text(`${userInfo.semester}-${userInfo.section}`, col2X + 35, currentY);
 
   doc.setDrawColor(230, 230, 230);
@@ -122,7 +122,7 @@ export async function exportSGPA_PDF(subjects: SGPASubject[], gpa: number, grade
     s.gradeLetter
   ]);
 
-  doc.autoTable({
+  autoTable(doc, {
     startY: startY,
     head: head,
     body: body,
@@ -172,7 +172,7 @@ export async function exportCGPA_PDF(semesters: CGPASemester[], cgpa: number, gr
     (Number(s.sgpa) * Number(s.credits)).toFixed(2)
   ]);
 
-  doc.autoTable({
+  autoTable(doc, {
     startY: startY,
     head: head,
     body: body,

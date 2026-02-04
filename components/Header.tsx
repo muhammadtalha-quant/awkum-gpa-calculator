@@ -2,13 +2,16 @@
 import React, { useState } from 'react';
 import { AWKUM_LOGO_URL } from '../constants';
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  theme: any;
+}
+
+const Header: React.FC<HeaderProps> = ({ theme }) => {
   const [imageError, setImageError] = useState(false);
   const [currentSrc, setCurrentSrc] = useState(AWKUM_LOGO_URL);
 
   const handleImageError = () => {
     if (currentSrc === AWKUM_LOGO_URL) {
-      // Try root relative if absolute path failed
       setCurrentSrc('AWKUM.png');
     } else {
       setImageError(true);
@@ -25,15 +28,15 @@ const Header: React.FC = () => {
           onError={handleImageError}
         />
       ) : (
-        <div className="w-24 h-24 bg-blue-50 border-2 border-blue-200 rounded-full flex items-center justify-center mb-4 shadow-sm">
-          <span className="text-blue-600 font-bold text-xs">AWKUM</span>
+        <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-4 shadow-sm border-2 ${theme.border} bg-white/5`}>
+          <span className={`font-bold text-xs ${theme.accent}`}>AWKUM</span>
         </div>
       )}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+        <h1 className="text-2xl font-bold tracking-tight">
           Abdul Wali Khan University Mardan
         </h1>
-        <p className="mt-2 inline-block bg-blue-100 text-blue-800 text-sm px-4 py-1 rounded-full font-medium">
+        <p className={`mt-2 inline-block text-white text-sm px-4 py-1 rounded-full font-medium ${theme.primary}`}>
           GPA & CGPA Calculator
         </p>
       </div>

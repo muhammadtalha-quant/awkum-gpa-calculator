@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { UserInfo } from '../types';
 import { PROGRAMMES } from '../constants';
 
@@ -10,9 +10,10 @@ interface UserInfoModalProps {
   title: string;
   isCGPA?: boolean;
   rowCount?: number;
+  theme: any;
 }
 
-const UserInfoModal: React.FC<UserInfoModalProps> = ({ isOpen, onClose, onSubmit, title, isCGPA, rowCount = 0 }) => {
+const UserInfoModal: React.FC<UserInfoModalProps> = ({ isOpen, onClose, onSubmit, title, isCGPA, rowCount = 0, theme }) => {
   const [info, setInfo] = useState<UserInfo>({
     name: '',
     fatherName: '',
@@ -24,9 +25,11 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ isOpen, onClose, onSubmit
     minor: '',
     isCompleted: false,
     totalDuration: '',
-    isVerified: false
+    isVerified: false,
+    photo: undefined
   });
   const [error, setError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (info.programme === "Undergraduate (BS)") {
@@ -38,14 +41,24 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ isOpen, onClose, onSubmit
 
   if (!isOpen) return null;
 
-  const sanitizeName = (val: string) => val.replace(/[0-9]/g, '');
+  const sanitizeName = (val: string) => val.replace(/[^A-Za-z\s]/g, '');
   const sanitizeSection = (val: string) => val.replace(/[^A-Za-z]/g, '').toUpperCase().slice(0, 1);
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setInfo(prev => ({ ...prev, photo: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    // Basic required fields
     if (!info.name.trim() || !info.fatherName.trim() || !info.registrationNumber.trim() || !info.subject.trim() || !info.section.trim()) {
       setError('Please fill in all required fields.');
       return;
@@ -56,7 +69,6 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ isOpen, onClose, onSubmit
       return;
     }
 
-    // CGPA Specific Validations
     if (isCGPA) {
       if (info.isCompleted) {
         if (info.programme === "Undergraduate (BS)") {
@@ -76,7 +88,6 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ isOpen, onClose, onSubmit
           }
         }
       } else {
-        // Active Student logic
         const currentSem = parseInt(info.semester);
         if (rowCount !== (currentSem - 1)) {
           setError(`Inconsistent data: For Semester ${currentSem}, you should have provided results for ${currentSem - 1} previous semesters. Found: ${rowCount}`);
@@ -88,7 +99,6 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ isOpen, onClose, onSubmit
     const finalInfo = {
       ...info,
       registrationNumber: `AWKUM-${info.registrationNumber}`,
-      // Use totalDuration as the semester string for transcript if completed and not BS
       semester: (info.isCompleted && info.programme !== "Undergraduate (BS)") ? info.totalDuration : info.semester
     };
 
@@ -100,64 +110,91 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ isOpen, onClose, onSubmit
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-white rounded-[2rem] w-full max-w-lg overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
-        <div className="bg-blue-600 p-6 text-white text-center">
+      <div className={`rounded-[2rem] w-full max-w-lg overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 ${theme.card} ${theme.text}`}>
+        <div className={`p-6 text-white text-center ${theme.primary}`}>
           <h3 className="text-xl font-bold">{title}</h3>
-          <p className="text-blue-100 text-xs mt-1">Academic Credential Verification</p>
+          <p className="text-white/70 text-xs mt-1">Academic Credential Verification</p>
         </div>
         
         <form onSubmit={handleSubmit} className="p-8 space-y-4 max-h-[80vh] overflow-y-auto custom-scrollbar">
+          
+          {/* Photo Upload Section */}
+          <div className="flex flex-col items-center mb-4">
+            <div 
+              onClick={() => fileInputRef.current?.click()}
+              className={`w-24 h-24 rounded-2xl border-2 border-dashed ${theme.border} flex items-center justify-center cursor-pointer overflow-hidden hover:bg-black/5 transition-all relative group`}
+            >
+              {info.photo ? (
+                <img src={info.photo} className="w-full h-full object-cover" />
+              ) : (
+                <div className="text-center p-2">
+                  <span className="text-[10px] font-bold opacity-50">Upload Photo</span>
+                </div>
+              )}
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-white text-[10px] font-bold">Change</span>
+              </div>
+            </div>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              className="hidden" 
+              accept="image/*" 
+              onChange={handlePhotoUpload}
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Student Name</label>
+              <label className="block text-[10px] font-bold opacity-40 uppercase tracking-widest mb-1">Student Name</label>
               <input
                 type="text"
                 placeholder="Ex. Ahmad Khan"
                 value={info.name}
                 onChange={(e) => setInfo({ ...info, name: sanitizeName(e.target.value) })}
-                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                className={`w-full px-4 py-2 bg-transparent border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm ${theme.border}`}
               />
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Father's Name</label>
+              <label className="block text-[10px] font-bold opacity-40 uppercase tracking-widest mb-1">Father's Name</label>
               <input
                 type="text"
                 placeholder="Ex. Gul Khan"
                 value={info.fatherName}
                 onChange={(e) => setInfo({ ...info, fatherName: sanitizeName(e.target.value) })}
-                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                className={`w-full px-4 py-2 bg-transparent border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm ${theme.border}`}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Registration Number</label>
-            <div className="flex shadow-sm rounded-xl overflow-hidden border border-gray-200">
-              <span className="bg-gray-100 px-3 py-2 text-gray-500 font-mono text-xs border-r border-gray-200 flex items-center">AWKUM-</span>
+            <label className="block text-[10px] font-bold opacity-40 uppercase tracking-widest mb-1">Registration Number</label>
+            <div className={`flex shadow-sm rounded-xl overflow-hidden border ${theme.border}`}>
+              <span className="bg-black/5 px-3 py-2 opacity-50 font-mono text-xs border-r flex items-center">AWKUM-</span>
               <input
                 type="text"
                 maxLength={8}
                 placeholder="12345678"
                 value={info.registrationNumber}
                 onChange={(e) => setInfo({ ...info, registrationNumber: e.target.value.replace(/\D/g, '') })}
-                className="flex-1 px-4 py-2 bg-white outline-none text-sm font-mono tracking-wider"
+                className="flex-1 px-4 py-2 bg-transparent outline-none text-sm font-mono tracking-wider"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Programme</label>
+              <label className="block text-[10px] font-bold opacity-40 uppercase tracking-widest mb-1">Programme</label>
               <select
                 value={info.programme}
                 onChange={(e) => setInfo({ ...info, programme: e.target.value })}
-                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                className={`w-full px-4 py-2 bg-transparent border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm ${theme.border}`}
               >
-                {PROGRAMMES.map(p => <option key={p} value={p}>{p}</option>)}
+                {PROGRAMMES.map(p => <option key={p} value={p} className="text-black">{p}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+              <label className="block text-[10px] font-bold opacity-40 uppercase tracking-widest mb-1">
                 {info.isCompleted ? 'Total Semesters' : 'Current Semester'}
               </label>
               {isCompletedNonBS ? (
@@ -168,17 +205,17 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ isOpen, onClose, onSubmit
                   placeholder="e.g. 4"
                   value={info.totalDuration}
                   onChange={(e) => setInfo({ ...info, totalDuration: e.target.value })}
-                  className="w-full px-4 py-2 bg-white border-2 border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold text-blue-700 animate-in fade-in zoom-in-95"
+                  className={`w-full px-4 py-2 bg-transparent border-2 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold ${theme.accent} ${theme.border}`}
                 />
               ) : (
                 <select
                   disabled={info.isCompleted && info.programme === "Undergraduate (BS)"}
                   value={info.semester}
                   onChange={(e) => setInfo({ ...info, semester: e.target.value })}
-                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm disabled:opacity-50"
+                  className={`w-full px-4 py-2 bg-transparent border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm disabled:opacity-30 ${theme.border}`}
                 >
                   {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(s => (
-                    <option key={s} value={s.toString()}>Semester {s}</option>
+                    <option key={s} value={s.toString()} className="text-black">Semester {s}</option>
                   ))}
                 </select>
               )}
@@ -186,69 +223,74 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ isOpen, onClose, onSubmit
           </div>
 
           {isCGPA && (
-            <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-xl border border-blue-100">
+            <div className={`flex items-center gap-2 p-3 rounded-xl border border-transparent bg-black/5`}>
               <input 
                 type="checkbox" 
                 id="isCompleted"
                 checked={info.isCompleted}
                 onChange={(e) => setInfo({ ...info, isCompleted: e.target.checked })}
-                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                className="w-4 h-4 rounded"
               />
-              <label htmlFor="isCompleted" className="text-sm font-bold text-blue-800 cursor-pointer select-none">Completed Graduation</label>
-              {isCompletedNonBS && (
-                <span className="ml-auto text-[10px] text-blue-600 italic font-medium">Enter total semesters above</span>
-              )}
+              <label htmlFor="isCompleted" className="text-sm font-bold cursor-pointer select-none">Completed Graduation</label>
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Major / Subject</label>
+              <label className="block text-[10px] font-bold opacity-40 uppercase tracking-widest mb-1">Major / Subject</label>
               <input
                 type="text"
-                placeholder="Ex. Computer Science"
+                placeholder="Ex. CS"
                 value={info.subject}
                 onChange={(e) => setInfo({ ...info, subject: sanitizeName(e.target.value) })}
-                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                className={`w-full px-4 py-2 bg-transparent border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm ${theme.border}`}
               />
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Section</label>
+              <label className="block text-[10px] font-bold opacity-40 uppercase tracking-widest mb-1">Section</label>
               <input
                 type="text"
                 placeholder="A"
                 value={info.section}
                 onChange={(e) => setInfo({ ...info, section: sanitizeSection(e.target.value) })}
-                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                className={`w-full px-4 py-2 bg-transparent border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm ${theme.border}`}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Minor (Optional)</label>
+            <label className="block text-[10px] font-bold opacity-40 uppercase tracking-widest mb-1">Minor (Optional)</label>
             <input
               type="text"
-              placeholder="Ex. Statistics"
+              placeholder="Ex. SE, DS"
               value={info.minor}
               onChange={(e) => setInfo({ ...info, minor: sanitizeName(e.target.value) })}
-              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+              className={`w-full px-4 py-2 bg-transparent border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm ${theme.border}`}
             />
           </div>
 
-          <div className="flex items-start gap-3 p-4 bg-gray-50 border border-gray-200 rounded-2xl">
+          {/* Tips Section */}
+          <div className="p-3 bg-black/5 rounded-xl border border-transparent">
+            <p className="text-[10px] leading-tight opacity-70">
+              <span className="font-bold uppercase tracking-wider block mb-1">💡 Professional Tip:</span>
+              Use acronyms for Major/Minor (e.g. "CS" instead of "Computer Science", "SE" instead of "Software Engineering") for a cooler, more official transcript look.
+            </p>
+          </div>
+
+          <div className="flex items-start gap-3 p-4 bg-black/5 border border-transparent rounded-2xl">
             <input 
               type="checkbox" 
               checked={info.isVerified}
               onChange={(e) => setInfo({ ...info, isVerified: e.target.checked })}
-              className="mt-1 w-4 h-4 text-blue-600 rounded"
+              className="mt-1 w-4 h-4 rounded"
             />
-            <p className="text-[11px] text-gray-600 leading-relaxed font-medium">
+            <p className="text-[11px] leading-relaxed font-medium opacity-80">
               I confirm that the marks and the details I added here are correct to my knowledge and verified against my user profile inside MIS.
             </p>
           </div>
 
           {error && (
-            <div className="text-red-600 text-[11px] font-bold bg-red-50 p-3 rounded-xl border border-red-100 animate-in fade-in slide-in-from-top-1">
+            <div className="text-red-500 text-[11px] font-bold bg-red-500/10 p-3 rounded-xl border border-red-500/20 animate-in fade-in slide-in-from-top-1">
               ⚠️ {error}
             </div>
           )}
@@ -257,13 +299,16 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ isOpen, onClose, onSubmit
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-3 text-gray-500 font-bold text-sm rounded-xl hover:bg-gray-100 transition-colors"
+              className="flex-1 py-3 opacity-60 font-bold text-sm rounded-xl hover:bg-black/10 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 py-3 bg-blue-600 text-white font-bold text-sm rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all active:scale-95"
+              disabled={!info.isVerified}
+              className={`flex-1 py-3 text-white font-bold text-sm rounded-xl shadow-lg transition-all active:scale-95 ${
+                info.isVerified ? theme.primary : 'opacity-40 cursor-not-allowed'
+              }`}
             >
               Proceed to Export
             </button>

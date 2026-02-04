@@ -9,9 +9,6 @@ type jsPDFWithAutoTable = jsPDF & {
   lastAutoTable: { finalY: number };
 };
 
-/**
- * Loads an image from a URL and returns a Promise that resolves to the image data.
- */
 const loadImage = (url: string): Promise<HTMLImageElement> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -23,7 +20,6 @@ const loadImage = (url: string): Promise<HTMLImageElement> => {
 };
 
 const drawHeader = async (doc: jsPDFWithAutoTable, title: string, userInfo: UserInfo) => {
-  // Logo with fallback chain
   let logoLoaded = false;
   try {
     const img = await loadImage(AWKUM_LOGO_URL);
@@ -35,11 +31,10 @@ const drawHeader = async (doc: jsPDFWithAutoTable, title: string, userInfo: User
        doc.addImage(fallbackImg, 'PNG', 15, 12, 22, 22);
        logoLoaded = true;
     } catch (innerE) {
-      console.warn("Logo failed to load for PDF. Ensure AWKUM.png is in the correct location.", innerE);
+      console.warn("Logo failed to load.");
     }
   }
 
-  // Draw placeholder ONLY if image failed
   if (!logoLoaded) {
     doc.setDrawColor(0, 90, 193);
     doc.setLineWidth(0.5);
@@ -49,32 +44,39 @@ const drawHeader = async (doc: jsPDFWithAutoTable, title: string, userInfo: User
     doc.text("AWKUM", 20, 24);
   }
 
-  // University Name
+  // Right-aligned Passport Photo
+  if (userInfo.photo) {
+    try {
+      doc.addImage(userInfo.photo, 'JPEG', 165, 12, 25, 30);
+      doc.setDrawColor(200);
+      doc.setLineWidth(0.1);
+      doc.rect(165, 12, 25, 30);
+    } catch (e) {
+      console.warn("Photo add error", e);
+    }
+  }
+
   doc.setFontSize(18);
-  doc.setTextColor(0, 90, 193); // AWKUM Blue
+  doc.setTextColor(0, 90, 193);
   doc.setFont("helvetica", "bold");
   doc.text("Abdul Wali Khan University Mardan", 42, 20);
 
-  // Document Title
   doc.setFontSize(11);
   doc.setTextColor(100, 100, 100);
   doc.setFont("helvetica", "normal");
   doc.text(title, 42, 27);
 
-  // Top Divider
   doc.setDrawColor(0, 90, 193);
   doc.setLineWidth(0.8);
-  doc.line(15, 38, 195, 38);
+  doc.line(15, 45, 195, 45);
 
-  // Info Section Setup
   doc.setFontSize(9);
   doc.setTextColor(0, 0, 0);
   const startX = 15;
   const col2X = 110;
-  let currentY = 46;
+  let currentY = 53;
   const lineHeight = 6;
 
-  // Formatting Subject / Degree
   const degreeText = userInfo.programme === "Undergraduate (BS)" 
     ? `BS ${userInfo.subject}${userInfo.minor ? ' - ' + userInfo.minor : ''}`
     : `${userInfo.programme} ${userInfo.subject}`;
@@ -92,24 +94,19 @@ const drawHeader = async (doc: jsPDFWithAutoTable, title: string, userInfo: User
   doc.setFont("helvetica", "normal"); doc.text(userInfo.registrationNumber || 'N/A', startX + 30, currentY);
 
   // Column 2
-  currentY = 46;
-  doc.setFont("helvetica", "bold"); doc.text("Degree/Major:", col2X, currentY);
+  currentY = 53;
+  doc.setFont("helvetica", "bold"); doc.text("Degree:", col2X, currentY);
   doc.setFont("helvetica", "normal"); doc.text(degreeText, col2X + 25, currentY);
 
   currentY += lineHeight;
-  doc.setFont("helvetica", "bold"); doc.text("Semester:", col2X, currentY);
-  doc.setFont("helvetica", "normal"); doc.text(userInfo.semester || 'N/A', col2X + 25, currentY);
+  doc.setFont("helvetica", "bold"); doc.text("Semester-Section:", col2X, currentY);
+  doc.setFont("helvetica", "normal"); doc.text(`${userInfo.semester}-${userInfo.section}`, col2X + 35, currentY);
 
-  currentY += lineHeight;
-  doc.setFont("helvetica", "bold"); doc.text("Section:", col2X, currentY);
-  doc.setFont("helvetica", "normal"); doc.text(userInfo.section || 'N/A', col2X + 25, currentY);
-
-  // Bottom Divider for Header
   doc.setDrawColor(230, 230, 230);
   doc.setLineWidth(0.2);
-  doc.line(15, 68, 195, 68);
+  doc.line(15, 75, 195, 75);
 
-  return 75; // Starting Y for table
+  return 85;
 };
 
 export async function exportSGPA_PDF(subjects: SGPASubject[], gpa: number, grade: string, userInfo: UserInfo) {
@@ -118,7 +115,7 @@ export async function exportSGPA_PDF(subjects: SGPASubject[], gpa: number, grade
 
   const head = [['Subject Description', 'Credits', 'Marks', 'Grade Point', 'Grade']];
   const body = subjects.map(s => [
-    s.name || 'Untitled Subject',
+    s.code ? `${s.name} (${s.code})` : (s.name || 'Untitled Subject'),
     s.credits,
     s.marks,
     s.gradePoint.toFixed(2),
@@ -143,7 +140,6 @@ export async function exportSGPA_PDF(subjects: SGPASubject[], gpa: number, grade
 
   const finalY = doc.lastAutoTable.finalY + 15;
   
-  // Results summary box
   doc.setFillColor(245, 247, 255);
   doc.rect(15, finalY, 180, 22, 'F');
   doc.setDrawColor(0, 90, 193);
@@ -159,16 +155,15 @@ export async function exportSGPA_PDF(subjects: SGPASubject[], gpa: number, grade
   doc.setFontSize(8);
   doc.setFont("helvetica", "italic");
   doc.setTextColor(150);
-  doc.text("Note: This is a computer-generated provisional document. Accuracy is subject to verification with the original Controller record.", 105, 285, { align: 'center' });
+  doc.text("Note: This is a computer-generated provisional document. Accuracy is subject to verification with official record.", 105, 285, { align: 'center' });
 
-  doc.save(`${userInfo.registrationNumber}_SGPA_DMC.pdf`);
+  doc.save(`${userInfo.registrationNumber}_SGPA.pdf`);
 }
 
 export async function exportCGPA_PDF(semesters: CGPASemester[], cgpa: number, grade: string, userInfo: UserInfo) {
   const doc = new jsPDF() as jsPDFWithAutoTable;
   const startY = await drawHeader(doc, "PROVISIONAL CUMULATIVE GRADE SHEET", userInfo);
 
-  // Updated header to "Quality Points"
   const head = [['Semester Order', 'Semester SGPA', 'Credit Hours', 'Quality Points']];
   const body = semesters.map(s => [
     s.name || 'Untitled Semester',
@@ -207,7 +202,7 @@ export async function exportCGPA_PDF(semesters: CGPASemester[], cgpa: number, gr
   doc.setFontSize(8);
   doc.setFont("helvetica", "italic");
   doc.setTextColor(150);
-  doc.text("Note: This is a provisional transcript generated for student use. Official documents are issued by AWKUM Exam Dept.", 105, 285, { align: 'center' });
+  doc.text("Note: This is a provisional transcript generated for student use. Official documents issued by Exam Dept.", 105, 285, { align: 'center' });
 
-  doc.save(`${userInfo.registrationNumber}_CGPA_Transcript.pdf`);
+  doc.save(`${userInfo.registrationNumber}_CGPA.pdf`);
 }

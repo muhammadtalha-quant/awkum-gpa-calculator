@@ -1,11 +1,14 @@
+export type ThemeType = 'tokyonight' | 'catppuccin' | 'gruvbox';
 
 export interface SGPASubject {
   id: string;
   name: string;
+  code?: string;
   credits: number | string;
   marks: number | string;
   gradePoint: number;
   gradeLetter: string;
+  isLocked: boolean;
 }
 
 export interface CGPASemester {
@@ -14,6 +17,7 @@ export interface CGPASemester {
   sgpa: number | string;
   credits: number | string;
   gradeLetter: string;
+  isLocked: boolean;
 }
 
 export interface GradeRange {
@@ -35,4 +39,5 @@ export interface UserInfo {
   isCompleted?: boolean;
   totalDuration?: string;
   isVerified?: boolean;
+  photo?: string; // base64
 }

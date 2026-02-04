@@ -1,7 +1,6 @@
 
 import { GradeRange } from './types';
 
-// Absolute path from root, which usually works best with Vite/Public folder setups
 export const AWKUM_LOGO_URL = '/AWKUM.png';
 
 export const PROGRAMMES = [
@@ -24,11 +23,8 @@ export const GRADE_RANGES: GradeRange[] = [
   { label: 'F',  min: 0,  max: 49,  gpRange: '0.00' },
 ];
 
-export const COLORS = {
-  primary: '#005AC1',
-  primaryContainer: '#D8E2FF',
-  onPrimaryContainer: '#001A41',
-  surface: '#FEF7FF',
-  error: '#BA1A1A',
-  secondary: '#575E71'
+export const THEMES = {
+  tokyonight: { bg: 'bg-[#d5d6db]', card: 'bg-[#ffffff]', text: 'text-[#343b58]', primary: 'bg-[#34548a]', accent: 'text-[#34548a]', border: 'border-[#9ea3b0]' },
+  catppuccin: { bg: 'bg-[#eff1f5]', card: 'bg-[#ffffff]', text: 'text-[#4c4f69]', primary: 'bg-[#1e66f5]', accent: 'text-[#1e66f5]', border: 'border-[#bcc0cc]' },
+  gruvbox: { bg: 'bg-[#fbf1c7]', card: 'bg-[#ffffff]', text: 'text-[#3c3836]', primary: 'bg-[#b57614]', accent: 'text-[#b57614]', border: 'border-[#d5c4a1]' }
 };

@@ -24,7 +24,28 @@ export const GRADE_RANGES: GradeRange[] = [
 ];
 
 export const THEMES = {
-  tokyonight: { bg: 'bg-[#d5d6db]', card: 'bg-[#ffffff]', text: 'text-[#343b58]', primary: 'bg-[#34548a]', accent: 'text-[#34548a]', border: 'border-[#9ea3b0]' },
-  catppuccin: { bg: 'bg-[#eff1f5]', card: 'bg-[#ffffff]', text: 'text-[#4c4f69]', primary: 'bg-[#1e66f5]', accent: 'text-[#1e66f5]', border: 'border-[#bcc0cc]' },
-  gruvbox: { bg: 'bg-[#fbf1c7]', card: 'bg-[#ffffff]', text: 'text-[#3c3836]', primary: 'bg-[#b57614]', accent: 'text-[#b57614]', border: 'border-[#d5c4a1]' }
+  tokyonight: { 
+    bg: 'bg-[#d5d6db]', 
+    card: 'bg-[#ffffff]', 
+    text: 'text-[#343b58]', 
+    primary: 'bg-[#565f89]', 
+    accent: 'text-[#9699a8]', 
+    border: 'border-[#cfc9c2]' 
+  },
+  catppuccin: { 
+    bg: 'bg-[#eff1f5]', 
+    card: 'bg-[#ffffff]', 
+    text: 'text-[#4c4f69]', 
+    primary: 'bg-[#8839ef]', 
+    accent: 'text-[#1e66f5]', 
+    border: 'border-[#bcc0cc]' 
+  },
+  gruvbox: { 
+    bg: 'bg-[#f2e5bc]', 
+    card: 'bg-[#ffffff]', 
+    text: 'text-[#3c3836]', 
+    primary: 'bg-[#98971a]', 
+    accent: 'text-[#689d6a]', 
+    border: 'border-[#928374]' 
+  }
 };

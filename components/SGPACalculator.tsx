@@ -17,16 +17,17 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
   const [finalGrade, setFinalGrade] = useState('F');
   const [isCalculated, setIsCalculated] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const addRow = () => {
-    // Before adding, make all previous rows immutable
+    setErrorMsg('');
     const updated = subjects.map(s => ({ ...s, isLocked: true }));
     const newId = (subjects.length + 1).toString();
     setSubjects([...updated, { id: newId, name: '', code: '', credits: 3, marks: '', gradePoint: 0, gradeLetter: 'F', isLocked: false }]);
   };
 
   const editRow = (id: string) => {
-    // When editing a row, all other rows (above AND below) must become totally immutable
+    setErrorMsg('');
     setSubjects(prev => prev.map((s) => ({
       ...s,
       isLocked: s.id !== id
@@ -34,18 +35,19 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
   };
 
   const removeRow = (id: string) => {
+    setErrorMsg('');
     if (subjects.length > 1) {
       setSubjects(subjects.filter(s => s.id !== id));
     }
   };
 
   const handleInputChange = (id: string, field: keyof SGPASubject, value: string) => {
+    setErrorMsg('');
     setSubjects(prev => prev.map(s => {
       if (s.id === id) {
         let finalVal = value;
 
         if (field === 'name') {
-          // Strictly English, spaces, uppercase/lowercase only
           finalVal = value.replace(/[^A-Za-z\s]/g, '');
         }
 
@@ -58,7 +60,6 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
         }
 
         if (field === 'credits') {
-          // Strictly integer. Range 2 to 6.
           let num = parseInt(value.replace(/\D/g, ''));
           if (isNaN(num)) finalVal = '';
           else {
@@ -68,7 +69,6 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
         }
 
         if (field === 'marks') {
-          // Strictly integer. Max 100.
           let num = parseInt(value.replace(/\D/g, ''));
           if (isNaN(num)) finalVal = '';
           else {
@@ -106,6 +106,7 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
   };
 
   const calculateTotal = () => {
+    setErrorMsg('');
     let totalWeightedGP = 0;
     let totalCredits = 0;
     let hasError = false;
@@ -123,7 +124,7 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
     });
 
     if (hasError || totalCredits === 0) {
-      alert("Please ensure all subjects have valid credits (2-6) and marks (0-100).");
+      setErrorMsg("Please ensure all subjects have valid credits (2-6) and marks (0-100).");
       return;
     }
 
@@ -134,6 +135,7 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
   };
 
   const resetAll = () => {
+    setErrorMsg('');
     setSubjects([{ id: '1', name: '', code: '', credits: 3, marks: '', gradePoint: 0, gradeLetter: 'F', isLocked: false }]);
     setSgpa(0);
     setFinalGrade('F');
@@ -178,7 +180,7 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
       <div className="overflow-x-auto -mx-6 mb-6">
         <table className="w-full text-left min-w-[700px] border-collapse">
           <thead>
-            <tr className={`bg-gray-50 border-y ${theme.border}`}>
+            <tr className={`bg-black/5 border-y ${theme.border}`}>
               <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider w-[25%]">Subject</th>
               {enableCodes && <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider w-[15%]">Code</th>}
               <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider w-[10%] text-center">Credits</th>
@@ -267,7 +269,7 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
         </table>
       </div>
 
-      <div className="flex flex-wrap gap-4 mb-8">
+      <div className="flex flex-wrap gap-4 mb-2">
         <button 
           onClick={addRow}
           className={`px-6 py-2.5 bg-transparent border ${theme.border} ${theme.accent} font-medium rounded-full hover:bg-black/5 transition-all flex items-center gap-2`}
@@ -295,8 +297,15 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
         </button>
       </div>
 
+      {errorMsg && (
+        <div className="mb-6 flex items-center gap-2 text-red-500 text-xs font-bold bg-red-500/10 p-3 rounded-xl border border-red-500/20 animate-in fade-in slide-in-from-top-1">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+          {errorMsg}
+        </div>
+      )}
+
       {isCalculated && (
-        <div className={`rounded-3xl p-8 text-center text-white transform transition-all animate-in fade-in slide-in-from-bottom-4 ${theme.primary}`}>
+        <div className={`rounded-3xl p-8 text-center text-white transform transition-all animate-in fade-in slide-in-from-bottom-4 mt-4 ${theme.primary}`}>
           <p className="text-xs uppercase tracking-[0.2em] font-bold opacity-80 mb-2">Semester Grade Point Average</p>
           <h3 className="text-6xl font-black mb-2">{sgpa.toFixed(2)}</h3>
           <p className="text-xl font-medium opacity-90">Letter Grade: <span className="font-bold border-b-2 border-white/40 px-1">{finalGrade}</span></p>

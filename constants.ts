@@ -1,4 +1,3 @@
-
 import { GradeRange } from './types';
 
 export const AWKUM_LOGO_URL = '/AWKUM.png';
@@ -24,28 +23,56 @@ export const GRADE_RANGES: GradeRange[] = [
 ];
 
 export const THEMES = {
-  tokyonight: { 
-    bg: 'bg-[#d5d6db]', 
-    card: 'bg-[#ffffff]', 
-    text: 'text-[#343b58]', 
-    primary: 'bg-[#565f89]', 
-    accent: 'text-[#9699a8]', 
-    border: 'border-[#cfc9c2]' 
+  light: {
+    tokyonight: { 
+      bg: 'bg-[#d5d6db]', 
+      card: 'bg-[#ffffff]', 
+      text: 'text-[#343b58]', 
+      primary: 'bg-[#565f89]', 
+      accent: 'text-[#9699a8]', 
+      border: 'border-[#cfc9c2]' 
+    },
+    catppuccin: { 
+      bg: 'bg-[#eff1f5]', 
+      card: 'bg-[#ffffff]', 
+      text: 'text-[#4c4f69]', 
+      primary: 'bg-[#8839ef]', 
+      accent: 'text-[#1e66f5]', 
+      border: 'border-[#bcc0cc]' 
+    },
+    gruvbox: { 
+      bg: 'bg-[#f2e5bc]', 
+      card: 'bg-[#ffffff]', 
+      text: 'text-[#3c3836]', 
+      primary: 'bg-[#98971a]', 
+      accent: 'text-[#689d6a]', 
+      border: 'border-[#928374]' 
+    }
   },
-  catppuccin: { 
-    bg: 'bg-[#eff1f5]', 
-    card: 'bg-[#ffffff]', 
-    text: 'text-[#4c4f69]', 
-    primary: 'bg-[#8839ef]', 
-    accent: 'text-[#1e66f5]', 
-    border: 'border-[#bcc0cc]' 
-  },
-  gruvbox: { 
-    bg: 'bg-[#f2e5bc]', 
-    card: 'bg-[#ffffff]', 
-    text: 'text-[#3c3836]', 
-    primary: 'bg-[#98971a]', 
-    accent: 'text-[#689d6a]', 
-    border: 'border-[#928374]' 
+  dark: {
+    tokyonight: { 
+      bg: 'bg-[#24283b]', 
+      card: 'bg-[#1a1b26]', 
+      text: 'text-[#c0caf5]', 
+      primary: 'bg-[#7aa2f7]', 
+      accent: 'text-[#565f89]', 
+      border: 'border-[#414868]' 
+    },
+    catppuccin: { 
+      bg: 'bg-[#1e1e2e]', 
+      card: 'bg-[#181825]', 
+      text: 'text-[#cdd6f4]', 
+      primary: 'bg-[#cba6f7]', 
+      accent: 'text-[#89b4fa]', 
+      border: 'border-[#313244]' 
+    },
+    gruvbox: { 
+      bg: 'bg-[#282828]', 
+      card: 'bg-[#1d2021]', 
+      text: 'text-[#ebdbb2]', 
+      primary: 'bg-[#b8bb26]', 
+      accent: 'text-[#8ec07c]', 
+      border: 'border-[#504945]' 
+    }
   }
 };

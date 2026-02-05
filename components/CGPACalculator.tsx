@@ -16,8 +16,10 @@ const CGPACalculator: React.FC<Props> = ({ theme }) => {
   const [overallGrade, setOverallGrade] = useState('F');
   const [isCalculated, setIsCalculated] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const addRow = () => {
+    setErrorMsg('');
     const updated = semesters.map(s => ({ ...s, isLocked: true }));
     const nextNum = semesters.length + 1;
     setSemesters([...updated, { 
@@ -31,7 +33,7 @@ const CGPACalculator: React.FC<Props> = ({ theme }) => {
   };
 
   const editRow = (id: string) => {
-    // When editing a row, all other rows (above AND below) must become totally immutable
+    setErrorMsg('');
     setSemesters(prev => prev.map((s) => ({
       ...s,
       isLocked: s.id !== id
@@ -39,6 +41,7 @@ const CGPACalculator: React.FC<Props> = ({ theme }) => {
   };
 
   const removeRow = (id: string) => {
+    setErrorMsg('');
     if (semesters.length > 1) {
       const filtered = semesters.filter(s => s.id !== id);
       const remapped = filtered.map((s, index) => ({
@@ -51,12 +54,12 @@ const CGPACalculator: React.FC<Props> = ({ theme }) => {
   };
 
   const handleInputChange = (id: string, field: keyof CGPASemester, value: string) => {
+    setErrorMsg('');
     setSemesters(prev => prev.map(s => {
       if (s.id === id) {
         let finalVal = value;
 
         if (field === 'sgpa') {
-          // Strictly floating point. Max 4.00. No alphabets.
           let cleaned = value.replace(/[^0-9.]/g, '');
           let floatVal = parseFloat(cleaned);
           if (isNaN(floatVal)) finalVal = '';
@@ -67,7 +70,6 @@ const CGPACalculator: React.FC<Props> = ({ theme }) => {
         }
 
         if (field === 'credits') {
-          // Strictly integer. No decimals, no alphabets. Max 21.
           let cleaned = value.replace(/\D/g, '');
           let num = parseInt(cleaned);
           if (isNaN(num)) finalVal = '';
@@ -117,6 +119,7 @@ const CGPACalculator: React.FC<Props> = ({ theme }) => {
   };
 
   const calculateTotal = () => {
+    setErrorMsg('');
     let totalWeightedSGPA = 0;
     let totalCredits = 0;
     let hasError = false;
@@ -134,7 +137,7 @@ const CGPACalculator: React.FC<Props> = ({ theme }) => {
     });
 
     if (hasError || totalCredits === 0) {
-      alert("Check inputs: SGPA (0-4.00) and Credits (12-21) are required for all semesters.");
+      setErrorMsg("Check inputs: SGPA (0-4.00) and Credits (12-21) are required for all semesters.");
       return;
     }
 
@@ -145,6 +148,7 @@ const CGPACalculator: React.FC<Props> = ({ theme }) => {
   };
 
   const resetAll = () => {
+    setErrorMsg('');
     setSemesters([{ id: '1', name: 'Semester 1', sgpa: '', credits: 18, gradeLetter: 'F', isLocked: false }]);
     setCgpa(0);
     setOverallGrade('F');
@@ -180,7 +184,7 @@ const CGPACalculator: React.FC<Props> = ({ theme }) => {
       <div className="overflow-x-auto -mx-6 mb-6">
         <table className="w-full text-left min-w-[600px] border-collapse">
           <thead>
-            <tr className={`bg-gray-50 border-y ${theme.border}`}>
+            <tr className={`bg-black/5 border-y ${theme.border}`}>
               <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider w-[40%]">Semester Order</th>
               <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider w-[25%] text-center">Obtained SGPA</th>
               <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider w-[25%] text-center">Total Credits</th>
@@ -246,7 +250,7 @@ const CGPACalculator: React.FC<Props> = ({ theme }) => {
         </table>
       </div>
 
-      <div className="flex flex-wrap gap-4 mb-8">
+      <div className="flex flex-wrap gap-4 mb-2">
         <button 
           onClick={addRow}
           className={`px-6 py-2.5 bg-transparent border ${theme.border} ${theme.accent} font-medium rounded-full hover:bg-black/5 transition-all flex items-center gap-2`}
@@ -274,8 +278,15 @@ const CGPACalculator: React.FC<Props> = ({ theme }) => {
         </button>
       </div>
 
+      {errorMsg && (
+        <div className="mb-6 flex items-center gap-2 text-red-500 text-xs font-bold bg-red-500/10 p-3 rounded-xl border border-red-500/20 animate-in fade-in slide-in-from-top-1">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+          {errorMsg}
+        </div>
+      )}
+
       {isCalculated && (
-        <div className={`rounded-3xl p-8 text-center text-white transform transition-all animate-in zoom-in-95 ${theme.primary}`}>
+        <div className={`rounded-3xl p-8 text-center text-white transform transition-all animate-in zoom-in-95 mt-4 ${theme.primary}`}>
           <p className="text-xs uppercase tracking-[0.2em] font-bold opacity-80 mb-2">Cumulative Grade Point Average</p>
           <h3 className="text-6xl font-black mb-2">{cgpa.toFixed(2)}</h3>
           <p className="text-xl font-medium opacity-90">Overall Standing: <span className="font-bold border-b-2 border-white/40 px-1">{overallGrade}</span></p>

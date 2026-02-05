@@ -1,4 +1,3 @@
-
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { SGPASubject, CGPASemester, UserInfo } from '../types';
@@ -44,13 +43,13 @@ const drawHeader = async (doc: jsPDF, title: string, userInfo: UserInfo) => {
     doc.text("AWKUM", 20, 24);
   }
 
-  // Right-aligned Passport Photo
+  // Right-aligned Passport Photo - Adjusted Y coordinate
   if (userInfo.photo) {
     try {
-      doc.addImage(userInfo.photo, 'JPEG', 165, 12, 25, 30);
+      doc.addImage(userInfo.photo, 'JPEG', 165, 48, 25, 30);
       doc.setDrawColor(200);
       doc.setLineWidth(0.1);
-      doc.rect(165, 12, 25, 30);
+      doc.rect(165, 48, 25, 30);
     } catch (e) {
       console.warn("Photo add error", e);
     }
@@ -73,7 +72,7 @@ const drawHeader = async (doc: jsPDF, title: string, userInfo: UserInfo) => {
   doc.setFontSize(9);
   doc.setTextColor(0, 0, 0);
   const startX = 15;
-  const col2X = 110;
+  const col2X = 95;
   let currentY = 53;
   const lineHeight = 6;
 
@@ -99,12 +98,12 @@ const drawHeader = async (doc: jsPDF, title: string, userInfo: UserInfo) => {
   doc.setFont("helvetica", "normal"); doc.text(degreeText, col2X + 25, currentY);
 
   currentY += lineHeight;
-  doc.setFont("helvetica", "bold"); doc.text("Semester:", col2X, currentY);
+  doc.setFont("helvetica", "bold"); doc.text("Semester-Section:", col2X, currentY);
   doc.setFont("helvetica", "normal"); doc.text(`${userInfo.semester}-${userInfo.section}`, col2X + 35, currentY);
 
   doc.setDrawColor(230, 230, 230);
   doc.setLineWidth(0.2);
-  doc.line(15, 75, 195, 75);
+  doc.line(15, 80, 195, 80);
 
   return 85;
 };

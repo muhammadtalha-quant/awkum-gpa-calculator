@@ -1,4 +1,5 @@
 export type ThemeType = 'tokyonight' | 'catppuccin' | 'gruvbox';
+export type ThemeMode = 'light' | 'dark';
 
 export interface SGPASubject {
   id: string;

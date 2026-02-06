@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Header from './components/Header';
 import SGPACalculator from './components/SGPACalculator';
 import CGPACalculator from './components/CGPACalculator';
@@ -7,43 +7,112 @@ import GradingChart from './components/GradingChart';
 import { ThemeType, ThemeMode } from './types';
 import { THEMES } from './constants';
 
+const UI_SYNC_KEY = 'awkum_gpa_ui_config_v2';
+const ACCESS_KEY = 'awkum_gpa_last_access_v2';
+
 const App: React.FC = () => {
+  // UI State
   const [activeTab, setActiveTab] = useState<'sgpa' | 'cgpa'>('sgpa');
   const [theme, setTheme] = useState<ThemeType>('catppuccin');
   const [mode, setMode] = useState<ThemeMode>('light');
+  
+  // Notification State
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const [isSyncVisible, setIsSyncVisible] = useState(false);
 
   const currentTheme = THEMES[mode][theme];
 
-  // Helper to trigger view transition for circular animation
+  // Ref to hold current state for silent beforeunload save
+  const stateRef = useRef({ activeTab, theme, mode });
+  useEffect(() => {
+    stateRef.current = { activeTab, theme, mode };
+  }, [activeTab, theme, mode]);
+
+  // Garbage Collection & Initial Restoration
+  useEffect(() => {
+    const lastAccess = localStorage.getItem(ACCESS_KEY);
+    const now = Date.now();
+    const twentyFourHours = 24 * 60 * 60 * 1000;
+
+    // Auto Garbage Collection: If site not accessed in 24h, clear everything
+    if (lastAccess && now - parseInt(lastAccess) > twentyFourHours) {
+      localStorage.removeItem(UI_SYNC_KEY);
+      localStorage.removeItem('awkum_sgpa_subjects_v1');
+      localStorage.removeItem('awkum_cgpa_semesters_v1');
+      localStorage.removeItem('awkum_sgpa_config_v1');
+    }
+    localStorage.setItem(ACCESS_KEY, now.toString());
+
+    // Restore UI UI State
+    const savedUI = localStorage.getItem(UI_SYNC_KEY);
+    if (savedUI) {
+      try {
+        const data = JSON.parse(savedUI);
+        if (data.activeTab) setActiveTab(data.activeTab);
+        if (data.theme) setTheme(data.theme);
+        if (data.mode) setMode(data.mode);
+        
+        // Check if there is actual input data before claiming "Session Restored"
+        const hasSGPA = localStorage.getItem('awkum_sgpa_subjects_v1');
+        const hasCGPA = localStorage.getItem('awkum_cgpa_semesters_v1');
+        if (hasSGPA || hasCGPA) {
+          triggerSyncMessage("Session Restored");
+        }
+      } catch (e) {
+        console.error("UI restore failed", e);
+      }
+    }
+
+    // Silent Save before app close
+    const handleUnload = () => {
+      localStorage.setItem(UI_SYNC_KEY, JSON.stringify(stateRef.current));
+      localStorage.setItem(ACCESS_KEY, Date.now().toString());
+    };
+    window.addEventListener('beforeunload', handleUnload);
+
+    // Reactive Cloud Save Trigger every 2 minutes
+    const saveInterval = setInterval(() => {
+      triggerSyncMessage("Session Saved");
+    }, 120000);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleUnload);
+      clearInterval(saveInterval);
+    };
+  }, []);
+
+  // Sync UI state to storage on every change
+  useEffect(() => {
+    localStorage.setItem(UI_SYNC_KEY, JSON.stringify({ activeTab, theme, mode }));
+  }, [activeTab, theme, mode]);
+
+  const triggerSyncMessage = (msg: string) => {
+    setSyncMessage(msg);
+    setIsSyncVisible(true);
+    setTimeout(() => setIsSyncVisible(false), 4000);
+  };
+
   const transition = (event: React.MouseEvent, update: () => void) => {
-    // Check if View Transitions API is supported
     if (!(document as any).startViewTransition) {
       update();
       return;
     }
-
     const x = event.clientX;
     const y = event.clientY;
     const endRadius = Math.hypot(
       Math.max(x, window.innerWidth - x),
       Math.max(y, window.innerHeight - y)
     );
-
     const transition = (document as any).startViewTransition(() => {
       update();
     });
-
     transition.ready.then(() => {
-      // Always animate from 0 to full radius (origination from toggle)
       const clipPath = [
         `circle(0px at ${x}px ${y}px)`,
         `circle(${endRadius}px at ${x}px ${y}px)`,
       ];
-      
       document.documentElement.animate(
-        {
-          clipPath: clipPath,
-        },
+        { clipPath: clipPath },
         {
           duration: 500,
           easing: 'ease-in-out',
@@ -63,18 +132,66 @@ const App: React.FC = () => {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 pb-16 ${currentTheme.bg} ${currentTheme.text}`}>
-      {/* Dynamic Style for View Transition */}
+      
+      {/* Reactive Cloud Notification (Swiped Down animation) */}
+      <div 
+        className={`fixed top-0 left-1/2 -translate-x-1/2 z-[100] transition-all duration-700 ease-out transform ${
+          isSyncVisible ? 'translate-y-6 opacity-100' : '-translate-y-20 opacity-0'
+        }`}
+      >
+        <div className={`flex items-center gap-3 px-6 py-2.5 rounded-full bg-white/20 backdrop-blur-2xl border border-white/30 shadow-2xl text-[10px] font-black uppercase tracking-[0.2em] ${currentTheme.text}`}>
+          <svg className="w-5 h-5 text-blue-500 animate-bounce" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M17.5 19c-3.037 0-5.5-2.463-5.5-5.5s2.463-5.5 5.5-5.5c1.455 0 2.775.568 3.75 1.493V7a7.001 7.001 0 00-11.91-5.007C7.306 2.053 5.378 4.295 5.105 7.15A5.002 5.002 0 005 17h12.5a6.5 6.5 0 100-13 1 1 0 010 2 4.5 4.5 0 010 9z" />
+          </svg>
+          {syncMessage}
+        </div>
+      </div>
+
       <style>{`
         ::view-transition-old(root),
         ::view-transition-new(root) {
           animation: none;
           mix-blend-mode: normal;
         }
-        ::view-transition-old(root) {
-          z-index: 1;
+        ::view-transition-old(root) { z-index: 1; }
+        ::view-transition-new(root) { z-index: 9999; }
+
+        /* Truly Themed Custom Checkbox */
+        .themed-checkbox {
+          appearance: none;
+          -webkit-appearance: none;
+          width: 1.25rem;
+          height: 1.25rem;
+          border-radius: 0.5rem;
+          border: 2px solid currentColor;
+          position: relative;
+          cursor: pointer;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          background-color: rgba(0,0,0,0.05);
         }
-        ::view-transition-new(root) {
-          z-index: 9999;
+        .themed-checkbox:checked {
+          background-color: currentColor;
+          border-color: transparent;
+        }
+        .themed-checkbox:checked::after {
+          content: '✓';
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: bold;
+          font-size: 0.8rem;
+        }
+        .themed-checkbox:hover {
+          transform: scale(1.1);
+          background-color: rgba(0,0,0,0.1);
+        }
+        
+        /* Dark mode adjustment for checkbox background */
+        .dark .themed-checkbox {
+          background-color: rgba(255,255,255,0.05);
         }
       `}</style>
 

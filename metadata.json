@@ -1,5 +1,8 @@
+
 {
   "name": "AWKUM GPA/CGPA Calculator",
   "description": "A high-precision academic tool for Abdul Wali Khan University Mardan students to calculate SGPA and CGPA based on official linear grading scales, featuring client-side PDF export.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "camera"
+  ]
 }

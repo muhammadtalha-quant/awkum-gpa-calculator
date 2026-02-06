@@ -21,24 +21,30 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  const MAX_CREDITS = 21;
+  const MIN_ROOM_FOR_ADD = 3;
+  const MAX_ROWS = 7;
+
   // Initial Restoration
   useEffect(() => {
-    // Restore subjects
     const savedSubjects = localStorage.getItem(SGPA_STORAGE_KEY);
     if (savedSubjects) {
-      setSubjects(JSON.parse(savedSubjects));
+      try {
+        setSubjects(JSON.parse(savedSubjects));
+      } catch (e) {
+        setSubjects([{ id: Date.now().toString(), name: '', code: '', credits: 3, marks: '', gradePoint: 0, gradeLetter: 'F', isLocked: false }]);
+      }
     } else {
-      setSubjects([{ id: '1', name: '', code: '', credits: 3, marks: '', gradePoint: 0, gradeLetter: 'F', isLocked: false }]);
+      setSubjects([{ id: Date.now().toString(), name: '', code: '', credits: 3, marks: '', gradePoint: 0, gradeLetter: 'F', isLocked: false }]);
     }
 
-    // Restore Checkbox States
     const savedConfig = localStorage.getItem(SGPA_CONFIG_KEY);
     if (savedConfig) {
       try {
         const config = JSON.parse(savedConfig);
         setEnableCodes(!!config.enableCodes);
         setCodesConfirmed(!!config.codesConfirmed);
-      } catch(e) { console.error(e); }
+      } catch(e) { /* ignore */ }
     }
   }, []);
 
@@ -49,16 +55,44 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
     }
   }, [subjects]);
 
+  // Credit Hour Pruning logic
+  useEffect(() => {
+    const totalCredits = subjects.reduce((sum, s) => sum + (parseInt(s.credits.toString()) || 0), 0);
+    if (totalCredits > MAX_CREDITS) {
+      setSubjects(prev => {
+        let current = [...prev];
+        let removedCount = 0;
+        while (current.reduce((sum, s) => sum + (parseInt(s.credits.toString()) || 0), 0) > MAX_CREDITS && current.length > 1) {
+          current.pop();
+          removedCount++;
+        }
+        
+        if (removedCount > 0) {
+          const msg = removedCount === 1 
+            ? "Automatically Deleted Last Column to Maintain the Maximum Credit Hours Limit"
+            : `Automatically Deleted Last ${removedCount} Columns to Maintain the Maximum Credit Hours Limit`;
+          setErrorMsg(msg);
+        }
+        return current;
+      });
+    }
+  }, [subjects]);
+
   // Continuous Auto-Save for Config (Checkboxes)
   useEffect(() => {
     localStorage.setItem(SGPA_CONFIG_KEY, JSON.stringify({ enableCodes, codesConfirmed }));
   }, [enableCodes, codesConfirmed]);
 
   const addRow = () => {
+    const currentTotalCredits = subjects.reduce((sum, s) => sum + (parseInt(s.credits.toString()) || 0), 0);
+    if (subjects.length >= MAX_ROWS || (MAX_CREDITS - currentTotalCredits) < MIN_ROOM_FOR_ADD) return;
+    
     setErrorMsg('');
-    const updated = subjects.map(s => ({ ...s, isLocked: true }));
-    const newId = (subjects.length + 1).toString();
-    setSubjects([...updated, { id: newId, name: '', code: '', credits: 3, marks: '', gradePoint: 0, gradeLetter: 'F', isLocked: false }]);
+    setSubjects(prev => {
+      const updated = prev.map(s => ({ ...s, isLocked: true }));
+      const newId = (Date.now() + Math.random()).toString();
+      return [...updated, { id: newId, name: '', code: '', credits: 3, marks: '', gradePoint: 0, gradeLetter: 'F', isLocked: false }];
+    });
   };
 
   const editRow = (id: string) => {
@@ -71,9 +105,12 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
 
   const removeRow = (id: string) => {
     setErrorMsg('');
-    if (subjects.length > 1) {
-      setSubjects(subjects.filter(s => s.id !== id));
-    }
+    setSubjects(prev => {
+      if (prev.length > 1) {
+        return prev.filter(s => s.id !== id);
+      }
+      return prev;
+    });
   };
 
   const handleInputChange = (id: string, field: keyof SGPASubject, value: string) => {
@@ -148,7 +185,7 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
 
   const resetAll = () => {
     setErrorMsg('');
-    const initial = [{ id: '1', name: '', code: '', credits: 3, marks: '', gradePoint: 0, gradeLetter: 'F', isLocked: false }];
+    const initial = [{ id: Date.now().toString(), name: '', code: '', credits: 3, marks: '', gradePoint: 0, gradeLetter: 'F', isLocked: false }];
     setSubjects(initial);
     setSgpa(0);
     setFinalGrade('F');
@@ -159,7 +196,6 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
   };
 
   const handlePdfExport = (userInfo: UserInfo) => {
-    // If not calculated yet, calculate on the fly for the PDF
     let finalSgpa = sgpa;
     let finalLetter = finalGrade;
     if (!isCalculated) {
@@ -175,12 +211,11 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
     exportSGPA_PDF(subjects, finalSgpa, finalLetter, userInfo);
   };
 
-  // DMC Export Gating:
-  // 1. Course codes MUST be enabled.
-  // 2. ALL codes must be filled.
-  // 3. Codes confirmed checkbox MUST be checked.
   const allCodesFilled = enableCodes && subjects.every(s => s.code && s.code.trim().length > 0);
   const isExportUnlocked = enableCodes && allCodesFilled && codesConfirmed;
+  
+  const currentTotalCredits = subjects.reduce((sum, s) => sum + (parseInt(s.credits.toString()) || 0), 0);
+  const showAddButton = subjects.length < MAX_ROWS && (MAX_CREDITS - currentTotalCredits) >= MIN_ROOM_FOR_ADD;
 
   return (
     <div className={`${theme.card} rounded-2xl p-6 shadow-sm border ${theme.border}`}>
@@ -193,7 +228,6 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
       />
 
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold">Semester GPA</h2>
         <div className="flex items-center gap-4">
           <label className={`flex items-center gap-3 text-xs font-bold uppercase tracking-widest cursor-pointer select-none ${theme.accent}`}>
             <input 
@@ -202,10 +236,10 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
               onChange={e => setEnableCodes(e.target.checked)}
               className="themed-checkbox"
             />
-            Enable Course Codes
+            {enableCodes ? 'Disable Course Codes' : 'Enable Course Codes'}
           </label>
-          <button onClick={resetAll} className="text-red-500 text-[10px] font-black uppercase tracking-widest hover:opacity-70 transition-colors">Clear All</button>
         </div>
+        <button onClick={resetAll} className="text-red-500 text-[10px] font-black uppercase tracking-widest hover:opacity-70 transition-colors">CLEAR ALL</button>
       </div>
 
       <div className="overflow-x-auto -mx-6 mb-6">
@@ -259,16 +293,26 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
       </div>
 
       <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap gap-4">
-          <button onClick={addRow} className={`px-6 py-2.5 bg-transparent border ${theme.border} ${theme.accent} font-medium rounded-full hover:bg-black/5 transition-all flex items-center gap-2`}>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
-            Add Subject
-          </button>
+        <div className="flex flex-wrap gap-4 items-center">
+          {showAddButton ? (
+            <button onClick={addRow} className={`px-6 py-2.5 bg-transparent border ${theme.border} ${theme.accent} font-medium rounded-full hover:bg-black/5 transition-all flex items-center gap-2`}>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+              Add Subject
+            </button>
+          ) : (
+            <div className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] bg-blue-500/10 p-3 rounded-full border border-blue-500/20 shadow-sm animate-in fade-in">
+              Maximum Limit of Subjects Reached !
+            </div>
+          )}
+          
           <button onClick={calculateTotal} className={`px-8 py-2.5 text-white font-semibold rounded-full hover:opacity-90 shadow-sm transition-all ${theme.primary}`}>Calculate SGPA</button>
-          <button onClick={() => setIsModalOpen(true)} disabled={!isExportUnlocked} className={`px-6 py-2.5 font-medium rounded-full transition-all flex items-center gap-2 ${isExportUnlocked ? `bg-black/10 border ${theme.border}` : 'opacity-40 cursor-not-allowed grayscale shadow-none'}`}>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-            Export DMC
-          </button>
+          
+          {isExportUnlocked && (
+            <button onClick={() => setIsModalOpen(true)} className={`px-6 py-2.5 font-medium rounded-full transition-all flex items-center gap-2 bg-black/10 border ${theme.border} animate-in zoom-in-95`}>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+              Export DMC
+            </button>
+          )}
         </div>
 
         {enableCodes && (
@@ -287,8 +331,8 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
         )}
 
         {!isExportUnlocked && (
-          <div className="text-[10px] font-black text-orange-500 uppercase tracking-[0.2em] bg-orange-500/10 p-3 rounded-xl border border-orange-500/20 self-start animate-pulse">
-            {!enableCodes ? "Enable Course Codes to unlock Export" : !allCodesFilled ? "Fill all course codes" : "Confirm code accuracy to unlock export"}
+          <div className="text-[10px] font-black text-orange-500 uppercase tracking-[0.2em] bg-orange-500/10 p-3 rounded-xl border border-orange-500/20 self-start">
+            In order to export DMC, enable course codes and fill the codes correctly.
           </div>
         )}
       </div>

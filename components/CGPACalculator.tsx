@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { CGPASemester, UserInfo } from '../types';
 import { getLetterFromGP } from '../utils/gradingLogic';
@@ -19,13 +18,21 @@ const CGPACalculator: React.FC<Props> = ({ theme }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  const MAX_CREDITS = 216;
+  const MIN_ROOM_FOR_ADD = 18;
+  const MAX_ROWS = 12;
+
   // Initial Restore
   useEffect(() => {
     const saved = localStorage.getItem(CGPA_STORAGE_KEY);
     if (saved) {
-      setSemesters(JSON.parse(saved));
+      try {
+        setSemesters(JSON.parse(saved));
+      } catch (e) {
+        setSemesters([{ id: Date.now().toString(), name: 'Semester 1', sgpa: '', credits: 18, gradeLetter: 'F', isLocked: false }]);
+      }
     } else {
-      setSemesters([{ id: '1', name: 'Semester 1', sgpa: '', credits: 18, gradeLetter: 'F', isLocked: false }]);
+      setSemesters([{ id: Date.now().toString(), name: 'Semester 1', sgpa: '', credits: 18, gradeLetter: 'F', isLocked: false }]);
     }
   }, []);
 
@@ -36,18 +43,47 @@ const CGPACalculator: React.FC<Props> = ({ theme }) => {
     }
   }, [semesters]);
 
+  // Credit Hour Pruning logic for CGPA
+  useEffect(() => {
+    const totalCredits = semesters.reduce((sum, s) => sum + (parseInt(s.credits.toString()) || 0), 0);
+    if (totalCredits > MAX_CREDITS) {
+      setSemesters(prev => {
+        let current = [...prev];
+        let removedCount = 0;
+        while (current.reduce((sum, s) => sum + (parseInt(s.credits.toString()) || 0), 0) > MAX_CREDITS && current.length > 1) {
+          current.pop();
+          removedCount++;
+        }
+        
+        if (removedCount > 0) {
+          const msg = removedCount === 1 
+            ? "Automatically Deleted Last Column to Maintain the Maximum Credit Hours Limit"
+            : `Automatically Deleted Last ${removedCount} Columns to Maintain the Maximum Credit Hours Limit`;
+          setErrorMsg(msg);
+        }
+        return current;
+      });
+    }
+  }, [semesters]);
+
   const addRow = () => {
+    const currentTotalCredits = semesters.reduce((sum, s) => sum + (parseInt(s.credits.toString()) || 0), 0);
+    if (semesters.length >= MAX_ROWS || (MAX_CREDITS - currentTotalCredits) < MIN_ROOM_FOR_ADD) return;
+    
     setErrorMsg('');
-    const updated = semesters.map(s => ({ ...s, isLocked: true }));
-    const nextNum = semesters.length + 1;
-    setSemesters([...updated, { 
-      id: nextNum.toString(), 
-      name: `Semester ${nextNum}`, 
-      sgpa: '', 
-      credits: 18, 
-      gradeLetter: 'F',
-      isLocked: false 
-    }]);
+    setSemesters(prev => {
+      const updated = prev.map(s => ({ ...s, isLocked: true }));
+      const nextNum = prev.length + 1;
+      const newId = (Date.now() + Math.random()).toString();
+      return [...updated, { 
+        id: newId, 
+        name: `Semester ${nextNum}`, 
+        sgpa: '', 
+        credits: 18, 
+        gradeLetter: 'F',
+        isLocked: false 
+      }];
+    });
   };
 
   const editRow = (id: string) => {
@@ -60,15 +96,16 @@ const CGPACalculator: React.FC<Props> = ({ theme }) => {
 
   const removeRow = (id: string) => {
     setErrorMsg('');
-    if (semesters.length > 1) {
-      const filtered = semesters.filter(s => s.id !== id);
-      const remapped = filtered.map((s, index) => ({
-        ...s,
-        id: (index + 1).toString(),
-        name: `Semester ${index + 1}`
-      }));
-      setSemesters(remapped);
-    }
+    setSemesters(prev => {
+      if (prev.length > 1) {
+        const filtered = prev.filter(s => s.id !== id);
+        return filtered.map((s, index) => ({
+          ...s,
+          name: `Semester ${index + 1}`
+        }));
+      }
+      return prev;
+    });
   };
 
   const handleInputChange = (id: string, field: keyof CGPASemester, value: string) => {
@@ -151,7 +188,7 @@ const CGPACalculator: React.FC<Props> = ({ theme }) => {
 
   const resetAll = () => {
     setErrorMsg('');
-    const initial = [{ id: '1', name: 'Semester 1', sgpa: '', credits: 18, gradeLetter: 'F', isLocked: false }];
+    const initial = [{ id: Date.now().toString(), name: 'Semester 1', sgpa: '', credits: 18, gradeLetter: 'F', isLocked: false }];
     setSemesters(initial);
     setCgpa(0);
     setOverallGrade('F');
@@ -163,12 +200,14 @@ const CGPACalculator: React.FC<Props> = ({ theme }) => {
     exportCGPA_PDF(semesters, cgpa, overallGrade, userInfo);
   };
 
+  const currentTotalCredits = semesters.reduce((sum, s) => sum + (parseInt(s.credits.toString()) || 0), 0);
+  const showAddButton = semesters.length < MAX_ROWS && (MAX_CREDITS - currentTotalCredits) >= MIN_ROOM_FOR_ADD;
+
   return (
     <div className={`${theme.card} rounded-2xl p-6 shadow-sm border ${theme.border}`}>
       <UserInfoModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSubmit={handlePdfExport} title="Cumulative Grade Sheet Details" isCGPA={true} rowCount={semesters.length} theme={theme} />
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold">Cumulative GPA</h2>
-        <button onClick={resetAll} className="text-red-500 text-sm font-medium hover:opacity-70 transition-colors">Clear All</button>
+      <div className="flex justify-end items-center mb-6">
+        <button onClick={resetAll} className="text-red-500 text-[10px] font-black uppercase tracking-widest hover:opacity-70 transition-colors">CLEAR ALL</button>
       </div>
       <div className="overflow-x-auto -mx-6 mb-6">
         <table className="w-full text-left min-w-[600px] border-collapse">
@@ -209,10 +248,23 @@ const CGPACalculator: React.FC<Props> = ({ theme }) => {
           </tbody>
         </table>
       </div>
-      <div className="flex flex-wrap gap-4 mb-2">
-        <button onClick={addRow} className={`px-6 py-2.5 bg-transparent border ${theme.border} ${theme.accent} font-medium rounded-full hover:bg-black/5 transition-all flex items-center gap-2`}><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>Add Semester</button>
+      <div className="flex flex-wrap gap-4 mb-2 items-center">
+        {showAddButton ? (
+          <button onClick={addRow} className={`px-6 py-2.5 bg-transparent border ${theme.border} ${theme.accent} font-medium rounded-full hover:bg-black/5 transition-all flex items-center gap-2`}>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+            Add Semester
+          </button>
+        ) : (
+          <div className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] bg-blue-500/10 p-3 rounded-full border border-blue-500/20 shadow-sm animate-in fade-in">
+            Maximum Limit of Semesters Reached !
+          </div>
+        )}
+        
         <button onClick={calculateTotal} className={`px-8 py-2.5 text-white font-semibold rounded-full hover:opacity-90 shadow-sm transition-all ${theme.primary}`}>Calculate CGPA</button>
-        <button onClick={() => setIsModalOpen(true)} disabled={!isCalculated} className={`px-6 py-2.5 font-medium rounded-full transition-all flex items-center gap-2 ${isCalculated ? `bg-black/10 border ${theme.border}` : 'opacity-40 cursor-not-allowed grayscale shadow-none'}`}><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>Export Transcript</button>
+        <button onClick={() => setIsModalOpen(true)} disabled={!isCalculated} className={`px-6 py-2.5 font-medium rounded-full transition-all flex items-center gap-2 ${isCalculated ? `bg-black/10 border ${theme.border}` : 'opacity-40 cursor-not-allowed grayscale shadow-none'}`}>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+          Export Transcript
+        </button>
       </div>
       {errorMsg && (
         <div className="mb-6 flex items-center gap-2 text-red-500 text-xs font-bold bg-red-500/10 p-3 rounded-xl border border-red-500/20 animate-in fade-in slide-in-from-top-1">

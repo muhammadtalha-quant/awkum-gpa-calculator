@@ -19,6 +19,7 @@ export interface CGPASemester {
   credits: number | string;
   gradeLetter: string;
   isLocked: boolean;
+  subjects?: SGPASubject[];
 }
 
 export interface GradeRange {

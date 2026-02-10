@@ -33,4 +33,4 @@ We have detailed documentation available for different aspects of the project:
 
 ## Grading Scale
 
-To convert marks into grade points, **AWKUM** uses a specific table. For the full breakdown and formulas used in this app, please refer to the [FEATURES.md](./documentation/FEATURES.md) file.
+To convert marks into grade points, **AWKUM** uses a specific table. For the full breakdown and formulas used in this app, please refer to the [LOGIC.md](./documentation/LOGIC.md) file.

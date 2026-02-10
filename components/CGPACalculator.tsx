@@ -117,10 +117,13 @@ const CGPACalculator: React.FC<Props> = ({ theme }) => {
       if (s.id === id) {
         let finalVal = value;
         if (field === 'sgpa') {
-          let cleaned = value.replace(/[^0-9.]/g, '');
-          let floatVal = parseFloat(cleaned);
-          if (isNaN(floatVal)) finalVal = '';
-          else { if (floatVal > 4.00) floatVal = 4.00; finalVal = floatVal.toString(); }
+          // Allow digits and a single dot. Check max 4.00
+          if (value === '' || /^\d*\.?\d*$/.test(value)) {
+            if (parseFloat(value) > 4.00) finalVal = '4.00';
+            else finalVal = value;
+          } else {
+            return s; // Ignore invalid char
+          }
         }
         if (field === 'credits') {
           let cleaned = value.replace(/\D/g, '');

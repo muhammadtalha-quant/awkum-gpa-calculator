@@ -10,7 +10,6 @@ interface Props {
   theme: any;
 }
 
-const CGPA_STORAGE_KEY = 'awkum_cgpa_semesters_v1';
 const CGPA_MODE_KEY = 'awkum_cgpa_mode_expert_v1';
 
 const CGPACalculator: React.FC<Props> = ({ theme }) => {
@@ -21,6 +20,7 @@ const CGPACalculator: React.FC<Props> = ({ theme }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isExpertMode, setIsExpertMode] = useState(false);
+  const [isInfoVerified, setIsInfoVerified] = useState(false);
 
   const MAX_CREDITS = 216;
   const MIN_ROOM_FOR_ADD = 18;
@@ -34,24 +34,10 @@ const CGPACalculator: React.FC<Props> = ({ theme }) => {
       setIsExpertMode(JSON.parse(savedMode));
     }
 
-    const saved = localStorage.getItem(CGPA_STORAGE_KEY);
-    if (saved) {
-      try {
-        setSemesters(JSON.parse(saved));
-      } catch (e) {
-        setSemesters([{ id: Date.now().toString(), name: 'Semester 1', sgpa: '', credits: 18, gradeLetter: 'F', isLocked: false, subjects: [] }]);
-      }
-    } else {
-      setSemesters([{ id: Date.now().toString(), name: 'Semester 1', sgpa: '', credits: 18, gradeLetter: 'F', isLocked: false, subjects: [] }]);
-    }
+    setSemesters([{ id: Date.now().toString(), name: 'Semester 1', sgpa: '', credits: 18, gradeLetter: 'F', isLocked: false, subjects: [] }]);
   }, []);
 
-  // Continuous Save
-  useEffect(() => {
-    if (semesters.length > 0) {
-      localStorage.setItem(CGPA_STORAGE_KEY, JSON.stringify(semesters));
-    }
-  }, [semesters]);
+
 
   // Save Mode
   useEffect(() => {
@@ -92,7 +78,6 @@ const CGPACalculator: React.FC<Props> = ({ theme }) => {
 
     setErrorMsg('');
     setSemesters(prev => {
-      const updated = prev.map(s => ({ ...s, isLocked: true }));
       const nextNum = prev.length + 1;
       const newId = (Date.now() + Math.random()).toString();
 
@@ -106,17 +91,11 @@ const CGPACalculator: React.FC<Props> = ({ theme }) => {
         subjects: isExpertMode ? [{ id: Date.now().toString(), name: '', code: '', credits: 3, marks: '', gradePoint: 0, gradeLetter: 'F', isLocked: false }] : []
       };
 
-      return [...updated, newSemester];
+      return [...prev, newSemester];
     });
   };
 
-  const editRow = (id: string) => {
-    setErrorMsg('');
-    setSemesters(prev => prev.map((s) => ({
-      ...s,
-      isLocked: s.id !== id
-    })));
-  };
+
 
   const removeRow = (id: string) => {
     setErrorMsg('');
@@ -267,7 +246,7 @@ const CGPACalculator: React.FC<Props> = ({ theme }) => {
     setCgpa(0);
     setOverallGrade('F');
     setIsCalculated(false);
-    localStorage.removeItem(CGPA_STORAGE_KEY);
+
   };
 
   const handlePdfExport = (userInfo: UserInfo) => {
@@ -284,6 +263,8 @@ const CGPACalculator: React.FC<Props> = ({ theme }) => {
         ...s,
         subjects: (s.subjects && s.subjects.length > 0) ? s.subjects : [{ id: (Date.now() + Math.random()).toString(), name: '', code: '', credits: 3, marks: '', gradePoint: 0, gradeLetter: 'F', isLocked: false }]
       })));
+    } else {
+      setIsInfoVerified(false);
     }
   };
 
@@ -295,7 +276,7 @@ const CGPACalculator: React.FC<Props> = ({ theme }) => {
     return sem.subjects.every(sub => sub.marks !== '' && sub.credits !== '' && sub.code && isValidCourseCode(sub.code));
   });
 
-  const showExportButton = isExpertMode ? (isExpertValid && isCalculated) : false;
+  const showExportButton = isExpertMode ? (isExpertValid && isCalculated && isInfoVerified) : false;
   // Wait, User said "Remove the Export Transcript Button... in the quick mode." 
   // "Export Transcript... GATED... should appear if and only if expert mode is enabled..."
   // So NO Export Transcript in Quick Mode at all? 
@@ -335,23 +316,18 @@ const CGPACalculator: React.FC<Props> = ({ theme }) => {
             </thead>
             <tbody className="divide-y divide-gray-100/10">
               {semesters.map((sem) => (
-                <tr key={sem.id} className={`${sem.isLocked ? 'opacity-60 bg-black/5' : 'hover:bg-white/5'} transition-colors`}>
+                <tr key={sem.id} className="hover:bg-white/5 transition-colors">
                   <td className="px-6 py-3">
                     <input type="text" disabled value={sem.name} className="w-full px-3 py-2 bg-black/5 border border-transparent rounded-lg text-gray-400 font-semibold text-sm cursor-not-allowed" />
                   </td>
                   <td className="px-4 py-3">
-                    <input type="text" disabled={sem.isLocked} placeholder="0.00 - 4.00" value={sem.sgpa} onChange={(e) => handleInputChange(sem.id, 'sgpa', e.target.value)} onBlur={(e) => handleBlur(sem.id, 'sgpa', e.target.value)} className={`w-full px-3 py-2 bg-transparent border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-center ${theme.border}`} />
+                    <input type="text" placeholder="0.00 - 4.00" value={sem.sgpa} onChange={(e) => handleInputChange(sem.id, 'sgpa', e.target.value)} onBlur={(e) => handleBlur(sem.id, 'sgpa', e.target.value)} className={`w-full px-3 py-2 bg-transparent border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-center ${theme.border}`} />
                   </td>
                   <td className="px-4 py-3">
-                    <input type="text" disabled={sem.isLocked} placeholder="12 - 21" value={sem.credits} onChange={(e) => handleInputChange(sem.id, 'credits', e.target.value)} onBlur={(e) => handleBlur(sem.id, 'credits', e.target.value)} className={`w-full px-3 py-2 bg-transparent border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-center ${theme.border}`} />
+                    <input type="text" placeholder="12 - 21" value={sem.credits} onChange={(e) => handleInputChange(sem.id, 'credits', e.target.value)} onBlur={(e) => handleBlur(sem.id, 'credits', e.target.value)} className={`w-full px-3 py-2 bg-transparent border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-center ${theme.border}`} />
                   </td>
                   <td className="px-6 py-3 text-right">
                     <div className="flex gap-2 justify-end">
-                      {sem.isLocked && (
-                        <button onClick={() => editRow(sem.id)} className={`p-1.5 rounded-lg hover:bg-black/10 transition-colors ${theme.accent}`} title="Edit Row">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                        </button>
-                      )}
                       <button onClick={() => removeRow(sem.id)} className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 transition-colors" title="Remove Row">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                       </button>
@@ -408,6 +384,28 @@ const CGPACalculator: React.FC<Props> = ({ theme }) => {
           </button>
         )}
       </div>
+
+      {!isExpertMode && (
+        <div className="mt-4 mb-4 text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] bg-blue-500/10 p-3 rounded-xl border border-blue-500/20 w-fit animate-in fade-in">
+          To generate a detailed unofficial transcript, switch to Expert Mode and enter full details of each semester such as subject name, course code, credit hours and marks.
+        </div>
+      )}
+
+      {isExpertMode && (
+        <div className="mt-4 mb-4 flex items-center gap-4 p-5 bg-black/5 rounded-[1.5rem] animate-in slide-in-from-left-4 border border-white/10 shadow-inner w-fit">
+          <input
+            type="checkbox"
+            id="confirmInfo"
+            checked={isInfoVerified}
+            onChange={e => setIsInfoVerified(e.target.checked)}
+            className="themed-checkbox"
+          />
+          <label htmlFor="confirmInfo" className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80 cursor-pointer select-none leading-relaxed">
+            I confirm that the information entered here is correct to the best of my knowledge and is verified against my MIS Profile.
+          </label>
+        </div>
+      )}
+
       {errorMsg && (
         <div className="mb-6 flex items-center gap-2 text-red-500 text-xs font-bold bg-red-500/10 p-3 rounded-xl border border-red-500/20 animate-in fade-in slide-in-from-top-1">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>

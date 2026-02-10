@@ -47,7 +47,7 @@ const SemesterSubjectTable: React.FC<Props> = ({ semesterId, subjects, onUpdate,
             marks: '',
             gradePoint: 0,
             gradeLetter: 'F',
-            isLocked: false
+            isLocked: false // Keeping for type compatibility, but effective no-op
         };
 
         onUpdate(semesterId, [...subjects, newSubject]);

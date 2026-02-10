@@ -15,7 +15,7 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'sgpa' | 'cgpa'>('sgpa');
   const [theme, setTheme] = useState<ThemeType>('catppuccin');
   const [mode, setMode] = useState<ThemeMode>('light');
-  
+
   // Notification State
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const [isSyncVisible, setIsSyncVisible] = useState(false);
@@ -37,8 +37,6 @@ const App: React.FC = () => {
     // Auto Garbage Collection: If site not accessed in 24h, clear everything
     if (lastAccess && now - parseInt(lastAccess) > twentyFourHours) {
       localStorage.removeItem(UI_SYNC_KEY);
-      localStorage.removeItem('awkum_sgpa_subjects_v1');
-      localStorage.removeItem('awkum_cgpa_semesters_v1');
       localStorage.removeItem('awkum_sgpa_config_v1');
     }
     localStorage.setItem(ACCESS_KEY, now.toString());
@@ -51,13 +49,7 @@ const App: React.FC = () => {
         if (data.activeTab) setActiveTab(data.activeTab);
         if (data.theme) setTheme(data.theme);
         if (data.mode) setMode(data.mode);
-        
-        // Check if there is actual input data before claiming "Session Restored"
-        const hasSGPA = localStorage.getItem('awkum_sgpa_subjects_v1');
-        const hasCGPA = localStorage.getItem('awkum_cgpa_semesters_v1');
-        if (hasSGPA || hasCGPA) {
-          triggerSyncMessage("Session Restored");
-        }
+
       } catch (e) {
         console.error("UI restore failed", e);
       }
@@ -132,12 +124,11 @@ const App: React.FC = () => {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 pb-16 ${currentTheme.bg} ${currentTheme.text}`}>
-      
+
       {/* Reactive Cloud Notification (Swiped Down animation) */}
-      <div 
-        className={`fixed top-0 left-1/2 -translate-x-1/2 z-[100] transition-all duration-700 ease-out transform ${
-          isSyncVisible ? 'translate-y-6 opacity-100' : '-translate-y-20 opacity-0'
-        }`}
+      <div
+        className={`fixed top-0 left-1/2 -translate-x-1/2 z-[100] transition-all duration-700 ease-out transform ${isSyncVisible ? 'translate-y-6 opacity-100' : '-translate-y-20 opacity-0'
+          }`}
       >
         <div className={`flex items-center gap-3 px-6 py-2.5 rounded-full bg-white/20 backdrop-blur-2xl border border-white/30 shadow-2xl text-[10px] font-black uppercase tracking-[0.2em] ${currentTheme.text}`}>
           <svg className="w-5 h-5 text-blue-500 animate-bounce" fill="currentColor" viewBox="0 0 24 24">
@@ -196,7 +187,7 @@ const App: React.FC = () => {
       `}</style>
 
       <div className="max-w-4xl mx-auto px-4 pt-8">
-        
+
         {/* Theme Controls */}
         <div className="flex flex-col items-center gap-2 mb-8 p-4 rounded-2xl bg-black/5 backdrop-blur-sm">
           <div className="flex items-center gap-3">
@@ -222,9 +213,8 @@ const App: React.FC = () => {
               <button
                 key={t}
                 onClick={(e) => handleThemeChange(e, t)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
-                  theme === t ? 'bg-white text-black shadow-sm' : 'opacity-50 hover:opacity-100'
-                }`}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${theme === t ? 'bg-white text-black shadow-sm' : 'opacity-50 hover:opacity-100'
+                  }`}
               >
                 {t}
               </button>
@@ -238,21 +228,19 @@ const App: React.FC = () => {
           <nav className="inline-flex p-1 rounded-2xl bg-black/10 backdrop-blur-md">
             <button
               onClick={() => setActiveTab('sgpa')}
-              className={`px-8 py-2.5 rounded-xl font-semibold transition-all ${
-                activeTab === 'sgpa'
+              className={`px-8 py-2.5 rounded-xl font-semibold transition-all ${activeTab === 'sgpa'
                   ? `shadow-md bg-white text-black`
                   : 'opacity-60 hover:opacity-100'
-              }`}
+                }`}
             >
               Semester GPA
             </button>
             <button
               onClick={() => setActiveTab('cgpa')}
-              className={`px-8 py-2.5 rounded-xl font-semibold transition-all ${
-                activeTab === 'cgpa'
+              className={`px-8 py-2.5 rounded-xl font-semibold transition-all ${activeTab === 'cgpa'
                   ? `shadow-md bg-white text-black`
                   : 'opacity-60 hover:opacity-100'
-              }`}
+                }`}
             >
               Cumulative GPA
             </button>

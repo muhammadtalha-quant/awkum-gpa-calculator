@@ -9,7 +9,6 @@ interface Props {
   theme: any;
 }
 
-const SGPA_STORAGE_KEY = 'awkum_sgpa_subjects_v1';
 const SGPA_CONFIG_KEY = 'awkum_sgpa_config_v1';
 
 const SGPACalculator: React.FC<Props> = ({ theme }) => {
@@ -28,16 +27,7 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
 
   // Initial Restoration
   useEffect(() => {
-    const savedSubjects = localStorage.getItem(SGPA_STORAGE_KEY);
-    if (savedSubjects) {
-      try {
-        setSubjects(JSON.parse(savedSubjects));
-      } catch (e) {
-        setSubjects([{ id: Date.now().toString(), name: '', code: '', credits: 3, marks: '', gradePoint: 0, gradeLetter: 'F', isLocked: false }]);
-      }
-    } else {
-      setSubjects([{ id: Date.now().toString(), name: '', code: '', credits: 3, marks: '', gradePoint: 0, gradeLetter: 'F', isLocked: false }]);
-    }
+    setSubjects([{ id: Date.now().toString(), name: '', code: '', credits: 3, marks: '', gradePoint: 0, gradeLetter: 'F', isLocked: false }]);
 
     const savedConfig = localStorage.getItem(SGPA_CONFIG_KEY);
     if (savedConfig) {
@@ -49,12 +39,7 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
     }
   }, []);
 
-  // Continuous Auto-Save for Subjects
-  useEffect(() => {
-    if (subjects.length > 0) {
-      localStorage.setItem(SGPA_STORAGE_KEY, JSON.stringify(subjects));
-    }
-  }, [subjects]);
+
 
   // Credit Hour Pruning logic
   useEffect(() => {
@@ -90,19 +75,12 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
 
     setErrorMsg('');
     setSubjects(prev => {
-      const updated = prev.map(s => ({ ...s, isLocked: true }));
       const newId = (Date.now() + Math.random()).toString();
-      return [...updated, { id: newId, name: '', code: '', credits: 3, marks: '', gradePoint: 0, gradeLetter: 'F', isLocked: false }];
+      return [...prev, { id: newId, name: '', code: '', credits: 3, marks: '', gradePoint: 0, gradeLetter: 'F', isLocked: false }];
     });
   };
 
-  const editRow = (id: string) => {
-    setErrorMsg('');
-    setSubjects(prev => prev.map((s) => ({
-      ...s,
-      isLocked: s.id !== id
-    })));
-  };
+
 
   const removeRow = (id: string) => {
     setErrorMsg('');
@@ -192,7 +170,7 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
     setFinalGrade('F');
     setIsCalculated(false);
     setCodesConfirmed(false);
-    localStorage.removeItem(SGPA_STORAGE_KEY);
+
     localStorage.removeItem(SGPA_CONFIG_KEY);
   };
 
@@ -258,15 +236,14 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
           </thead>
           <tbody className="divide-y divide-gray-100/10">
             {subjects.map((sub) => (
-              <tr key={sub.id} className={`${sub.isLocked ? 'opacity-60 bg-black/5' : 'hover:bg-white/5'} transition-colors`}>
+              <tr key={sub.id} className="hover:bg-white/5 transition-colors">
                 <td className="px-6 py-3">
-                  <input type="text" disabled={sub.isLocked} placeholder="Subject Name" value={sub.name} onChange={(e) => handleInputChange(sub.id, 'name', e.target.value)} className={`w-full px-3 py-2 bg-transparent border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm ${theme.border}`} />
+                  <input type="text" placeholder="Subject Name" value={sub.name} onChange={(e) => handleInputChange(sub.id, 'name', e.target.value)} className={`w-full px-3 py-2 bg-transparent border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm ${theme.border}`} />
                 </td>
                 {enableCodes && (
                   <td className="px-4 py-3">
                     <input
                       type="text"
-                      disabled={sub.isLocked}
                       placeholder="e.g. CS-113"
                       value={sub.code}
                       onChange={(e) => handleInputChange(sub.id, 'code', e.target.value)}
@@ -277,20 +254,16 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
                   </td>
                 )}
                 <td className="px-4 py-3">
-                  <input type="text" disabled={sub.isLocked} placeholder="3" value={sub.credits} onChange={(e) => handleInputChange(sub.id, 'credits', e.target.value)} onBlur={(e) => handleBlur(sub.id, 'credits', e.target.value)} className={`w-full px-3 py-2 bg-transparent border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-center ${theme.border}`} />
+                  <input type="text" placeholder="3" value={sub.credits} onChange={(e) => handleInputChange(sub.id, 'credits', e.target.value)} onBlur={(e) => handleBlur(sub.id, 'credits', e.target.value)} className={`w-full px-3 py-2 bg-transparent border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-center ${theme.border}`} />
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <input type="text" disabled={sub.isLocked} placeholder="0-100" value={sub.marks} onChange={(e) => handleInputChange(sub.id, 'marks', e.target.value)} className={`w-full px-3 py-2 bg-transparent border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-center ${theme.border}`} />
+                  <input type="text" placeholder="0-100" value={sub.marks} onChange={(e) => handleInputChange(sub.id, 'marks', e.target.value)} className={`w-full px-3 py-2 bg-transparent border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-center ${theme.border}`} />
                 </td>
                 <td className={`px-4 py-3 font-mono font-semibold text-sm text-center ${theme.accent}`}>{sub.gradePoint.toFixed(2)}</td>
                 <td className="px-4 py-3 font-bold text-sm text-center">{sub.gradeLetter}</td>
                 <td className="px-6 py-3 text-right">
                   <div className="flex gap-2 justify-end">
-                    {sub.isLocked && (
-                      <button onClick={() => editRow(sub.id)} className={`p-1.5 rounded-lg hover:bg-black/10 transition-colors ${theme.accent}`} title="Edit Row">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                      </button>
-                    )}
+
                     <button onClick={() => removeRow(sub.id)} className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 transition-colors" title="Remove Row">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
@@ -340,9 +313,9 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
           </div>
         )}
 
-        {!isExportUnlocked && (
-          <div className="text-[10px] font-black text-orange-500 uppercase tracking-[0.2em] bg-orange-500/10 p-3 rounded-xl border border-orange-500/20 self-start">
-            In order to export DMC, enable course codes and fill the codes correctly (e.g. CS-123).
+        {!enableCodes && (
+          <div className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] bg-blue-500/10 p-3 rounded-xl border border-blue-500/20 self-start">
+            To generate an unofficial DMC, enable course codes and fill the codes correctly (e.g. CS-123).
           </div>
         )}
       </div>

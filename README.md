@@ -20,7 +20,7 @@ We have detailed documentation available for different aspects of the project:
 
 1.  Clone the repo
     ```sh
-    git clone https://github.com/your-username/awkum-gpa-calculator.git
+    git clone https://github.com/muhammadtalha-quant/awkum-gpa-calculator.git
     ```
 2.  Install NPM packages
     ```sh

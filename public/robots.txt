@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://muhammadtalha-quant.github.io/awkum-gpa-calculator/sitemap.xml

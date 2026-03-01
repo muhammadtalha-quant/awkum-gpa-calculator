@@ -106,11 +106,11 @@ const App: React.FC = () => {
         }
       `}</style>
 
-      <div className="max-w-4xl mx-auto px-4 pt-8">
+      <div className="max-w-4xl mx-auto px-3 sm:px-4 pt-6 sm:pt-8 w-full">
 
         {/* Top Bar with Theme & Auth */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8 p-4 rounded-2xl bg-black/5 backdrop-blur-sm border border-white/5">
-          <div className="flex flex-col items-center md:items-start gap-2">
+        <div className="flex flex-col items-center gap-3 sm:gap-4 mb-6 sm:mb-8 p-3 sm:p-4 rounded-2xl bg-black/5 backdrop-blur-sm border border-white/5">
+          <div className="flex flex-col items-center gap-2">
             <div className="flex items-center gap-3">
               <span className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-80 text-gray-600 dark:text-gray-400">Colorscheme</span>
               <button
@@ -148,28 +148,28 @@ const App: React.FC = () => {
 
         <Header theme={currentTheme} />
 
-        <div className="flex justify-center mb-12">
-          <nav className="flex items-center gap-8 p-1.5 rounded-3xl bg-black/5 border border-white/5 shadow-inner">
+        <div className="flex justify-center mb-8 sm:mb-12">
+          <nav className="flex items-center gap-2 sm:gap-8 p-1 sm:p-1.5 rounded-3xl bg-black/5 border border-white/5 shadow-inner w-full sm:w-auto">
             <button
               onClick={() => setActiveTab('sgpa')}
-              className={`flex items-center gap-3 px-8 py-3 rounded-2xl transition-all duration-500 group ${activeTab === 'sgpa'
+              className={`flex-1 sm:flex-none flex items-center justify-center gap-2 sm:gap-3 px-3 sm:px-8 py-2.5 sm:py-3 rounded-2xl transition-all duration-500 group ${activeTab === 'sgpa'
                 ? `bg-white text-black shadow-2xl scale-105`
                 : 'opacity-40 hover:opacity-100'
                 }`}
             >
               <span className={`text-[10px] font-black ${activeTab === 'sgpa' ? 'text-blue-500' : 'text-current'}`}>01</span>
-              <span className="text-xs font-black uppercase tracking-[0.2em]">Semester GPA</span>
+              <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider sm:tracking-[0.2em]">Semester GPA</span>
             </button>
-            <div className="w-px h-6 bg-current opacity-10"></div>
+            <div className="w-px h-6 bg-current opacity-10 hidden sm:block"></div>
             <button
               onClick={() => setActiveTab('cgpa')}
-              className={`flex items-center gap-3 px-8 py-3 rounded-2xl transition-all duration-500 group ${activeTab === 'cgpa'
+              className={`flex-1 sm:flex-none flex items-center justify-center gap-2 sm:gap-3 px-3 sm:px-8 py-2.5 sm:py-3 rounded-2xl transition-all duration-500 group ${activeTab === 'cgpa'
                 ? `bg-white text-black shadow-2xl scale-105`
                 : 'opacity-40 hover:opacity-100'
                 }`}
             >
               <span className={`text-[10px] font-black ${activeTab === 'cgpa' ? 'text-blue-500' : 'text-current'}`}>02</span>
-              <span className="text-xs font-black uppercase tracking-[0.2em]">Cumulative GPA</span>
+              <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider sm:tracking-[0.2em]">Cumulative GPA</span>
             </button>
           </nav>
         </div>

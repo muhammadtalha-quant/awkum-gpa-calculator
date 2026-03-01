@@ -37,16 +37,16 @@ const RetakeOptimizer: React.FC<Props> = ({ theme }) => {
     const isNoEligible = result === 'NO_ELIGIBLE';
 
     return (
-        <div className={`p-8 rounded-[2.5rem] border ${theme.border} bg-white/5 animate-in fade-in duration-700`}>
+        <div className={`p-4 sm:p-8 rounded-[2.5rem] border ${theme.border} bg-white/5 animate-in fade-in duration-700`}>
             {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-10">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                 <div>
                     <h3 className="text-sm font-black uppercase tracking-[0.3em] opacity-40 mb-1">Retake Strategy Engine</h3>
                     <p className="text-[10px] font-bold opacity-30 uppercase tracking-widest">
                         Credit-weighted mark distribution across eligible retakes
                     </p>
                 </div>
-                <div className={`flex items-center gap-3 bg-black/10 px-5 py-3 rounded-2xl border ${theme.border}`}>
+                <div className={`flex items-center gap-3 bg-black/10 px-4 py-3 rounded-2xl border ${theme.border} self-start`}>
                     <label className="text-[9px] font-black uppercase tracking-widest opacity-40">Target CGPA</label>
                     <input
                         type="number"
@@ -55,7 +55,7 @@ const RetakeOptimizer: React.FC<Props> = ({ theme }) => {
                         max="4.00"
                         value={targetCGPA}
                         onChange={e => setTargetCGPA(e.target.value)}
-                        className={`w-20 bg-transparent outline-none text-center font-black text-lg ${isTargetValid ? 'text-blue-500' : 'text-red-500'}`}
+                        className={`w-16 bg-transparent outline-none text-center font-black text-lg ${isTargetValid ? 'text-blue-500' : 'text-red-500'}`}
                     />
                 </div>
             </div>
@@ -93,21 +93,21 @@ const RetakeOptimizer: React.FC<Props> = ({ theme }) => {
             {/* Distribution table */}
             {recommendations.length > 0 && (
                 <>
-                    {/* Column headers */}
-                    <div className="grid grid-cols-5 gap-2 px-6 mb-3 text-[8px] font-black uppercase tracking-widest opacity-30">
+                    {/* Column headers - hidden on xs */}
+                    <div className="hidden sm:grid grid-cols-5 gap-2 px-4 mb-2 text-[8px] font-black uppercase tracking-widest opacity-30">
                         <span className="col-span-2">Subject</span>
                         <span className="text-center">Now</span>
                         <span className="text-center">Need</span>
                         <span className="text-center">Jump</span>
                     </div>
 
-                    <div className="space-y-3 mb-8">
+                    <div className="space-y-2 sm:space-y-3 mb-6 sm:mb-8">
                         {recommendations.map((rec, idx) => {
                             const jump = rec.requiredMarks - rec.currentMarks;
                             return (
                                 <div
                                     key={rec.subjectId}
-                                    className={`grid grid-cols-5 gap-2 items-center p-5 rounded-2xl border ${theme.border} bg-black/10 hover:bg-black/20 transition-all duration-300 ${!rec.feasible ? 'opacity-40' : ''}`}
+                                    className={`flex sm:grid sm:grid-cols-5 gap-3 sm:gap-2 items-center p-4 sm:p-5 rounded-2xl border ${theme.border} bg-black/10 hover:bg-black/20 transition-all duration-300 ${!rec.feasible ? 'opacity-40' : ''}`}
                                 >
                                     {/* Subject info */}
                                     <div className="col-span-2 flex items-center gap-4 min-w-0">

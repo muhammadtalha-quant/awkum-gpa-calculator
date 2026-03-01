@@ -94,7 +94,7 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
   const isExportUnlocked = allCodesFilled && isCalculated;
 
   return (
-    <div className={`${theme.card} rounded-3xl p-8 shadow-2xl border ${theme.border} relative overflow-hidden`}>
+    <div className={`${theme.card} rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-2xl border ${theme.border} relative overflow-hidden`}>
       {/* Modals */}
       <UserInfoModal
         isOpen={isExportModalOpen}
@@ -120,8 +120,8 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
       />
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
-        <h2 className="text-sm font-black uppercase tracking-[0.3em] opacity-40">Subject Entry</h2>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+        <h2 className="text-xs sm:text-sm font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] opacity-40">Subject Entry</h2>
         <button onClick={resetAll} className="text-red-500 text-[10px] font-black uppercase tracking-widest hover:opacity-70 transition-colors">CLEAR ALL</button>
       </div>
 
@@ -167,10 +167,10 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
       )}
 
       {/* Actions */}
-      <div className="flex flex-wrap gap-4 items-center mt-10">
+      <div className="flex flex-wrap gap-3 sm:gap-4 items-center mt-8 sm:mt-10">
         <button
           onClick={calculateTotal}
-          className={`px-10 py-4 text-white font-black uppercase tracking-[0.2em] rounded-2xl hover:opacity-90 shadow-xl transition-all active:scale-95 ${theme.primary}`}
+          className={`w-full sm:w-auto px-6 sm:px-10 py-3 sm:py-4 text-white font-black uppercase tracking-wider sm:tracking-[0.2em] rounded-2xl hover:opacity-90 shadow-xl transition-all active:scale-95 text-xs sm:text-sm ${theme.primary}`}
         >
           Calculate SGPA
         </button>
@@ -198,10 +198,10 @@ const SGPACalculator: React.FC<Props> = ({ theme }) => {
       )}
 
       {isCalculated && (
-        <div className={`rounded-[2.5rem] p-10 text-center text-white transform transition-all animate-in zoom-in mt-8 ${theme.primary} shadow-2xl shadow-blue-500/30 border border-white/10`}>
-          <p className="text-[10px] uppercase tracking-[0.4em] font-black opacity-60 mb-4">Semester Performance Index</p>
+        <div className={`rounded-2xl sm:rounded-[2.5rem] p-6 sm:p-10 text-center text-white transform transition-all animate-in zoom-in mt-6 sm:mt-8 ${theme.primary} shadow-2xl shadow-blue-500/30 border border-white/10`}>
+          <p className="text-[10px] uppercase tracking-[0.3em] sm:tracking-[0.4em] font-black opacity-60 mb-3 sm:mb-4">Semester Performance Index</p>
           <div className="flex flex-col items-center">
-            <h3 className="text-8xl font-black mb-4 tracking-tighter drop-shadow-lg">{Number(sgpaValue).toFixed(2)}</h3>
+            <h3 className="text-5xl sm:text-8xl font-black mb-3 sm:mb-4 tracking-tighter drop-shadow-lg">{Number(sgpaValue).toFixed(2)}</h3>
             <div className="bg-white/20 backdrop-blur-md px-8 py-3 rounded-2xl border border-white/20 inline-block">
               <p className="text-xl font-black uppercase tracking-[0.2em]">Grade: {finalGrade}</p>
             </div>

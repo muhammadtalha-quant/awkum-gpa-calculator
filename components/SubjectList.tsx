@@ -112,7 +112,7 @@ const SubjectList: React.FC<Props> = ({ subjects, onUpdate, theme, enableCodes, 
                                         </span>
                                     )}
                                 </div>
-                                <h5 className="text-sm font-bold truncate max-w-[200px]">{sub.name || 'Unnamed Subject'}</h5>
+                                <h5 className="text-sm font-bold truncate">{sub.name || 'Unnamed Subject'}</h5>
                             </div>
 
                             <div className="flex items-center gap-4 sm:gap-6 self-end sm:self-auto">

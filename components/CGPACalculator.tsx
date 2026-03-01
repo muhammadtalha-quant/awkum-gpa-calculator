@@ -1,426 +1,407 @@
 import React, { useState, useEffect } from 'react';
-import { CGPASemester, UserInfo, SGPASubject } from '../types';
-import { getLetterFromGP, calculateGradePoint } from '../utils/gradingLogic';
-import { isValidCourseCode } from '../utils/validation';
+import { UserInfo, GradePoint, Credit, asGP, asCredit, Mark, CGPASemester } from '../src/domain/types';
+import { useAcademicStore } from '../src/domain/store';
+import { getLetterFromGP } from '../src/domain/grading/engine';
+import { calculateCGPA } from '../src/domain/gpa/engine';
+import { isValidCourseCode } from '../src/core/validation';
+import { useKeyboardShortcuts } from '../src/core/useKeyboardShortcuts';
 import { exportCGPA_PDF } from '../services/pdfService';
 import UserInfoModal from './UserInfoModal';
-import SemesterSubjectTable from './SemesterSubjectTable';
+import ProbationAlert from './ProbationAlert';
+import ForecastingTool from './ForecastingTool';
+import AnalyticsDashboard from './AnalyticsDashboard';
+import PredictiveDashboard from './PredictiveDashboard';
+import RetakeOptimizer from './RetakeOptimizer';
+
+import SemesterEntryModal from './SemesterEntryModal';
+import SubjectList from './SubjectList';
+import Pagination from './Pagination';
 
 interface Props {
   theme: any;
 }
 
-const CGPA_MODE_KEY = 'awkum_cgpa_mode_expert_v1';
-
 const CGPACalculator: React.FC<Props> = ({ theme }) => {
-  const [semesters, setSemesters] = useState<CGPASemester[]>([]);
-  const [cgpa, setCgpa] = useState(0);
-  const [overallGrade, setOverallGrade] = useState('F');
+  const { semesters, addSemester, removeSemester, updateSemester, setSemesters } = useAcademicStore();
+
   const [isCalculated, setIsCalculated] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isExpertMode, setIsExpertMode] = useState(false);
   const [isInfoVerified, setIsInfoVerified] = useState(false);
 
+  const [isSemesterModalOpen, setIsSemesterModalOpen] = useState(false);
+  const [editingSemester, setEditingSemester] = useState<{ id: string, sgpa: GradePoint, credits: Credit, name: string } | undefined>(undefined);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const ITEMS_PER_PAGE = 4;
   const MAX_CREDITS = 216;
-  const MIN_ROOM_FOR_ADD = 18;
+  const MIN_ROOM_FOR_ADD = 12;
   const MAX_ROWS = 12;
 
-  // Initial Restore
-  useEffect(() => {
-    // Restore Mode
-    const savedMode = localStorage.getItem(CGPA_MODE_KEY);
-    if (savedMode) {
-      setIsExpertMode(JSON.parse(savedMode));
-    }
-
-    setSemesters([{ id: Date.now().toString(), name: 'Semester 1', sgpa: '', credits: 18, gradeLetter: 'F', isLocked: false, subjects: [] }]);
-  }, []);
-
-
-
-  // Save Mode
-  useEffect(() => {
-    localStorage.setItem(CGPA_MODE_KEY, JSON.stringify(isExpertMode));
-  }, [isExpertMode]);
+  const totalPages = Math.ceil(semesters.length / ITEMS_PER_PAGE);
+  const paginatedSemesters = semesters.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   // Credit Hour Pruning logic for CGPA
   useEffect(() => {
-    // In Expert mode, credits are computed, so we might not want to prune aggressively or we do it based on the computed sum.
-    // The requirement says "inherit all limit rules". 
-    // If expert mode, the credits are derived.
     if (!isExpertMode) {
-      const totalCredits = semesters.reduce((sum: number, s: CGPASemester) => sum + (parseInt(s.credits.toString()) || 0), 0);
+      const totalCredits = semesters.reduce((sum, s) => sum + (Number(s.credits) || 0), 0);
       if (totalCredits > MAX_CREDITS) {
-        setSemesters(prev => {
-          let current = [...prev];
-          let removedCount = 0;
-          while (current.reduce((sum: number, s: CGPASemester) => sum + (parseInt(s.credits.toString()) || 0), 0) > MAX_CREDITS && current.length > 1) {
-            current.pop();
-            removedCount++;
-          }
-
-          if (removedCount > 0) {
-            const msg = removedCount === 1
-              ? "Automatically Deleted Last Column to Maintain the Maximum Credit Hours Limit"
-              : `Automatically Deleted Last ${removedCount} Columns to Maintain the Maximum Credit Hours Limit`;
-            setErrorMsg(msg);
-          }
-          return current;
-        });
+        const current = [...semesters];
+        while (current.reduce((sum, s) => sum + (Number(s.credits) || 0), 0) > MAX_CREDITS && current.length > 1) {
+          current.pop();
+        }
+        setSemesters(current);
+        setErrorMsg("Adjusted semesters to maintain global credit limit.");
       }
     }
-  }, [semesters, isExpertMode]);
+  }, [semesters, isExpertMode, setSemesters]);
 
-  const addRow = () => {
-    const currentTotalCredits = semesters.reduce((sum: number, s: CGPASemester) => sum + (parseInt(s.credits.toString()) || 0), 0);
+  const handleAddRow = () => {
+    const currentTotalCredits = semesters.reduce((sum, s) => sum + (Number(s.credits) || 0), 0);
     if (semesters.length >= MAX_ROWS || (MAX_CREDITS - currentTotalCredits) < MIN_ROOM_FOR_ADD) return;
 
     setErrorMsg('');
-    setSemesters(prev => {
-      const nextNum = prev.length + 1;
-      const newId = (Date.now() + Math.random()).toString();
+    if (isExpertMode) {
+      addSemester();
+    } else {
+      setEditingSemester(undefined);
+      setIsSemesterModalOpen(true);
+    }
+  };
 
-      const newSemester: CGPASemester = {
+  const handleRemoveRow = (id: string) => {
+    setErrorMsg('');
+    if (semesters.length > 1) {
+      removeSemester(id);
+      if (paginatedSemesters.length === 1 && currentPage > 1) {
+        setCurrentPage(currentPage - 1);
+      }
+    } else {
+      setSemesters([]);
+    }
+  };
+
+  const handleOpenSemesterModal = (sem: CGPASemester) => {
+    setEditingSemester({ id: sem.id, sgpa: sem.sgpa, credits: sem.credits, name: sem.name });
+    setIsSemesterModalOpen(true);
+  };
+
+  const handleSemesterSubmit = (data: { sgpa: GradePoint, credits: Credit }) => {
+    if (editingSemester) {
+      updateSemester(editingSemester.id, data);
+      setIsCalculated(false);
+    } else {
+      // Direct Add from Modal
+      const newId = Math.random().toString(36).substr(2, 9);
+      const newName = `Semester ${semesters.length + 1}`;
+      setSemesters([...semesters, {
         id: newId,
-        name: `Semester ${nextNum}`,
-        sgpa: '',
-        credits: 18,
-        gradeLetter: 'F',
-        isLocked: false,
-        subjects: isExpertMode ? [{ id: Date.now().toString(), name: '', code: '', credits: 3, marks: '', gradePoint: 0, gradeLetter: 'F', isLocked: false }] : []
-      };
-
-      return [...prev, newSemester];
-    });
+        name: newName,
+        sgpa: data.sgpa,
+        credits: data.credits,
+        subjects: []
+      }]);
+      setIsCalculated(false);
+    }
   };
 
+  const handleSubjectsUpdate = (semesterId: string, updatedSubjects: any[]) => {
+    const semCredits = updatedSubjects.reduce((sum, s) => sum + (Number(s.credits) || 0), 0);
+    const semSgpa = updatedSubjects.length > 0
+      ? Number((updatedSubjects.reduce((sum, s) => sum + (Number(s.gradePoint) * Number(s.credits)), 0) / semCredits).toFixed(2))
+      : 0;
 
-
-  const removeRow = (id: string) => {
-    setErrorMsg('');
-    setSemesters(prev => {
-      if (prev.length > 1) {
-        const filtered = prev.filter(s => s.id !== id);
-        return filtered.map((s, index) => ({
-          ...s,
-          name: `Semester ${index + 1}`
-        }));
-      }
-      return prev;
+    updateSemester(semesterId, {
+      subjects: updatedSubjects,
+      credits: asCredit(semCredits),
+      sgpa: asGP(semSgpa)
     });
-  };
-
-  const handleInputChange = (id: string, field: keyof CGPASemester, value: string) => {
-    setErrorMsg('');
-    setSemesters(prev => prev.map(s => {
-      if (s.id === id) {
-        let finalVal = value;
-        if (field === 'sgpa') {
-          // Allow digits and a single dot. Check max 4.00
-          if (value === '' || /^\d*\.?\d*$/.test(value)) {
-            if (parseFloat(value) > 4.00) finalVal = '4.00';
-            else finalVal = value;
-          } else {
-            return s; // Ignore invalid char
-          }
-        }
-        if (field === 'credits') {
-          let cleaned = value.replace(/\D/g, '');
-          let num = parseInt(cleaned);
-          if (isNaN(num)) finalVal = '';
-          else { if (num > 21) num = 21; finalVal = num.toString(); }
-        }
-        const updated = { ...s, [field]: finalVal };
-        if (field === 'sgpa' && finalVal !== '') {
-          const val = parseFloat(finalVal);
-          updated.gradeLetter = getLetterFromGP(val);
-        } else if (field === 'sgpa' && finalVal === '') {
-          updated.gradeLetter = 'F';
-        }
-        return updated;
-      }
-      return s;
-    }));
     setIsCalculated(false);
   };
 
-  const handleSubjectsUpdate = (semesterId: string, updatedSubjects: SGPASubject[]) => {
-    setSemesters(prev => prev.map(s => {
-      if (s.id === semesterId) {
-        // Calculate SGPA and Credits for this semester automatically based on subjects
-        let totalWeightedGP = 0;
-        let totalCredits = 0;
-
-        updatedSubjects.forEach((sub: SGPASubject) => {
-          const c = parseInt(sub.credits.toString()) || 0;
-          const gp = sub.gradePoint || 0;
-          totalCredits += c;
-          totalWeightedGP += (gp * c);
-        });
-
-        const semSgpa = totalCredits > 0 ? (totalWeightedGP / totalCredits) : 0;
-
-        return {
-          ...s,
-          subjects: updatedSubjects,
-          credits: totalCredits,
-          sgpa: semSgpa.toFixed(2),
-          gradeLetter: getLetterFromGP(semSgpa)
-        };
-      }
-      return s;
-    }));
-    setIsCalculated(false);
-  };
-
-  const handleBlur = (id: string, field: keyof CGPASemester, value: string) => {
-    setSemesters(prev => prev.map(s => {
-      if (s.id === id) {
-        let corrected = value;
-        if (field === 'sgpa') {
-          const val = parseFloat(value);
-          if (!isNaN(val)) corrected = val.toFixed(2);
-          else corrected = '0.00';
-        }
-        if (field === 'credits') {
-          let num = parseInt(value);
-          if (isNaN(num)) num = 18;
-          if (num < 12) num = 12;
-          if (num > 21) num = 21;
-          corrected = num.toString();
-        }
-        return { ...s, [field]: corrected };
-      }
-      return s;
-    }));
-  };
+  const cgpaValue = calculateCGPA(semesters.map(s => ({ sgpa: s.sgpa, credits: s.credits })));
+  const overallGrade = getLetterFromGP(cgpaValue);
 
   const calculateTotal = () => {
     setErrorMsg('');
-    let totalWeightedSGPA = 0;
-    let totalCredits = 0;
-    let hasError = false;
-
-    // Use current state logic
-    semesters.forEach(s => {
-      const gpa = parseFloat(s.sgpa.toString());
-      const credits = parseInt(s.credits.toString());
-
-      // Validation slightly differs for Expert Mode? 
-      // User said "inherit limit rules". 
-      // In Expert Mode, credits are sum of subjects. Range 2-21 mostly covered by Subject constraints (2-6 per subject).
-      // But SGPA check 0-4.00 is same.
-
-      if (isNaN(gpa) || gpa < 0 || gpa > 4.00 || isNaN(credits)) {
-        // Quick mode has Credit limits 12-21. Expert mode involves summing subjects.
-        // Expert Mode: Validation is on the subjects. If subjects are valid (Marks 0-100), GPA is valid.
-        // Is there a minimum credit limit for a semester in Expert Mode? 
-        // Original SGPA tab doesn't strictly enforce min total credits for calculation but Quick Mode CGPA does (12-21).
-        // Let's assume valid subjects imply valid semester.
-        hasError = true;
-      } else {
-        if (!isExpertMode && (credits < 12 || credits > 21)) {
-          hasError = true;
-        } else {
-          totalWeightedSGPA += (gpa * credits);
-          totalCredits += credits;
-        }
-      }
-    });
-
-    if (hasError || totalCredits === 0) {
-      setErrorMsg(isExpertMode
-        ? "Please ensure all subjects in every semester are filled correctly."
-        : "Check inputs: SGPA (0-4.00) and Credits (12-21) are required for all semesters.");
+    if (semesters.length === 0) {
+      setErrorMsg("Please add at least one semester to calculate CGPA.");
       return;
     }
-    const res = totalWeightedSGPA / totalCredits;
-    setCgpa(res);
-    setOverallGrade(getLetterFromGP(res));
+    const hasError = semesters.some(s => {
+      if (isExpertMode) {
+        return !s.subjects || s.subjects.length === 0 || s.subjects.some(sub => sub.name === '' || sub.marks === '');
+      }
+      return Number(s.sgpa) === 0 || Number(s.credits) === 0;
+    });
+
+    if (hasError) {
+      setErrorMsg(isExpertMode
+        ? "Please ensure all subjects in every semester are filled correctly."
+        : "Please ensure all semesters have valid SGPA and Credits.");
+      return;
+    }
     setIsCalculated(true);
   };
 
   const resetAll = () => {
     setErrorMsg('');
-    const initialSubjects = isExpertMode ? [{ id: Date.now().toString(), name: '', code: '', credits: 3, marks: '', gradePoint: 0, gradeLetter: 'F', isLocked: false }] : [];
-    const initial = [{ id: Date.now().toString(), name: 'Semester 1', sgpa: '', credits: 18, gradeLetter: 'F', isLocked: false, subjects: initialSubjects }];
-    setSemesters(initial);
-    setCgpa(0);
-    setOverallGrade('F');
+    setSemesters([]);
     setIsCalculated(false);
-
+    setIsInfoVerified(false);
+    setCurrentPage(1);
   };
 
   const handlePdfExport = (userInfo: UserInfo) => {
-    exportCGPA_PDF(semesters, cgpa, overallGrade, userInfo);
+    exportCGPA_PDF(semesters, Number(cgpaValue), overallGrade, userInfo);
   };
 
   const toggleMode = (checked: boolean) => {
     setIsExpertMode(checked);
     setIsCalculated(false);
-
-    // If switching to Expert Mode, ensure subjects exist
-    if (checked) {
-      setSemesters(prev => prev.map(s => ({
-        ...s,
-        subjects: (s.subjects && s.subjects.length > 0) ? s.subjects : [{ id: (Date.now() + Math.random()).toString(), name: '', code: '', credits: 3, marks: '', gradePoint: 0, gradeLetter: 'F', isLocked: false }]
-      })));
-    } else {
-      setIsInfoVerified(false);
-    }
+    // Removed auto-semester addition to maintain clean slate
   };
 
-  // Gating for Export Transcript in Expert Mode
-  // "This button should appear if and only if expert mode is enabled and all the inputs are filled and validated"
   const isExpertValid = isExpertMode && semesters.every(sem => {
-    // Check if semester has subjects and all subjects are valid
     if (!sem.subjects || sem.subjects.length === 0) return false;
-    return sem.subjects.every(sub => sub.marks !== '' && sub.credits !== '' && sub.code && isValidCourseCode(sub.code));
+    return sem.subjects.every(sub => sub.marks !== '' && Number(sub.credits) > 0 && sub.code && isValidCourseCode(sub.code));
   });
 
-  const showExportButton = isExpertMode ? (isExpertValid && isCalculated && isInfoVerified) : false;
-  // Wait, User said "Remove the Export Transcript Button... in the quick mode." 
-  // "Export Transcript... GATED... should appear if and only if expert mode is enabled..."
-  // So NO Export Transcript in Quick Mode at all? 
-  // "The Export Transcript button should be removed in the quick mode." -> YES.
-  // "This button should appear if and only if expert mode is enabled..." -> YES.
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    'ctrl+n': () => { if (showAddButton) handleAddRow(); },
+    'ctrl+s': () => { if (isExpertMode && showAddButton) handleAddRow(); },
+    'escape': () => {
+      setIsSemesterModalOpen(false);
+      setIsModalOpen(false);
+    }
+  });
 
-  const currentTotalCredits = semesters.reduce((sum: number, s: CGPASemester) => sum + (parseInt(s.credits.toString()) || 0), 0);
+  const showExportButton = isExpertMode && isExpertValid && isCalculated && isInfoVerified;
+  const currentTotalCredits = semesters.reduce((sum: number, s: CGPASemester) => sum + (Number(s.credits) || 0), 0);
   const showAddButton = semesters.length < MAX_ROWS && (MAX_CREDITS - currentTotalCredits) >= MIN_ROOM_FOR_ADD;
 
   return (
-    <div className={`${theme.card} rounded-2xl p-6 shadow-sm border ${theme.border}`}>
+    <div className={`${theme.card} rounded-3xl p-8 shadow-2xl border ${theme.border} relative`}>
       <UserInfoModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSubmit={handlePdfExport} title="Cumulative Grade Sheet Details" isCGPA={true} rowCount={semesters.length} theme={theme} />
 
-      <div className="flex justify-between items-center mb-6">
-        <label className={`flex items-center gap-3 text-xs font-bold uppercase tracking-widest cursor-pointer select-none ${theme.accent}`}>
-          <input
-            type="checkbox"
-            checked={isExpertMode}
-            onChange={e => toggleMode(e.target.checked)}
-            className="themed-checkbox"
-          />
-          {isExpertMode ? 'Quick Mode' : 'Expert Mode'}
-        </label>
-        <button onClick={resetAll} className="text-red-500 text-[10px] font-black uppercase tracking-widest hover:opacity-70 transition-colors">CLEAR ALL</button>
+      <SemesterEntryModal
+        isOpen={isSemesterModalOpen}
+        onClose={() => setIsSemesterModalOpen(false)}
+        onSubmit={handleSemesterSubmit}
+        initialData={editingSemester}
+        theme={theme}
+      />
+
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-6 mb-10">
+        <h2 className="text-sm font-black uppercase tracking-[0.3em] opacity-40">Cumulative Assessment</h2>
+        <div className="flex items-center gap-6">
+          <label className={`flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.2em] cursor-pointer select-none ${theme.accent}`}>
+            <div className={`relative w-12 h-6 rounded-full transition-all duration-500 bg-black/10 border ${theme.border}`}>
+              <input
+                type="checkbox"
+                className="sr-only peer"
+                checked={isExpertMode}
+                onChange={e => toggleMode(e.target.checked)}
+              />
+              <div className={`absolute top-1 left-1 w-4 h-4 rounded-full transition-all duration-300 ${isExpertMode ? 'translate-x-6 bg-blue-500 shadow-lg shadow-blue-500/50' : 'bg-gray-400'}`}></div>
+            </div>
+            {isExpertMode ? 'Expert Mode' : 'Quick Mode'}
+          </label>
+          <button onClick={resetAll} className="text-red-500 text-[10px] font-black uppercase tracking-widest hover:opacity-70 transition-colors">RESET ALL DATA</button>
+        </div>
       </div>
 
-      <div className="overflow-x-auto -mx-6 mb-6">
-        {!isExpertMode ? (
-          <table className="w-full text-left min-w-[600px] border-collapse">
-            <thead>
-              <tr className={`bg-black/5 border-y ${theme.border}`}>
-                <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider w-[40%]">Semester Order</th>
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider w-[25%] text-center">Obtained SGPA</th>
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider w-[25%] text-center">Total Credits</th>
-                <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider w-[10%]"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100/10">
-              {semesters.map((sem) => (
-                <tr key={sem.id} className="hover:bg-white/5 transition-colors">
-                  <td className="px-6 py-3">
-                    <input type="text" disabled value={sem.name} className="w-full px-3 py-2 bg-black/5 border border-transparent rounded-lg text-gray-400 font-semibold text-sm cursor-not-allowed" />
-                  </td>
-                  <td className="px-4 py-3">
-                    <input type="text" placeholder="0.00 - 4.00" value={sem.sgpa} onChange={(e) => handleInputChange(sem.id, 'sgpa', e.target.value)} onBlur={(e) => handleBlur(sem.id, 'sgpa', e.target.value)} className={`w-full px-3 py-2 bg-transparent border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-center ${theme.border}`} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <input type="text" placeholder="12 - 21" value={sem.credits} onChange={(e) => handleInputChange(sem.id, 'credits', e.target.value)} onBlur={(e) => handleBlur(sem.id, 'credits', e.target.value)} className={`w-full px-3 py-2 bg-transparent border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-center ${theme.border}`} />
-                  </td>
-                  <td className="px-6 py-3 text-right">
-                    <div className="flex gap-2 justify-end">
-                      <button onClick={() => removeRow(sem.id)} className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 transition-colors" title="Remove Row">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      {semesters.length === 0 ? (
+        <div className={`py-16 text-center border-2 border-dashed ${theme.border} rounded-[2rem] bg-black/5 animate-in fade-in zoom-in mb-8`}>
+          <div className="mb-6 opacity-20">
+            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+          </div>
+          <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-40 mb-4">No Semesters Added</h3>
+          <button
+            onClick={handleAddRow}
+            className={`px-8 py-3 rounded-2xl ${theme.primary} text-white font-black uppercase tracking-widest hover:opacity-90 shadow-lg active:scale-95 transition-all`}
+          >
+            Add Academic Record
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 mb-8">
+          {paginatedSemesters.map((sem) => (
+            <div key={sem.id} className={`p-8 rounded-[2rem] border ${theme.border} bg-white/5 hover:bg-white/10 transition-all duration-500 animate-in slide-in-from-bottom-6`}>
+              {/* Existing semester row content remains Same */}
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-6">
+                <div className="flex items-center gap-4">
+                  <div className={`w-12 h-12 rounded-2xl ${theme.primary} text-white flex items-center justify-center font-black text-xl shadow-lg`}>
+                    {sem.name.match(/\d+/)?.[0] || '?'}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black uppercase tracking-widest">{sem.name}</h3>
+                    <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest">Academic Record</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-8 bg-black/10 px-6 py-3 rounded-2xl border border-white/5">
+                  <div className="text-center">
+                    <p className="text-[8px] font-black uppercase tracking-widest opacity-40 mb-1">Semester SGPA</p>
+                    <p className={`text-2xl font-black ${theme.accent}`}>{Number(sem.sgpa).toFixed(2)}</p>
+                  </div>
+                  <div className="w-px h-8 bg-white/10"></div>
+                  <div className="text-center">
+                    <p className="text-[8px] font-black uppercase tracking-widest opacity-40 mb-1">Total Credits</p>
+                    <p className="text-2xl font-black">{Number(sem.credits)}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    {!isExpertMode && (
+                      <button
+                        onClick={() => handleOpenSemesterModal(sem)}
+                        className="p-3 rounded-xl bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white transition-all shadow-sm"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                       </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <div className="px-6 flex flex-col gap-6">
-            {semesters.map((sem, index) => (
-              <div key={sem.id} className={`p-6 rounded-2xl border ${theme.border} bg-white/5 animate-in fade-in slide-in-from-bottom-2`}>
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-sm font-bold uppercase tracking-widest opacity-80">{sem.name}</h3>
-                  <div className="flex items-center gap-4">
-                    <div className="text-xs font-mono opacity-60">SGPA: <span className={`${theme.accent} font-bold`}>{sem.sgpa || '0.00'}</span></div>
-                    <div className="text-xs font-mono opacity-60">Credits: <span className={`${theme.accent} font-bold`}>{sem.credits || '0'}</span></div>
-                    <button onClick={() => removeRow(sem.id)} className="text-red-400 hover:text-red-600 transition-colors p-1" title="Remove Semester">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    )}
+                    <button
+                      onClick={() => handleRemoveRow(sem.id)}
+                      className="p-3 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                     </button>
                   </div>
                 </div>
-                <SemesterSubjectTable
-                  semesterId={sem.id}
-                  subjects={sem.subjects || []}
-                  onUpdate={handleSubjectsUpdate}
-                  theme={theme}
-                />
               </div>
-            ))}
-          </div>
-        )}
-      </div>
 
-      <div className="flex flex-wrap gap-4 mb-2 items-center">
-        {showAddButton ? (
-          <button onClick={addRow} className={`px-6 py-2.5 bg-transparent border ${theme.border} ${theme.accent} font-medium rounded-full hover:bg-black/5 transition-all flex items-center gap-2`}>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
-            Add Semester
-          </button>
-        ) : (
-          <div className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] bg-blue-500/10 p-3 rounded-full border border-blue-500/20 shadow-sm animate-in fade-in">
-            Maximum Limit of Semesters Reached !
-          </div>
-        )}
+              {isExpertMode && (
+                <div className="mt-8 pt-8 border-t border-white/5 animate-in fade-in duration-700">
+                  <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30 mb-6 ml-1">Subject Breakdown</p>
+                  <SubjectList
+                    subjects={sem.subjects || []}
+                    onUpdate={(subs) => handleSubjectsUpdate(sem.id, subs)}
+                    theme={theme}
+                    enableCodes={true}
+                    maxCredits={21}
+                  />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
-        <button onClick={calculateTotal} className={`px-8 py-2.5 text-white font-semibold rounded-full hover:opacity-90 shadow-sm transition-all ${theme.primary}`}>Calculate CGPA</button>
+      <div className="flex flex-col items-center gap-8">
+        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} theme={theme} />
 
-        {showExportButton && (
-          <button onClick={() => setIsModalOpen(true)} className={`px-6 py-2.5 font-medium rounded-full transition-all flex items-center gap-2 bg-black/10 border ${theme.border} animate-in zoom-in-95`}>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-            Export Transcript
-          </button>
-        )}
+        <div className="flex flex-wrap gap-4 items-center justify-center">
+          {showAddButton ? (
+            <button onClick={handleAddRow} className={`px-8 py-4 bg-transparent border-2 ${theme.border} ${theme.accent} font-black uppercase tracking-widest rounded-2xl hover:bg-black/5 transition-all flex items-center gap-3 active:scale-95`}>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+              Add Semester
+            </button>
+          ) : (
+            <div className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] bg-blue-500/10 px-6 py-4 rounded-2xl border border-blue-500/20 shadow-sm animate-in zoom-in">
+              Degree Credit Limit Reached ({MAX_CREDITS} Hrs)
+            </div>
+          )}
+
+          <button onClick={calculateTotal} className={`px-10 py-4 text-white font-black uppercase tracking-[0.2em] rounded-2xl hover:opacity-90 shadow-2xl transition-all active:scale-95 ${theme.primary}`}>Calculate CGPA</button>
+
+          {showExportButton && (
+            <button onClick={() => setIsModalOpen(true)} className={`px-8 py-4 font-black uppercase tracking-widest rounded-2xl transition-all flex items-center gap-3 bg-white/10 border-2 ${theme.border} hover:bg-white/20 animate-in zoom-in shadow-lg`}>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+              Export Transcript
+            </button>
+          )}
+        </div>
       </div>
 
       {!isExpertMode && (
-        <div className="mt-4 mb-4 text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] bg-blue-500/10 p-3 rounded-xl border border-blue-500/20 w-fit animate-in fade-in">
-          To generate a detailed unofficial transcript, switch to Expert Mode and enter full details of each semester such as subject name, course code, credit hours and marks.
+        <div className="mt-8 text-[10px] font-black text-blue-500 uppercase tracking-[0.3em] bg-blue-500/10 p-6 rounded-[1.5rem] border border-blue-500/20 text-center leading-relaxed max-w-2xl mx-auto shadow-inner">
+          Switch to Expert Mode for a detailed subject-wise breakdown and unofficial transcript generation.
         </div>
       )}
 
       {isExpertMode && (
-        <div className="mt-4 mb-4 flex items-center gap-4 p-5 bg-black/5 rounded-[1.5rem] animate-in slide-in-from-left-4 border border-white/10 shadow-inner w-fit">
+        <div className="mt-8 flex items-center gap-5 p-6 bg-black/5 rounded-[2rem] animate-in slide-in-from-left-4 border border-white/5 shadow-inner max-w-2xl mx-auto">
           <input
             type="checkbox"
             id="confirmInfo"
             checked={isInfoVerified}
             onChange={e => setIsInfoVerified(e.target.checked)}
-            className="themed-checkbox"
+            className="themed-checkbox shadow-md"
           />
           <label htmlFor="confirmInfo" className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80 cursor-pointer select-none leading-relaxed">
-            I confirm that the information entered here is correct to the best of my knowledge and is verified against my MIS Profile.
+            I confirm that the detailed semester records are verified against my MIS Profile.
           </label>
         </div>
       )}
 
       {errorMsg && (
-        <div className="mb-6 flex items-center gap-2 text-red-500 text-xs font-bold bg-red-500/10 p-3 rounded-xl border border-red-500/20 animate-in fade-in slide-in-from-top-1">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        <div className="mt-8 flex items-center gap-4 text-red-500 text-[11px] font-black uppercase tracking-widest bg-red-500/10 p-6 rounded-[2rem] border border-red-500/20 animate-in shake">
+          <svg className="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
           {errorMsg}
         </div>
       )}
+
       {isCalculated && (
-        <div className={`rounded-3xl p-8 text-center text-white transform transition-all animate-in zoom-in-95 mt-4 ${theme.primary}`}>
-          <p className="text-xs uppercase tracking-[0.2em] font-bold opacity-80 mb-2">Cumulative Grade Point Average</p>
-          <h3 className="text-6xl font-black mb-2">{cgpa.toFixed(2)}</h3>
-          <p className="text-xl font-medium opacity-90">Overall Standing: <span className="font-bold border-b-2 border-white/40 px-1">{overallGrade}</span></p>
+        <div className={`rounded-[2.5rem] p-12 text-center text-white transform transition-all animate-in zoom-in mt-10 ${theme.primary} shadow-[0_20px_50px_rgba(59,130,246,0.3)] border border-white/10`}>
+          <p className="text-[10px] uppercase tracking-[0.4em] font-black opacity-60 mb-4">Cumulative Grade Point Average</p>
+          <div className="flex flex-col items-center">
+            <h3 className="text-8xl font-black mb-4 tracking-tighter drop-shadow-2xl">{Number(cgpaValue).toFixed(2)}</h3>
+            <div className="bg-white/20 backdrop-blur-xl px-10 py-4 rounded-2xl border border-white/20 inline-block">
+              <p className="text-2xl font-black uppercase tracking-[0.2em]">Standing: {overallGrade}</p>
+            </div>
+          </div>
+          <div className="mt-8">
+            <ProbationAlert cgpa={Number(cgpaValue)} theme={theme} />
+          </div>
         </div>
+      )}
+
+      <div className="mt-16 pt-12 border-t border-white/5">
+        <IntelligencePanel theme={theme} currentCGPA={Number(cgpaValue)} currentCredits={currentTotalCredits} />
+      </div>
+    </div>
+  );
+};
+
+// --- Intelligence Panel (Tabbed) ---
+const IntelligencePanel: React.FC<{ theme: any; currentCGPA: number; currentCredits: number }> = ({ theme, currentCGPA, currentCredits }) => {
+  const [activeTab, setActiveTab] = useState<'forecast' | 'simulate' | 'retake'>('forecast');
+
+  const tabs = [
+    { id: 'forecast', label: 'Forecasting', icon: '📈' },
+    { id: 'simulate', label: 'Outcome Sim', icon: '🔭' },
+    { id: 'retake', label: 'Retake ROI', icon: '⚡' },
+  ];
+
+  return (
+    <div>
+      {/* Tab Nav */}
+      <div className="flex items-center gap-2 mb-10 overflow-x-auto pb-2">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as any)}
+            className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab.id
+              ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30'
+              : 'opacity-40 hover:opacity-70 hover:bg-black/5'
+              }`}
+          >
+            <span>{tab.icon}</span>
+            <span>{tab.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'forecast' && (
+        <ForecastingTool currentCGPA={currentCGPA} currentCredits={currentCredits} theme={theme} />
+      )}
+      {activeTab === 'simulate' && (
+        <PredictiveDashboard theme={theme} />
+      )}
+      {activeTab === 'retake' && (
+        <RetakeOptimizer theme={theme} />
       )}
     </div>
   );

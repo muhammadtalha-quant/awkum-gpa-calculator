@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import { SGPASubject } from '../types';
-import { calculateGradePoint, getLetterFromGP } from '../utils/gradingLogic';
-import { isValidCourseCode } from '../utils/validation';
+import { SGPASubject, asMark, asCredit, Credit, Mark, GradePoint } from '../src/domain/types';
+import { getLetterFromGP, calculateGradePoint } from '../src/domain/grading/engine';
+import { isValidCourseCode, sanitizeSubjectName } from '../src/core/validation';
 
 interface Props {
     semesterId: string;
@@ -19,11 +19,11 @@ const SemesterSubjectTable: React.FC<Props> = ({ semesterId, subjects, onUpdate,
 
     // Credit Hour Pruning logic
     useEffect(() => {
-        const totalCredits = subjects.reduce((sum, s) => sum + (parseInt(s.credits.toString()) || 0), 0);
+        const totalCredits = subjects.reduce((sum, s) => sum + (Number(s.credits) || 0), 0);
         if (totalCredits > MAX_CREDITS_PER_SEM) {
             let current = [...subjects];
             // Remove subjects from the end until we are within limits
-            while (current.reduce((sum, s) => sum + (parseInt(s.credits.toString()) || 0), 0) > MAX_CREDITS_PER_SEM && current.length > 1) {
+            while (current.reduce((sum, s) => sum + (Number(s.credits) || 0), 0) > MAX_CREDITS_PER_SEM && current.length > 1) {
                 current.pop();
             }
             // Only update if we actually removed something to avoid infinite loops if logic is slightly off
@@ -34,7 +34,7 @@ const SemesterSubjectTable: React.FC<Props> = ({ semesterId, subjects, onUpdate,
     }, [subjects, semesterId]);
 
     const addRow = () => {
-        const currentTotalCredits = subjects.reduce((sum, s) => sum + (parseInt(s.credits.toString()) || 0), 0);
+        const currentTotalCredits = subjects.reduce((sum, s) => sum + (Number(s.credits) || 0), 0);
         // Ensure there is room for at least 3 credits (default new subject credits)
         if (subjects.length >= MAX_ROWS || (MAX_CREDITS_PER_SEM - currentTotalCredits) < 3) return;
 
@@ -43,11 +43,10 @@ const SemesterSubjectTable: React.FC<Props> = ({ semesterId, subjects, onUpdate,
             id: (Date.now() + Math.random()).toString(),
             name: '',
             code: '',
-            credits: 3,
-            marks: '',
-            gradePoint: 0,
+            credits: asCredit(3),
+            marks: '' as Mark | '',
+            gradePoint: 0 as GradePoint,
             gradeLetter: 'F',
-            isLocked: false // Keeping for type compatibility, but effective no-op
         };
 
         onUpdate(semesterId, [...subjects, newSubject]);
@@ -65,13 +64,11 @@ const SemesterSubjectTable: React.FC<Props> = ({ semesterId, subjects, onUpdate,
                 let finalVal = value;
 
                 // Name validation
-                if (field === 'name') finalVal = value.replace(/[^A-Za-z\s]/g, '');
+                if (field === 'name') finalVal = sanitizeSubjectName(value);
 
                 // Code validation
                 if (field === 'code') {
                     finalVal = value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
-                    const dashCount = (finalVal.match(/-/g) || []).length;
-                    if (dashCount > 1) finalVal = finalVal.substring(0, finalVal.lastIndexOf('-'));
                 }
 
                 // Credits validation (0-6)
@@ -88,17 +85,22 @@ const SemesterSubjectTable: React.FC<Props> = ({ semesterId, subjects, onUpdate,
                     else { if (num > 100) num = 100; finalVal = num.toString(); }
                 }
 
-                const updated = { ...s, [field]: finalVal };
+                const updated = { ...s };
+                if (field === 'name') updated.name = finalVal;
+                if (field === 'code') updated.code = finalVal;
+                if (field === 'credits') updated.credits = asCredit(Number(finalVal) || 0);
+                if (field === 'marks') updated.marks = finalVal === '' ? '' : asMark(Number(finalVal));
 
                 // Calculate Grade Point automatically if marks change
-                if (field === 'marks' && finalVal !== '') {
-                    const marks = parseInt(finalVal);
-                    const gp = calculateGradePoint(marks);
-                    updated.gradePoint = gp;
-                    updated.gradeLetter = getLetterFromGP(gp);
-                } else if (field === 'marks' && finalVal === '') {
-                    updated.gradePoint = 0;
-                    updated.gradeLetter = 'F';
+                if (field === 'marks') {
+                    if (updated.marks !== '') {
+                        const gp = calculateGradePoint(updated.marks as Mark);
+                        updated.gradePoint = gp;
+                        updated.gradeLetter = getLetterFromGP(gp);
+                    } else {
+                        updated.gradePoint = 0 as GradePoint;
+                        updated.gradeLetter = 'F';
+                    }
                 }
 
                 return updated;

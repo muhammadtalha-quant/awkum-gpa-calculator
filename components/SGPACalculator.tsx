@@ -1,339 +1,217 @@
 import React, { useState, useEffect } from 'react';
-import { SGPASubject, UserInfo } from '../types';
-import { calculateGradePoint, getLetterFromGP } from '../utils/gradingLogic';
-import { isValidCourseCode } from '../utils/validation';
+import { UserInfo, Credit, Mark, GradePoint, SGPASubject } from '../src/domain/types';
+import { useAcademicStore } from '../src/domain/store';
+import { isValidCourseCode } from '../src/core/validation';
 import { exportSGPA_PDF } from '../services/pdfService';
+import { calculateGradePoint } from '../src/domain/grading/engine';
 import UserInfoModal from './UserInfoModal';
+import SubjectEntryModal from './SubjectEntryModal';
+import MISParserModal from './MISParserModal';
+import { calculateSGPA } from '../src/domain/gpa/engine';
+import { getLetterFromGP } from '../src/domain/grading/engine';
+import RequiredMarksTool from './RequiredMarksTool';
+import SubjectList from './SubjectList';
 
 interface Props {
   theme: any;
 }
 
-const SGPA_CONFIG_KEY = 'awkum_sgpa_config_v1';
-
 const SGPACalculator: React.FC<Props> = ({ theme }) => {
-  const [subjects, setSubjects] = useState<SGPASubject[]>([]);
-  const [enableCodes, setEnableCodes] = useState(false);
-  const [codesConfirmed, setCodesConfirmed] = useState(false);
-  const [sgpa, setSgpa] = useState(0);
-  const [finalGrade, setFinalGrade] = useState('F');
+  const { subjects, setSubjects } = useAcademicStore();
+
   const [isCalculated, setIsCalculated] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isSubjectModalOpen, setIsSubjectModalOpen] = useState(false);
+  const [isMISModalOpen, setIsMISModalOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   const MAX_CREDITS = 21;
-  const MIN_ROOM_FOR_ADD = 3;
-  const MAX_ROWS = 7;
-
-  // Initial Restoration
-  useEffect(() => {
-    setSubjects([{ id: Date.now().toString(), name: '', code: '', credits: 3, marks: '', gradePoint: 0, gradeLetter: 'F', isLocked: false }]);
-
-    const savedConfig = localStorage.getItem(SGPA_CONFIG_KEY);
-    if (savedConfig) {
-      try {
-        const config = JSON.parse(savedConfig);
-        setEnableCodes(!!config.enableCodes);
-        setCodesConfirmed(!!config.codesConfirmed);
-      } catch (e) { /* ignore */ }
-    }
-  }, []);
-
-
 
   // Credit Hour Pruning logic
   useEffect(() => {
-    const totalCredits = subjects.reduce((sum, s) => sum + (parseInt(s.credits.toString()) || 0), 0);
+    const totalCredits = subjects.reduce((sum, s) => sum + (Number(s.credits) || 0), 0);
     if (totalCredits > MAX_CREDITS) {
-      setSubjects(prev => {
-        let current = [...prev];
-        let removedCount = 0;
-        while (current.reduce((sum, s) => sum + (parseInt(s.credits.toString()) || 0), 0) > MAX_CREDITS && current.length > 1) {
-          current.pop();
-          removedCount++;
-        }
-
-        if (removedCount > 0) {
-          const msg = removedCount === 1
-            ? "Automatically Deleted Last Column to Maintain the Maximum Credit Hours Limit"
-            : `Automatically Deleted Last ${removedCount} Columns to Maintain the Maximum Credit Hours Limit`;
-          setErrorMsg(msg);
-        }
-        return current;
-      });
-    }
-  }, [subjects]);
-
-  // Continuous Auto-Save for Config (Checkboxes)
-  useEffect(() => {
-    localStorage.setItem(SGPA_CONFIG_KEY, JSON.stringify({ enableCodes, codesConfirmed }));
-  }, [enableCodes, codesConfirmed]);
-
-  const addRow = () => {
-    const currentTotalCredits = subjects.reduce((sum, s) => sum + (parseInt(s.credits.toString()) || 0), 0);
-    if (subjects.length >= MAX_ROWS || (MAX_CREDITS - currentTotalCredits) < MIN_ROOM_FOR_ADD) return;
-
-    setErrorMsg('');
-    setSubjects(prev => {
-      const newId = (Date.now() + Math.random()).toString();
-      return [...prev, { id: newId, name: '', code: '', credits: 3, marks: '', gradePoint: 0, gradeLetter: 'F', isLocked: false }];
-    });
-  };
-
-
-
-  const removeRow = (id: string) => {
-    setErrorMsg('');
-    setSubjects(prev => {
-      if (prev.length > 1) {
-        return prev.filter(s => s.id !== id);
+      const current = [...subjects];
+      while (current.reduce((sum, s) => sum + (Number(s.credits) || 0), 0) > MAX_CREDITS && current.length > 1) {
+        current.pop();
       }
-      return prev;
-    });
-  };
-
-  const handleInputChange = (id: string, field: keyof SGPASubject, value: string) => {
-    setErrorMsg('');
-    setSubjects(prev => prev.map(s => {
-      if (s.id === id) {
-        let finalVal = value;
-        if (field === 'name') finalVal = value.replace(/[^A-Za-z\s]/g, '');
-        if (field === 'code') {
-          finalVal = value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
-          const dashCount = (finalVal.match(/-/g) || []).length;
-          if (dashCount > 1) finalVal = finalVal.substring(0, finalVal.lastIndexOf('-'));
-        }
-        if (field === 'credits') {
-          let num = parseInt(value.replace(/\D/g, ''));
-          if (isNaN(num)) finalVal = '';
-          else { if (num > 6) num = 6; finalVal = num.toString(); }
-        }
-        if (field === 'marks') {
-          let num = parseInt(value.replace(/\D/g, ''));
-          if (isNaN(num)) finalVal = '';
-          else { if (num > 100) num = 100; finalVal = num.toString(); }
-        }
-        const updated = { ...s, [field]: finalVal };
-        if (field === 'marks' && finalVal !== '') {
-          const marks = parseInt(finalVal);
-          const gp = calculateGradePoint(marks);
-          updated.gradePoint = gp;
-          updated.gradeLetter = getLetterFromGP(gp);
-        } else if (field === 'marks' && finalVal === '') {
-          updated.gradePoint = 0;
-          updated.gradeLetter = 'F';
-        }
-        return updated;
-      }
-      return s;
-    }));
-    setIsCalculated(false);
-  };
-
-  const handleBlur = (id: string, field: keyof SGPASubject, value: string) => {
-    if (field === 'credits') {
-      const num = parseInt(value);
-      if (isNaN(num) || num < 2) handleInputChange(id, 'credits', '2');
+      setSubjects(current);
+      setErrorMsg("Automatically adjusted subjects to maintain the 21-credit hour limit.");
     }
-  };
-
-  const calculateTotal = () => {
-    setErrorMsg('');
-    let totalWeightedGP = 0;
-    let totalCredits = 0;
-    let hasError = false;
-    subjects.forEach(s => {
-      const credits = parseInt(s.credits.toString());
-      const marks = parseInt(s.marks.toString());
-      if (isNaN(credits) || credits < 2 || credits > 6 || isNaN(marks) || marks < 0 || marks > 100) {
-        hasError = true;
-      } else {
-        totalWeightedGP += (s.gradePoint * credits);
-        totalCredits += credits;
-      }
-    });
-    if (hasError || totalCredits === 0) {
-      setErrorMsg("Please ensure all subjects have valid credits (2-6) and marks (0-100).");
-      return;
-    }
-    const res = totalWeightedGP / totalCredits;
-    setSgpa(res);
-    setFinalGrade(getLetterFromGP(res));
-    setIsCalculated(true);
-  };
+  }, [subjects, setSubjects]);
 
   const resetAll = () => {
     setErrorMsg('');
-    const initial = [{ id: Date.now().toString(), name: '', code: '', credits: 3, marks: '', gradePoint: 0, gradeLetter: 'F', isLocked: false }];
-    setSubjects(initial);
-    setSgpa(0);
-    setFinalGrade('F');
+    setSubjects([]);
     setIsCalculated(false);
-    setCodesConfirmed(false);
+  };
 
-    localStorage.removeItem(SGPA_CONFIG_KEY);
+  const handleSubjectSubmit = (data: Partial<SGPASubject>) => {
+    const gp = data.gradePoint ?? (data.marks !== undefined && data.marks !== '' ? calculateGradePoint(data.marks as Mark) : 0 as GradePoint);
+    const newSub: SGPASubject = {
+      id: (Date.now() + Math.random()).toString(),
+      name: data.name || '',
+      code: data.code || '',
+      credits: (data.credits || 3) as Credit,
+      marks: (data.marks || 0) as Mark,
+      gradePoint: gp,
+      gradeLetter: data.gradeLetter || getLetterFromGP(gp)
+    };
+    setSubjects([...subjects, newSub]);
+    setIsCalculated(false);
+  };
+
+  const handleMISImport = (imported: SGPASubject[]) => {
+    const merged = [...subjects];
+    for (const imp of imported) {
+      const idx = merged.findIndex(s => s.code === imp.code);
+      if (idx >= 0) merged[idx] = imp;
+      else merged.push(imp);
+    }
+    setSubjects(merged);
+    setIsCalculated(false);
+  };
+
+  const sgpaValue = calculateSGPA(subjects.map(s => ({ gradePoint: s.gradePoint, credits: s.credits })));
+  const finalGrade = getLetterFromGP(sgpaValue);
+
+  const calculateTotal = () => {
+    setErrorMsg('');
+    const hasIncomplete = subjects.some(s => s.name === '' || s.marks === '');
+    if (hasIncomplete) {
+      setErrorMsg("Please fill in names and marks for all subjects before calculating.");
+      return;
+    }
+    setIsCalculated(true);
   };
 
   const handlePdfExport = (userInfo: UserInfo) => {
-    let finalSgpa = sgpa;
-    let finalLetter = finalGrade;
-    if (!isCalculated) {
-      let totalWeightedGP = 0;
-      let totalCredits = 0;
-      subjects.forEach(s => {
-        totalWeightedGP += (s.gradePoint * (parseInt(s.credits.toString()) || 0));
-        totalCredits += (parseInt(s.credits.toString()) || 0);
-      });
-      finalSgpa = totalCredits > 0 ? totalWeightedGP / totalCredits : 0;
-      finalLetter = getLetterFromGP(finalSgpa);
-    }
-    exportSGPA_PDF(subjects, finalSgpa, finalLetter, userInfo);
+    exportSGPA_PDF(subjects, Number(sgpaValue), finalGrade, userInfo);
   };
 
-  const allCodesFilled = enableCodes && subjects.every(s => s.code && isValidCourseCode(s.code));
-  const isExportUnlocked = enableCodes && allCodesFilled && codesConfirmed;
-
-  const currentTotalCredits = subjects.reduce((sum, s) => sum + (parseInt(s.credits.toString()) || 0), 0);
-  const showAddButton = subjects.length < MAX_ROWS && (MAX_CREDITS - currentTotalCredits) >= MIN_ROOM_FOR_ADD;
+  // Export unlocked when all subjects have valid course codes and calculation is done
+  const allCodesFilled = subjects.every(s => s.code && isValidCourseCode(s.code));
+  const isExportUnlocked = allCodesFilled && isCalculated;
 
   return (
-    <div className={`${theme.card} rounded-2xl p-6 shadow-sm border ${theme.border}`}>
+    <div className={`${theme.card} rounded-3xl p-8 shadow-2xl border ${theme.border} relative overflow-hidden`}>
+      {/* Modals */}
       <UserInfoModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
         onSubmit={handlePdfExport}
         title="Semester Grade Sheet Details"
         theme={theme}
       />
+      <SubjectEntryModal
+        isOpen={isSubjectModalOpen}
+        onClose={() => setIsSubjectModalOpen(false)}
+        onSubmit={handleSubjectSubmit}
+        initialData={undefined}
+        theme={theme}
+        enableCodes={true}
+      />
+      <MISParserModal
+        isOpen={isMISModalOpen}
+        onClose={() => setIsMISModalOpen(false)}
+        onImport={handleMISImport}
+        existingSubjectCodes={subjects.map(s => s.code || '').filter(Boolean)}
+        theme={theme}
+      />
 
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-4">
-          <label className={`flex items-center gap-3 text-xs font-bold uppercase tracking-widest cursor-pointer select-none ${theme.accent}`}>
-            <input
-              type="checkbox"
-              checked={enableCodes}
-              onChange={e => setEnableCodes(e.target.checked)}
-              className="themed-checkbox"
-            />
-            {enableCodes ? 'Disable Course Codes' : 'Enable Course Codes'}
-          </label>
-        </div>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
+        <h2 className="text-sm font-black uppercase tracking-[0.3em] opacity-40">Subject Entry</h2>
         <button onClick={resetAll} className="text-red-500 text-[10px] font-black uppercase tracking-widest hover:opacity-70 transition-colors">CLEAR ALL</button>
       </div>
 
-      <div className="overflow-x-auto -mx-6 mb-6">
-        <table className="w-full text-left min-w-[700px] border-collapse">
-          <thead>
-            <tr className={`bg-black/5 border-y ${theme.border}`}>
-              <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider w-[25%]">Subject</th>
-              {enableCodes && <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider w-[15%]">Code</th>}
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider w-[10%] text-center">Credits</th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider w-[10%] text-center">Marks</th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider w-[15%] text-center">Grade Point</th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider w-[10%] text-center">Grade</th>
-              <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider w-[15%]"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100/10">
-            {subjects.map((sub) => (
-              <tr key={sub.id} className="hover:bg-white/5 transition-colors">
-                <td className="px-6 py-3">
-                  <input type="text" placeholder="Subject Name" value={sub.name} onChange={(e) => handleInputChange(sub.id, 'name', e.target.value)} className={`w-full px-3 py-2 bg-transparent border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm ${theme.border}`} />
-                </td>
-                {enableCodes && (
-                  <td className="px-4 py-3">
-                    <input
-                      type="text"
-                      placeholder="e.g. CS-113"
-                      value={sub.code}
-                      onChange={(e) => handleInputChange(sub.id, 'code', e.target.value)}
-                      onBlur={(e) => handleBlur(sub.id, 'code', e.target.value)}
-                      className={`w-full px-3 py-2 bg-transparent border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm ${sub.code && !isValidCourseCode(sub.code) ? 'border-red-500 focus:ring-red-500' : theme.border
-                        }`}
-                    />
-                  </td>
-                )}
-                <td className="px-4 py-3">
-                  <input type="text" placeholder="3" value={sub.credits} onChange={(e) => handleInputChange(sub.id, 'credits', e.target.value)} onBlur={(e) => handleBlur(sub.id, 'credits', e.target.value)} className={`w-full px-3 py-2 bg-transparent border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-center ${theme.border}`} />
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <input type="text" placeholder="0-100" value={sub.marks} onChange={(e) => handleInputChange(sub.id, 'marks', e.target.value)} className={`w-full px-3 py-2 bg-transparent border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-center ${theme.border}`} />
-                </td>
-                <td className={`px-4 py-3 font-mono font-semibold text-sm text-center ${theme.accent}`}>{sub.gradePoint.toFixed(2)}</td>
-                <td className="px-4 py-3 font-bold text-sm text-center">{sub.gradeLetter}</td>
-                <td className="px-6 py-3 text-right">
-                  <div className="flex gap-2 justify-end">
-
-                    <button onClick={() => removeRow(sub.id)} className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 transition-colors" title="Remove Row">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap gap-4 items-center">
-          {showAddButton ? (
-            <button onClick={addRow} className={`px-6 py-2.5 bg-transparent border ${theme.border} ${theme.accent} font-medium rounded-full hover:bg-black/5 transition-all flex items-center gap-2`}>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
-              Add Subject
+      {/* Subject list or empty state */}
+      {subjects.length === 0 ? (
+        <div className={`py-16 text-center border-2 border-dashed ${theme.border} rounded-[2rem] bg-black/5 animate-in fade-in zoom-in`}>
+          <div className="mb-6 opacity-20">
+            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+          </div>
+          <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-40 mb-6">No Subjects Added Yet</h3>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <button
+              onClick={() => setIsSubjectModalOpen(true)}
+              className={`px-8 py-3 rounded-2xl ${theme.primary} text-white font-black uppercase tracking-widest hover:opacity-90 shadow-lg active:scale-95 transition-all`}
+            >
+              Add Subject Manually
             </button>
-          ) : (
-            <div className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] bg-blue-500/10 p-3 rounded-full border border-blue-500/20 shadow-sm animate-in fade-in">
-              Maximum Limit of Subjects Reached !
-            </div>
-          )}
-
-          <button onClick={calculateTotal} className={`px-8 py-2.5 text-white font-semibold rounded-full hover:opacity-90 shadow-sm transition-all ${theme.primary}`}>Calculate SGPA</button>
-
-          {isExportUnlocked && (
-            <button onClick={() => setIsModalOpen(true)} className={`px-6 py-2.5 font-medium rounded-full transition-all flex items-center gap-2 bg-black/10 border ${theme.border} animate-in zoom-in-95`}>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-              Export DMC
+            <button
+              onClick={() => setIsMISModalOpen(true)}
+              className="px-8 py-3 rounded-2xl border-2 border-purple-500/40 text-purple-400 font-black uppercase tracking-widest hover:bg-purple-500/10 active:scale-95 transition-all flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              Paste from MIS
             </button>
-          )}
+          </div>
         </div>
+      ) : (
+        <SubjectList
+          subjects={subjects}
+          onUpdate={(newSubs: SGPASubject[]) => {
+            setSubjects(newSubs);
+            setIsCalculated(false);
+            setErrorMsg('');
+          }}
+          theme={theme}
+          enableCodes={true}
+          maxCredits={MAX_CREDITS}
+        />
+      )}
 
-        {enableCodes && (
-          <div className="flex items-center gap-4 p-5 bg-black/5 rounded-[1.5rem] animate-in slide-in-from-left-4 border border-white/10 shadow-inner">
-            <input
-              type="checkbox"
-              id="confirmCodes"
-              checked={codesConfirmed}
-              onChange={e => setCodesConfirmed(e.target.checked)}
-              className="themed-checkbox"
-            />
-            <label htmlFor="confirmCodes" className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80 cursor-pointer select-none leading-relaxed">
-              I confirm these course codes are correct according my MIS Profile.
-            </label>
-          </div>
-        )}
+      {/* Actions */}
+      <div className="flex flex-wrap gap-4 items-center mt-10">
+        <button
+          onClick={calculateTotal}
+          className={`px-10 py-4 text-white font-black uppercase tracking-[0.2em] rounded-2xl hover:opacity-90 shadow-xl transition-all active:scale-95 ${theme.primary}`}
+        >
+          Calculate SGPA
+        </button>
 
-        {!enableCodes && (
-          <div className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] bg-blue-500/10 p-3 rounded-xl border border-blue-500/20 self-start">
-            To generate an unofficial DMC, enable course codes and fill the codes correctly (e.g. CS-123).
-          </div>
+        {isExportUnlocked && (
+          <button
+            onClick={() => setIsExportModalOpen(true)}
+            className={`px-8 py-4 font-black uppercase tracking-widest rounded-2xl transition-all flex items-center gap-3 bg-white/10 border-2 ${theme.border} hover:bg-white/20 animate-in zoom-in`}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            Export DMC
+          </button>
         )}
       </div>
 
       {errorMsg && (
-        <div className="mt-6 flex items-center gap-2 text-red-500 text-xs font-bold bg-red-500/10 p-4 rounded-2xl border border-red-500/20 animate-in fade-in slide-in-from-top-1">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        <div className="mt-8 flex items-center gap-3 text-red-500 text-[11px] font-black uppercase tracking-widest bg-red-500/10 p-5 rounded-3xl border border-red-500/20 animate-in shake duration-500">
+          <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+          </svg>
           {errorMsg}
         </div>
       )}
 
       {isCalculated && (
-        <div className={`rounded-3xl p-8 text-center text-white transform transition-all animate-in fade-in slide-in-from-bottom-4 mt-4 ${theme.primary} shadow-xl`}>
-          <p className="text-xs uppercase tracking-[0.3em] font-bold opacity-80 mb-2">Semester Grade Point Average</p>
-          <h3 className="text-7xl font-black mb-2 tracking-tighter">{sgpa.toFixed(2)}</h3>
-          <p className="text-xl font-medium opacity-90 uppercase tracking-widest">Grade: <span className="font-black border-b-4 border-white/30 px-2">{finalGrade}</span></p>
+        <div className={`rounded-[2.5rem] p-10 text-center text-white transform transition-all animate-in zoom-in mt-8 ${theme.primary} shadow-2xl shadow-blue-500/30 border border-white/10`}>
+          <p className="text-[10px] uppercase tracking-[0.4em] font-black opacity-60 mb-4">Semester Performance Index</p>
+          <div className="flex flex-col items-center">
+            <h3 className="text-8xl font-black mb-4 tracking-tighter drop-shadow-lg">{Number(sgpaValue).toFixed(2)}</h3>
+            <div className="bg-white/20 backdrop-blur-md px-8 py-3 rounded-2xl border border-white/20 inline-block">
+              <p className="text-xl font-black uppercase tracking-[0.2em]">Grade: {finalGrade}</p>
+            </div>
+          </div>
         </div>
       )}
+
+      <div className="mt-12">
+        <RequiredMarksTool subjects={subjects} theme={theme} />
+      </div>
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { SGPASubject, CGPASemester, UserInfo } from '../types';
+import { SGPASubject, CGPASemester, UserInfo } from '../src/domain/types';
 import { AWKUM_LOGO_URL } from '../constants';
 
 // Extending jsPDF type to include the lastAutoTable property added by the plugin
@@ -183,7 +183,7 @@ export async function exportCGPA_PDF(semesters: CGPASemester[], cgpa: number, gr
       currentY += 8;
 
       const head = [['Course Code', 'Subject Name', 'Credits', 'Marks', 'GP', 'Grade']];
-      const body = (semester.subjects || []).map(s => [
+      const body = (semester.subjects || []).map((s: SGPASubject) => [
         s.code || '-',
         s.name || 'Untitled',
         s.credits,

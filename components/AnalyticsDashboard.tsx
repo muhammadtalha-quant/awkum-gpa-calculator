@@ -4,10 +4,10 @@ import GPATrendChart from '../src/features/analytics/GPATrendChart';
 import GradeDistributionChart from '../src/features/analytics/GradeDistributionChart';
 
 interface Props {
-    theme: any;
+    theme?: any;
 }
 
-const AnalyticsDashboard: React.FC<Props> = ({ theme }) => {
+const AnalyticsDashboard: React.FC<Props> = () => {
     const { semesters } = useAcademicStore();
 
     // Prepare GPA Trend Data
@@ -20,7 +20,7 @@ const AnalyticsDashboard: React.FC<Props> = ({ theme }) => {
 
     if (semesters.length === 0 || trendData.length === 0) {
         return (
-            <div className={`p-8 text-center opacity-50 border-2 border-dashed ${theme.border} rounded-3xl mt-6`}>
+            <div className="p-8 text-center opacity-50 border-2 border-dashed border-[#27272a] rounded-xl mt-6">
                 <p className="text-xs font-bold uppercase tracking-widest">No Analytics Data Available</p>
                 <p className="text-[10px] mt-2 italic">Fill your semester details to see visual performance trends.</p>
             </div>
@@ -37,12 +37,12 @@ const AnalyticsDashboard: React.FC<Props> = ({ theme }) => {
 
             <div className="max-w-2xl mx-auto">
                 {/* GPA Trend */}
-                <div className={`p-8 rounded-[2.5rem] border ${theme.border} bg-white/5 backdrop-blur-sm shadow-xl`}>
+                <div className="p-8 rounded-xl border border-[#27272a] bg-[#121215] backdrop-blur-sm shadow-xl">
                     <h4 className="text-xs font-black uppercase tracking-[0.2em] mb-8 flex items-center gap-3 opacity-60">
                         <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
                         GPA Progression Trend
                     </h4>
-                    <GPATrendChart data={trendData} theme={theme} />
+                    <GPATrendChart data={trendData} theme={null} />
                 </div>
             </div>
         </div>

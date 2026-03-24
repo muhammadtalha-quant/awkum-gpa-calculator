@@ -1,14 +1,13 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#565f89">
+  <meta name="theme-color" content="#09090b">
 
   <!-- Primary SEO -->
-  <title>AWKUM GPA Calculator – SGPA & CGPA Calculator for Abdul Wali Khan University Mardan</title>
-  <meta name="description" content="Free official GPA & CGPA Calculator for AWKUM students. Calculate semester GPA, cumulative GPA, predict outcomes, analyze retake strategies, and export transcripts. 100% client-side, privacy-first.">
+  <title>AWKUM GPA Calculator – SGPA &amp; CGPA Calculator for Abdul Wali Khan University Mardan</title>
+  <meta name="description" content="Free official GPA &amp; CGPA Calculator for AWKUM students. Calculate semester GPA, cumulative GPA, predict outcomes, analyze retake strategies, and export transcripts. 100% client-side, privacy-first.">
   <meta name="keywords" content="AWKUM, GPA Calculator, CGPA Calculator, SGPA, Abdul Wali Khan University Mardan, grade point average, semester GPA, cumulative GPA, retake optimizer, MIS parser, academic calculator, AWKUM students">
   <meta name="author" content="AWKUMIAN">
   <meta name="robots" content="index, follow">
@@ -17,16 +16,16 @@
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://muhammadtalha-quant.github.io/awkum-gpa-calculator/">
-  <meta property="og:title" content="AWKUM GPA Calculator – SGPA & CGPA for Abdul Wali Khan University Mardan">
-  <meta property="og:description" content="Free GPA & CGPA Calculator built exclusively for AWKUM students. Semester GPA, cumulative GPA, outcome simulation, retake strategy engine, MIS bulk import, and PDF transcript export.">
+  <meta property="og:title" content="AWKUM GPA Calculator – SGPA &amp; CGPA for Abdul Wali Khan University Mardan">
+  <meta property="og:description" content="Free GPA &amp; CGPA Calculator built exclusively for AWKUM students. Semester GPA, cumulative GPA, outcome simulation, retake strategy engine, MIS bulk import, and PDF transcript export.">
   <meta property="og:image" content="https://muhammadtalha-quant.github.io/awkum-gpa-calculator/AWKUM.png">
   <meta property="og:site_name" content="AWKUM GPA Calculator">
   <meta property="og:locale" content="en_US">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="AWKUM GPA Calculator – SGPA & CGPA Calculator">
-  <meta name="twitter:description" content="Free GPA & CGPA Calculator for Abdul Wali Khan University Mardan students. Predict outcomes, optimize retakes, export transcripts.">
+  <meta name="twitter:title" content="AWKUM GPA Calculator – SGPA &amp; CGPA Calculator">
+  <meta name="twitter:description" content="Free GPA &amp; CGPA Calculator for Abdul Wali Khan University Mardan students. Predict outcomes, optimize retakes, export transcripts.">
   <meta name="twitter:image" content="https://muhammadtalha-quant.github.io/awkum-gpa-calculator/AWKUM.png">
 
   <!-- JSON-LD Structured Data -->
@@ -58,37 +57,116 @@
   <link rel="icon" type="image/jpeg" href="/favicon.jpg">
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/AWKUM.png">
-  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+
+  <!-- Tailwind with Obsidian config -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'background':                '#09090b',
+            'on-background':             '#fafafa',
+            'surface':                   '#0c0c0f',
+            'surface-dim':               '#0c0c0f',
+            'surface-bright':            '#18181b',
+            'surface-variant':           '#18181b',
+            'surface-container-lowest':  '#09090b',
+            'surface-container-low':     '#0f0f12',
+            'surface-container':         '#121215',
+            'surface-container-high':    '#18181b',
+            'surface-container-highest': '#1e1e22',
+            'on-surface':                '#fafafa',
+            'on-surface-variant':        '#a1a1aa',
+            'outline':                   '#52525b',
+            'outline-variant':           '#27272a',
+            'primary':                   '#a78bfa',
+            'primary-container':         '#7c3aed',
+            'primary-fixed':             '#ede9fe',
+            'primary-fixed-dim':         '#c4b5fd',
+            'on-primary':                '#0a0012',
+            'on-primary-container':      '#ede9fe',
+            'on-primary-fixed':          '#2e1065',
+            'on-primary-fixed-variant':  '#5b21b6',
+            'inverse-primary':           '#5b21b6',
+            'surface-tint':              '#a78bfa',
+            'secondary':                 '#71717a',
+            'secondary-container':       '#27272a',
+            'secondary-fixed':           '#a1a1aa',
+            'secondary-fixed-dim':       '#71717a',
+            'on-secondary':              '#09090b',
+            'on-secondary-container':    '#a1a1aa',
+            'on-secondary-fixed':        '#18181b',
+            'on-secondary-fixed-variant':'#3f3f46',
+            'tertiary':                  '#34d399',
+            'tertiary-container':        '#065f46',
+            'tertiary-fixed':            '#bbf7d0',
+            'tertiary-fixed-dim':        '#6ee7b7',
+            'on-tertiary':               '#001a12',
+            'on-tertiary-container':     '#bbf7d0',
+            'on-tertiary-fixed':         '#003318',
+            'on-tertiary-fixed-variant': '#047857',
+            'error':                     '#ef4444',
+            'error-container':           '#3b1111',
+            'on-error':                  '#1a0000',
+            'on-error-container':        '#fca5a5',
+            'inverse-surface':           '#fafafa',
+            'inverse-on-surface':        '#09090b',
+          },
+          fontFamily: {
+            headline: ['Geist', 'sans-serif'],
+            body:     ['Geist', 'sans-serif'],
+            label:    ['Geist', 'sans-serif'],
+          },
+          borderRadius: {
+            DEFAULT: '0.25rem',
+            lg:      '0.5rem',
+            xl:      '0.75rem',
+            full:    '9999px',
+          },
+        },
+      },
+    };
+  </script>
+
   <style>
-    body {
-      font-family: 'Roboto', sans-serif;
-      background-color: #f3f4f6;
+    * { box-sizing: border-box; }
+    body { font-family: 'Geist', sans-serif; background-color: #09090b; color: #fafafa; }
+
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
     }
+
+    /* Remove number input spinners */
     input::-webkit-outer-spin-button,
-    input::-webkit-inner-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-    .custom-scrollbar::-webkit-scrollbar {
-      width: 6px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-track {
-      background: #f1f1f1;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: #888;
-      border-radius: 10px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: #555;
-    }
+    input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #121215; }
+    ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #52525b; }
+
+    /* View transition */
+    ::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+    ::view-transition-old(root) { z-index: 1; }
+    ::view-transition-new(root) { z-index: 9999; }
+
+    /* Focus ring */
+    *:focus-visible { outline: 2px solid #a78bfa; outline-offset: 2px; }
 
     /* PWA Prompt styles */
     .pwa-hide { display: none !important; }
   </style>
+
 <script type="importmap">
 {
   "imports": {

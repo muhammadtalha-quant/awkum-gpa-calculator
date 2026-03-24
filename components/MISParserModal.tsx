@@ -9,7 +9,7 @@ interface Props {
     onClose: () => void;
     onImport: (subjects: SGPASubject[]) => void;
     existingSubjectCodes: string[];
-    theme: any;
+    theme?: any;
 }
 
 type Step = 'paste' | 'credits' | 'confirm';
@@ -21,7 +21,7 @@ interface SubjectDraft extends ParsedSubject {
 
 const DEFAULT_CREDITS = 3;
 
-const MISParserModal: React.FC<Props> = ({ isOpen, onClose, onImport, existingSubjectCodes, theme }) => {
+const MISParserModal: React.FC<Props> = ({ isOpen, onClose, onImport, existingSubjectCodes }) => {
     const [step, setStep] = useState<Step>('paste');
     const [rawText, setRawText] = useState('');
     const [drafts, setDrafts] = useState<SubjectDraft[]>([]);
@@ -81,10 +81,10 @@ const MISParserModal: React.FC<Props> = ({ isOpen, onClose, onImport, existingSu
     return (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
             {/* Sheet on mobile, centered modal on tablet+ */}
-            <div className={`w-full sm:max-w-2xl max-h-[95vh] sm:max-h-[90vh] flex flex-col rounded-t-[2rem] sm:rounded-[2.5rem] border-t sm:border ${theme.border} ${theme.card} shadow-2xl overflow-hidden`}>
+            <div className="w-full sm:max-w-2xl max-h-[95vh] sm:max-h-[90vh] flex flex-col rounded-t-xl sm:rounded-xl border-t sm:border border-[#27272a] bg-[#121215] shadow-2xl overflow-hidden">
 
                 {/* Header */}
-                <div className={`flex items-center justify-between px-5 sm:px-10 py-5 sm:py-7 border-b ${theme.border} flex-shrink-0`}>
+                <div className="flex items-center justify-between px-5 sm:px-10 py-5 sm:py-7 border-b border-[#27272a] flex-shrink-0">
                     <div>
                         <h2 className="text-sm font-black uppercase tracking-[0.3em] mb-1">MIS Bulk Importer</h2>
                         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
@@ -120,10 +120,10 @@ const MISParserModal: React.FC<Props> = ({ isOpen, onClose, onImport, existingSu
                                 onChange={e => setRawText(e.target.value)}
                                 rows={9}
                                 placeholder={"Paste your MIS result page text here...\n\nExample:\n1  Introduction To Management (SS-306)  Mr. Haider Zaman\n21\n20\n35\n76\n-"}
-                                className={`w-full px-4 sm:px-6 py-4 sm:py-5 rounded-2xl border ${theme.border} bg-black/10 text-sm font-mono resize-none outline-none focus:ring-2 focus:ring-blue-500/30 transition-all placeholder:opacity-20`}
+                                className="w-full px-4 sm:px-6 py-4 sm:py-5 rounded-lg border border-[#27272a] bg-[#18181b] text-sm font-mono resize-none outline-none focus:border-[#a78bfa] transition-all placeholder:opacity-20 text-[#fafafa]"
                             />
                             {rawText.length > 0 && (
-                                <div className={`flex flex-wrap items-center gap-3 px-4 py-3 rounded-2xl border ${theme.border} bg-black/10`}>
+                                <div className="flex flex-wrap items-center gap-3 px-4 py-3 rounded-lg border border-[#27272a] bg-[#18181b]">
                                     <span className={`text-2xl font-black ${detected.length > 0 ? 'text-blue-500' : 'text-red-500'}`}>{detected.length}</span>
                                     <span className="text-[10px] font-black uppercase tracking-widest opacity-50">
                                         {detected.length === 1 ? 'Subject Detected' : 'Subjects Detected'}
@@ -139,7 +139,7 @@ const MISParserModal: React.FC<Props> = ({ isOpen, onClose, onImport, existingSu
                     {/* ── Step 2: Credits ── */}
                     {step === 'credits' && (
                         <div className="space-y-5 animate-in fade-in duration-300">
-                            <div className={`flex flex-wrap items-center gap-3 p-4 rounded-2xl border ${theme.border} bg-blue-500/5`}>
+                            <div className="flex flex-wrap items-center gap-3 p-4 rounded-lg border border-[#27272a] bg-[#a78bfa]/5">
                                 <label className="text-[9px] font-black uppercase tracking-widest opacity-50 flex-1 min-w-[8rem]">
                                     Set all subjects to:
                                 </label>
@@ -148,7 +148,7 @@ const MISParserModal: React.FC<Props> = ({ isOpen, onClose, onImport, existingSu
                                         <button
                                             key={cr}
                                             onClick={() => applyGlobalCredits(cr)}
-                                            className={`w-10 h-10 rounded-xl font-black text-sm border transition-all ${globalCredits === cr ? 'bg-blue-500 text-white border-blue-500' : `${theme.border} hover:bg-black/10`}`}
+                                            className={`w-10 h-10 rounded-lg font-black text-sm border transition-all ${globalCredits === cr ? 'bg-[#a78bfa] text-[#0a0012] border-[#a78bfa]' : 'border-[#27272a] hover:bg-[#18181b] text-[#fafafa]'}`}
                                         >
                                             {cr}
                                         </button>
@@ -157,7 +157,7 @@ const MISParserModal: React.FC<Props> = ({ isOpen, onClose, onImport, existingSu
                             </div>
                             <div className="space-y-2">
                                 {drafts.map(d => (
-                                    <div key={d.code} className={`flex flex-wrap items-center gap-3 px-4 py-3 rounded-xl border ${theme.border} bg-black/10 ${d.isDuplicate ? 'border-orange-500/30' : ''}`}>
+                                    <div key={d.code} className={`flex flex-wrap items-center gap-3 px-4 py-3 rounded-lg border border-[#27272a] bg-[#18181b] ${d.isDuplicate ? 'border-[#f2a100]/30' : ''}`}>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                                                 <span className="text-[9px] font-black text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded">{d.code}</span>
@@ -167,12 +167,12 @@ const MISParserModal: React.FC<Props> = ({ isOpen, onClose, onImport, existingSu
                                         </div>
                                         <div className="flex items-center gap-2 flex-shrink-0">
                                             <span className="text-[9px] opacity-40 font-black hidden sm:block">{d.marks} marks</span>
-                                            <div className={`flex items-center border ${theme.border} rounded-xl overflow-hidden`}>
+                                            <div className="flex items-center border border-[#27272a] rounded-lg overflow-hidden">
                                                 {[1, 2, 3, 4].map(cr => (
                                                     <button
                                                         key={cr}
                                                         onClick={() => updateCredit(d.code, cr)}
-                                                        className={`w-8 h-8 font-black text-xs transition-all ${d.credits === cr ? 'bg-blue-500 text-white' : 'hover:bg-black/10'}`}
+                                                        className={`w-8 h-8 font-black text-xs transition-all ${d.credits === cr ? 'bg-[#a78bfa] text-[#0a0012]' : 'hover:bg-[#27272a] text-[#71717a]'}`}
                                                     >
                                                         {cr}
                                                     </button>
@@ -196,7 +196,7 @@ const MISParserModal: React.FC<Props> = ({ isOpen, onClose, onImport, existingSu
                                     const gp = calculateGradePoint(d.marks as Mark);
                                     const letter = getLetterFromGP(gp);
                                     return (
-                                        <div key={d.code} className={`flex items-center justify-between gap-2 px-4 py-3 rounded-xl border ${theme.border} bg-black/10`}>
+                                        <div key={d.code} className="flex items-center justify-between gap-2 px-4 py-3 rounded-lg border border-[#27272a] bg-[#18181b]">
                                             <div className="flex items-center gap-2 min-w-0 flex-1">
                                                 <span className="text-[9px] font-black text-blue-500 flex-shrink-0">{d.code}</span>
                                                 <span className="text-xs font-bold truncate">{d.name}</span>
@@ -216,7 +216,7 @@ const MISParserModal: React.FC<Props> = ({ isOpen, onClose, onImport, existingSu
                 </div>
 
                 {/* Footer */}
-                <div className={`flex justify-between items-center px-4 sm:px-8 py-4 sm:py-6 border-t ${theme.border} flex-shrink-0`}>
+                <div className="flex justify-between items-center px-4 sm:px-8 py-4 sm:py-6 border-t border-[#27272a] flex-shrink-0">
                     <button
                         onClick={() => step === 'paste' ? handleClose() : setStep(step === 'confirm' ? 'credits' : 'paste')}
                         className="px-4 sm:px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest opacity-40 hover:opacity-80 transition-all"
@@ -227,7 +227,7 @@ const MISParserModal: React.FC<Props> = ({ isOpen, onClose, onImport, existingSu
                         <button
                             disabled={detected.length === 0}
                             onClick={() => toStep('credits')}
-                            className={`px-5 sm:px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${detected.length > 0 ? `${theme.primary} text-white hover:opacity-90 shadow-lg` : 'opacity-20 cursor-not-allowed bg-gray-500 text-white'}`}
+                            className={`px-5 sm:px-8 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${detected.length > 0 ? 'bg-[#a78bfa] text-[#0a0012] hover:opacity-90 shadow-lg' : 'opacity-20 cursor-not-allowed bg-[#27272a] text-[#52525b]'}`}
                         >
                             Next: Credits →
                         </button>
@@ -235,7 +235,7 @@ const MISParserModal: React.FC<Props> = ({ isOpen, onClose, onImport, existingSu
                     {step === 'credits' && (
                         <button
                             onClick={() => toStep('confirm')}
-                            className={`px-5 sm:px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest ${theme.primary} text-white hover:opacity-90 shadow-lg transition-all`}
+                            className="px-5 sm:px-8 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest bg-[#a78bfa] text-[#0a0012] hover:opacity-90 shadow-lg transition-all"
                         >
                             Next: Review →
                         </button>

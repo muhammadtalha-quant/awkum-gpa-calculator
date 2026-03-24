@@ -3,10 +3,10 @@ import { useAcademicStore } from '../src/domain/store';
 import { calculateCGPA, distributeRetakeMarks, RetakeDistributionResult } from '../src/domain/gpa/engine';
 
 interface Props {
-    theme: any;
+    theme?: any;
 }
 
-const RetakeOptimizer: React.FC<Props> = ({ theme }) => {
+const RetakeOptimizer: React.FC<Props> = () => {
     const { semesters } = useAcademicStore();
 
     const currentCGPA = Number(calculateCGPA(semesters.map(s => ({ sgpa: s.sgpa, credits: s.credits }))).toFixed(2));
@@ -16,7 +16,7 @@ const RetakeOptimizer: React.FC<Props> = ({ theme }) => {
 
     if (!hasSubjects) {
         return (
-            <div className={`p-10 text-center border-2 border-dashed ${theme.border} rounded-[2.5rem] bg-black/5`}>
+            <div className="p-10 text-center border-2 border-dashed border-[#27272a] rounded-xl bg-[#121215]">
                 <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30 leading-relaxed">
                     Strategy engine requires Subject-wise data.<br />
                     <span className="opacity-60">Switch to Expert Mode and add subjects to optimize your CGPA.</span>
@@ -37,7 +37,7 @@ const RetakeOptimizer: React.FC<Props> = ({ theme }) => {
     const isNoEligible = result === 'NO_ELIGIBLE';
 
     return (
-        <div className={`p-4 sm:p-8 rounded-[2.5rem] border ${theme.border} bg-white/5 animate-in fade-in duration-700`}>
+        <div className="p-4 sm:p-8 rounded-xl border border-[#27272a] bg-[#121215] animate-in fade-in duration-700">
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                 <div>
@@ -46,7 +46,7 @@ const RetakeOptimizer: React.FC<Props> = ({ theme }) => {
                         Credit-weighted mark distribution across eligible retakes
                     </p>
                 </div>
-                <div className={`flex items-center gap-3 bg-black/10 px-4 py-3 rounded-2xl border ${theme.border} self-start`}>
+                <div className="flex items-center gap-3 bg-[#18181b] px-4 py-3 rounded-lg border border-[#27272a] self-start">
                     <label className="text-[9px] font-black uppercase tracking-widest opacity-40">Target CGPA</label>
                     <input
                         type="number"
@@ -82,7 +82,7 @@ const RetakeOptimizer: React.FC<Props> = ({ theme }) => {
                 </div>
             )}
             {isNoEligible && (
-                <div className={`p-10 text-center border-2 border-dashed ${theme.border} rounded-[2.5rem] bg-green-500/5`}>
+                <div className="p-10 text-center border-2 border-dashed border-[#27272a] rounded-xl bg-[#34d399]/5">
                     <p className="text-[10px] font-black uppercase tracking-[0.3em] text-green-500/60 leading-relaxed">
                         No eligible retakes found.<br />
                         <span className="opacity-60 normal-case tracking-normal">Subjects with marks ≥ 60 are ineligible under AWKUM policy.</span>
@@ -107,7 +107,7 @@ const RetakeOptimizer: React.FC<Props> = ({ theme }) => {
                             return (
                                 <div
                                     key={rec.subjectId}
-                                    className={`flex sm:grid sm:grid-cols-5 gap-3 sm:gap-2 items-center p-4 sm:p-5 rounded-2xl border ${theme.border} bg-black/10 hover:bg-black/20 transition-all duration-300 ${!rec.feasible ? 'opacity-40' : ''}`}
+                                    className={`flex sm:grid sm:grid-cols-5 gap-3 sm:gap-2 items-center p-4 sm:p-5 rounded-xl border border-[#27272a] bg-[#18181b] hover:bg-[#27272a] transition-all duration-300 ${!rec.feasible ? 'opacity-40' : ''}`}
                                 >
                                     {/* Subject info */}
                                     <div className="col-span-2 flex items-center gap-4 min-w-0">

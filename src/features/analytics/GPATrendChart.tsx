@@ -13,18 +13,18 @@ import {
 
 interface Props {
     data: { name: string; sgpa: number }[];
-    theme: any;
+    theme?: any;
 }
 
-const GPATrendChart: React.FC<Props> = ({ data, theme }) => {
+const GPATrendChart: React.FC<Props> = ({ data }) => {
     return (
         <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
                         <linearGradient id="colorSgpa" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor={theme.primary?.split(' ')[0] === 'bg-black' ? '#ffffff' : '#3b82f6'} stopOpacity={0.3} />
-                            <stop offset="95%" stopColor={theme.primary?.split(' ')[0] === 'bg-black' ? '#ffffff' : '#3b82f6'} stopOpacity={0} />
+                            <stop offset="5%" stopColor="#a78bfa" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#a78bfa" stopOpacity={0} />
                         </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
@@ -54,7 +54,7 @@ const GPATrendChart: React.FC<Props> = ({ data, theme }) => {
                     <Area
                         type="monotone"
                         dataKey="sgpa"
-                        stroke={theme.primary?.split(' ')[0] === 'bg-black' ? '#ffffff' : '#3b82f6'}
+                        stroke="#a78bfa"
                         strokeWidth={3}
                         fillOpacity={1}
                         fill="url(#colorSgpa)"

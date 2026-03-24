@@ -4,10 +4,10 @@ import { calculateRequiredSGPA } from '../src/domain/gpa/engine';
 interface Props {
     currentCGPA: number;
     currentCredits: number;
-    theme: any;
+    theme?: any;
 }
 
-const ForecastingTool: React.FC<Props> = ({ currentCGPA, currentCredits, theme }) => {
+const ForecastingTool: React.FC<Props> = ({ currentCGPA, currentCredits }) => {
     const [targetCGPA, setTargetCGPA] = useState<string>('');
     const [nextCredits, setNextCredits] = useState<number>(18);
     const [result, setResult] = useState<number | null | 'IMPOSSIBLE' | 'ACHIEVED'>(null);
@@ -21,9 +21,9 @@ const ForecastingTool: React.FC<Props> = ({ currentCGPA, currentCredits, theme }
     };
 
     return (
-        <div className={`mt-6 p-6 rounded-3xl border ${theme.border} bg-black/5 animate-in zoom-in-95`}>
-            <h3 className="text-sm font-bold uppercase tracking-widest mb-4 opacity-80 flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+        <div className="p-6 rounded-xl border border-[#27272a] bg-[#121215] animate-in zoom-in-95">
+            <h3 className="text-sm font-bold text-[#fafafa] uppercase tracking-wider mb-4 flex items-center gap-2">
+                <span className="material-symbols-outlined text-[#a78bfa] text-[18px]">trending_up</span>
                 GPA Forecasting Tool
             </h3>
 
@@ -35,7 +35,7 @@ const ForecastingTool: React.FC<Props> = ({ currentCGPA, currentCredits, theme }
                         placeholder="e.g. 3.00"
                         value={targetCGPA}
                         onChange={e => setTargetCGPA(e.target.value.replace(/[^0-9.]/g, ''))}
-                        className={`w-full px-4 py-2 bg-transparent border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm ${theme.border}`}
+                        className="w-full px-4 py-2 bg-[#18181b] border border-[#27272a] rounded-lg focus:border-[#a78bfa] focus:ring-1 focus:ring-[#a78bfa] outline-none text-sm text-[#fafafa] placeholder:text-[#52525b]"
                     />
                 </div>
                 <div>
@@ -46,14 +46,14 @@ const ForecastingTool: React.FC<Props> = ({ currentCGPA, currentCredits, theme }
                         max="21"
                         value={nextCredits}
                         onChange={e => setNextCredits(Math.max(0, parseInt(e.target.value) || 0))}
-                        className={`w-full px-4 py-2 bg-transparent border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm ${theme.border}`}
+                        className="w-full px-4 py-2 bg-[#18181b] border border-[#27272a] rounded-lg focus:border-[#a78bfa] focus:ring-1 focus:ring-[#a78bfa] outline-none text-sm text-[#fafafa]"
                     />
                 </div>
             </div>
 
             <button
                 onClick={handleCalculate}
-                className={`w-full py-2.5 text-xs font-bold uppercase tracking-widest rounded-xl bg-white/10 hover:bg-white/20 transition-all border ${theme.border}`}
+                className="w-full py-2.5 text-xs font-bold uppercase tracking-widest rounded-lg bg-[#a78bfa] text-[#0a0012] hover:opacity-90 transition-all"
             >
                 Calculate Required Performance
             </button>
@@ -73,7 +73,7 @@ const ForecastingTool: React.FC<Props> = ({ currentCGPA, currentCredits, theme }
                     ) : (
                         <div className="text-center">
                             <p className="text-[10px] font-bold opacity-50 uppercase mb-1">Required Next Semester SGPA</p>
-                            <h4 className={`text-3xl font-black ${theme.accent}`}>{typeof result === 'number' ? result.toFixed(2) : result}</h4>
+                            <h4 className="text-3xl font-black text-[#a78bfa]">{typeof result === 'number' ? result.toFixed(2) : result}</h4>
                             <p className="text-[10px] opacity-60 mt-2 italic">
                                 Maintain this SGPA in your next {nextCredits} credits to reach {parseFloat(targetCGPA).toFixed(2)} CGPA.
                             </p>

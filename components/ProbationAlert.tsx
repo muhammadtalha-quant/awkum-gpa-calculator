@@ -3,10 +3,10 @@ import { getProbationStatus } from '../src/domain/gpa/engine';
 
 interface Props {
     cgpa: number;
-    theme: any;
+    theme?: any;
 }
 
-const ProbationAlert: React.FC<Props> = ({ cgpa, theme }) => {
+const ProbationAlert: React.FC<Props> = ({ cgpa }) => {
     const status = getProbationStatus(cgpa);
 
     if (status === 'GOOD') return null;

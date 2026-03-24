@@ -1,47 +1,15 @@
-
-import React, { useState } from 'react';
-import { AWKUM_LOGO_URL } from '../constants';
+import React from 'react';
 
 interface HeaderProps {
-  theme: any;
+  theme?: any;
 }
 
-const Header: React.FC<HeaderProps> = ({ theme }) => {
-  const [imageError, setImageError] = useState(false);
-  const [currentSrc, setCurrentSrc] = useState(AWKUM_LOGO_URL);
-
-  const handleImageError = () => {
-    if (currentSrc === AWKUM_LOGO_URL) {
-      setCurrentSrc('AWKUM.png');
-    } else {
-      setImageError(true);
-    }
-  };
-
-  return (
-    <header className="flex flex-col items-center mb-6 sm:mb-8 text-center px-2">
-      {!imageError ? (
-        <img
-          src={currentSrc}
-          alt="AWKUM Logo"
-          className="w-16 h-16 sm:w-24 sm:h-24 object-contain mb-3 sm:mb-4 transition-opacity duration-300"
-          onError={handleImageError}
-        />
-      ) : (
-        <div className={`w-16 h-16 sm:w-24 sm:h-24 rounded-full flex items-center justify-center mb-3 sm:mb-4 shadow-sm border-2 ${theme.border} bg-white/5`}>
-          <span className={`font-bold text-xs ${theme.accent}`}>AWKUM</span>
-        </div>
-      )}
-      <div>
-        <h1 className="text-base sm:text-2xl font-bold tracking-tight leading-tight">
-          Abdul Wali Khan University Mardan
-        </h1>
-        <p className={`mt-2 inline-block text-white text-xs sm:text-sm px-3 sm:px-4 py-1 rounded-full font-medium ${theme.primary}`}>
-          GPA & CGPA Calculator
-        </p>
-      </div>
-    </header>
-  );
+/**
+ * @deprecated Replaced by components/layout/TopBar.tsx in the Obsidian redesign.
+ * Kept here to avoid build errors from any orphan reference, but not rendered in the app.
+ */
+const Header: React.FC<HeaderProps> = () => {
+  return null;
 };
 
 export default Header;

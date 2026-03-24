@@ -10,20 +10,10 @@ interface UserInfoModalProps {
   title: string;
   isCGPA?: boolean;
   rowCount?: number;
-  theme: any;
+  theme?: any;
 }
 
-interface UserInfoModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (info: UserInfo) => void;
-  title: string;
-  isCGPA?: boolean;
-  rowCount?: number;
-  theme: any;
-}
-
-const UserInfoModal: React.FC<UserInfoModalProps> = ({ isOpen, onClose, onSubmit, title, isCGPA, rowCount = 0, theme }) => {
+const UserInfoModal: React.FC<UserInfoModalProps> = ({ isOpen, onClose, onSubmit, title, isCGPA, rowCount = 0 }) => {
   const [info, setInfo] = useState<UserInfo>({
     name: '',
     fatherName: '',
@@ -105,7 +95,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ isOpen, onClose, onSubmit
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-xl animate-in fade-in duration-500">
-      <div className={`w-full max-w-xl rounded-[3rem] overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] border ${theme.border} ${theme.card} animate-in zoom-in-95 duration-300`}>
+      <div className="w-full max-w-xl rounded-xl overflow-hidden shadow-2xl border border-[#27272a] bg-[#121215] animate-in zoom-in-95 duration-300">
 
         {/* Modern Centered Header */}
         <div className={`p-10 text-center relative overflow-hidden bg-gradient-to-b from-black/20 to-transparent`}>
@@ -129,7 +119,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ isOpen, onClose, onSubmit
               <div className="relative group">
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className={`w-28 h-28 rounded-[2rem] border-2 border-dashed ${theme.border} flex items-center justify-center cursor-pointer overflow-hidden bg-black/5 hover:scale-105 transition-all duration-500 shadow-xl`}
+                  className="w-28 h-28 rounded-xl border-2 border-dashed border-[#27272a] flex items-center justify-center cursor-pointer overflow-hidden bg-[#18181b] hover:scale-105 transition-all duration-500 shadow-xl"
                 >
                   {info.photo ? (
                     <img src={info.photo} className="w-full h-full object-cover" />
@@ -156,7 +146,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ isOpen, onClose, onSubmit
                       value={info.name}
                       onFocus={() => setFormTouched(true)}
                       onChange={(e) => setInfo({ ...info, name: sanitizeName(e.target.value) })}
-                      className={`w-full px-5 py-3 bg-white/5 border-2 rounded-2xl outline-none transition-all ${formTouched && !isNameValid ? 'border-red-500/50' : isNameValid ? 'border-green-500/30' : theme.border} focus:ring-4 focus:ring-blue-500/10 font-bold text-sm`}
+                      className={`w-full px-5 py-3 bg-[#18181b] border-2 rounded-lg outline-none transition-all ${formTouched && !isNameValid ? 'border-[#ef4444]/50' : isNameValid ? 'border-[#34d399]/30' : 'border-[#27272a]'} focus:border-[#a78bfa] font-bold text-sm text-[#fafafa]`}
                     />
                   </div>
                   <div className="space-y-1">
@@ -170,7 +160,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ isOpen, onClose, onSubmit
                       value={info.fatherName}
                       onFocus={() => setFormTouched(true)}
                       onChange={(e) => setInfo({ ...info, fatherName: sanitizeName(e.target.value) })}
-                      className={`w-full px-5 py-3 bg-white/5 border-2 rounded-2xl outline-none transition-all ${formTouched && !isFatherValid ? 'border-red-500/50' : isFatherValid ? 'border-green-500/30' : theme.border} focus:ring-4 focus:ring-blue-500/10 font-bold text-sm`}
+                      className={`w-full px-5 py-3 bg-[#18181b] border-2 rounded-lg outline-none transition-all ${formTouched && !isFatherValid ? 'border-[#ef4444]/50' : isFatherValid ? 'border-[#34d399]/30' : 'border-[#27272a]'} focus:border-[#a78bfa] font-bold text-sm text-[#fafafa]`}
                     />
                   </div>
                 </div>
@@ -179,7 +169,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ isOpen, onClose, onSubmit
 
             <div className="space-y-1">
               <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-1">Registration Identifier</label>
-              <div className={`flex items-center bg-black/10 rounded-2xl border-2 transition-all overflow-hidden ${formTouched && !isRegValid ? 'border-red-500/50' : isRegValid ? 'border-green-500/30' : theme.border}`}>
+              <div className={`flex items-center bg-[#18181b] rounded-lg border-2 transition-all overflow-hidden ${formTouched && !isRegValid ? 'border-[#ef4444]/50' : isRegValid ? 'border-[#34d399]/30' : 'border-[#27272a]'}`}>
                 <span className="px-5 py-3 bg-black/20 text-[10px] font-black opacity-40 tracking-widest border-r border-white/5">AWKUM -</span>
                 <input
                   type="text"
@@ -208,7 +198,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ isOpen, onClose, onSubmit
                 <select
                   value={info.programme}
                   onChange={(e) => setInfo({ ...info, programme: e.target.value })}
-                  className={`w-full px-5 py-3 bg-white/5 border-2 rounded-2xl outline-none transition-all ${theme.border} focus:ring-4 focus:ring-blue-500/10 text-sm font-bold`}
+                  className="w-full px-5 py-3 bg-[#18181b] border-2 border-[#27272a] rounded-lg outline-none transition-all focus:border-[#a78bfa] text-sm font-bold text-[#fafafa]"
                 >
                   {PROGRAMMES.map(p => <option key={p} value={p} className="bg-gray-800 text-white">{p}</option>)}
                 </select>
@@ -226,14 +216,14 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ isOpen, onClose, onSubmit
                     placeholder="Semesters"
                     value={info.totalDuration}
                     onChange={(e) => setInfo({ ...info, totalDuration: e.target.value })}
-                    className={`w-full px-5 py-3 bg-white/5 border-2 rounded-2xl outline-none transition-all ${theme.border} focus:ring-4 focus:ring-blue-500/10 text-sm font-black text-center`}
+                    className="w-full px-5 py-3 bg-[#18181b] border-2 border-[#27272a] rounded-lg outline-none transition-all focus:border-[#a78bfa] text-sm font-black text-center text-[#fafafa]"
                   />
                 ) : (
                   <select
                     disabled={info.isCompleted && info.programme === "Undergraduate (BS)"}
                     value={info.semester}
                     onChange={(e) => setInfo({ ...info, semester: e.target.value })}
-                    className={`w-full px-5 py-3 bg-white/5 border-2 rounded-2xl outline-none transition-all ${theme.border} focus:ring-4 focus:ring-blue-500/10 text-sm disabled:opacity-30 font-bold`}
+                    className="w-full px-5 py-3 bg-[#18181b] border-2 border-[#27272a] rounded-lg outline-none transition-all focus:border-[#a78bfa] text-sm disabled:opacity-30 font-bold text-[#fafafa]"
                   >
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(s => (
                       <option key={s} value={s.toString()} className="bg-gray-800 text-white">Semester {s}</option>
@@ -255,7 +245,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ isOpen, onClose, onSubmit
                   value={info.subject}
                   onFocus={() => setFormTouched(true)}
                   onChange={(e) => setInfo({ ...info, subject: sanitizeName(e.target.value) })}
-                  className={`w-full px-5 py-3 bg-white/5 border-2 rounded-2xl outline-none transition-all ${formTouched && !isSubjectValid ? 'border-red-500/50' : isSubjectValid ? 'border-green-500/30' : theme.border} focus:ring-4 focus:ring-blue-500/10 font-bold text-sm`}
+                  className={`w-full px-5 py-3 bg-[#18181b] border-2 rounded-lg outline-none transition-all ${formTouched && !isSubjectValid ? 'border-[#ef4444]/50' : isSubjectValid ? 'border-[#34d399]/30' : 'border-[#27272a]'} focus:border-[#a78bfa] font-bold text-sm text-[#fafafa]`}
                 />
               </div>
               <div className="space-y-1">
@@ -269,7 +259,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ isOpen, onClose, onSubmit
                   value={info.section}
                   onFocus={() => setFormTouched(true)}
                   onChange={(e) => setInfo({ ...info, section: sanitizeSection(e.target.value) })}
-                  className={`w-full px-5 py-3 bg-white/5 border-2 rounded-2xl outline-none transition-all ${formTouched && !isSectionValid ? 'border-red-500/50' : isSectionValid ? 'border-green-500/30' : theme.border} focus:ring-4 focus:ring-blue-500/10 text-center font-black text-sm`}
+                  className={`w-full px-5 py-3 bg-[#18181b] border-2 rounded-lg outline-none transition-all ${formTouched && !isSectionValid ? 'border-[#ef4444]/50' : isSectionValid ? 'border-[#34d399]/30' : 'border-[#27272a]'} focus:border-[#a78bfa] text-center font-black text-sm text-[#fafafa]`}
                 />
               </div>
             </div>
@@ -322,7 +312,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ isOpen, onClose, onSubmit
             <button
               type="submit"
               disabled={!isFormValid}
-              className={`flex-[2] py-5 px-6 rounded-2xl font-black uppercase tracking-[0.3em] text-[10px] shadow-2xl transition-all active:scale-[0.98] ${isFormValid ? `${theme.primary} text-white` : 'bg-gray-500/20 text-gray-500 opacity-20 cursor-not-allowed'}`}
+              className={`flex-[2] py-5 px-6 rounded-lg font-black uppercase tracking-[0.3em] text-[10px] shadow-2xl transition-all active:scale-[0.98] ${isFormValid ? 'bg-[#a78bfa] text-[#0a0012]' : 'bg-[#27272a] text-[#52525b] opacity-30 cursor-not-allowed'}`}
             >
               Verify & Proceed
             </button>

@@ -3,10 +3,10 @@ import { calculateRequiredMarks } from '../src/domain/gpa/engine';
 
 interface Props {
     subjects: any[];
-    theme: any;
+    theme?: any;
 }
 
-const RequiredMarksTool: React.FC<Props> = ({ subjects, theme }) => {
+const RequiredMarksTool: React.FC<Props> = ({ subjects }) => {
     const [targetSGPA, setTargetSGPA] = useState<string>('');
     const [result, setResult] = useState<number | null | 'IMPOSSIBLE' | 'ACHIEVED'>(null);
 
@@ -30,9 +30,9 @@ const RequiredMarksTool: React.FC<Props> = ({ subjects, theme }) => {
     // ... (JSX reflects this in previous edit style)
 
     return (
-        <div className={`mt-6 p-6 rounded-3xl border ${theme.border} bg-black/5 animate-in zoom-in-95`}>
-            <h3 className="text-sm font-bold uppercase tracking-widest mb-4 opacity-80 flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+        <div className="animate-in zoom-in-95">
+            <h3 className="text-sm font-bold uppercase tracking-widest mb-4 text-[#fafafa] flex items-center gap-2">
+                <span className="material-symbols-outlined text-[#a78bfa] text-[18px]">assignment</span>
                 Required Marks Predictor
             </h3>
 
@@ -46,12 +46,12 @@ const RequiredMarksTool: React.FC<Props> = ({ subjects, theme }) => {
                                 placeholder="e.g. 3.50"
                                 value={targetSGPA}
                                 onChange={e => setTargetSGPA(e.target.value.replace(/[^0-9.]/g, ''))}
-                                className={`w-full px-4 py-2 bg-transparent border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm ${theme.border}`}
+                                className="w-full px-4 py-2 bg-[#18181b] border border-[#27272a] rounded-lg focus:border-[#a78bfa] focus:ring-1 focus:ring-[#a78bfa] outline-none text-sm text-[#fafafa]"
                             />
                         </div>
                         <button
                             onClick={handleCalculate}
-                            className={`px-6 mt-5 text-xs font-bold uppercase tracking-widest rounded-xl bg-white/10 hover:bg-white/20 transition-all border ${theme.border}`}
+                            className="px-6 mt-5 text-xs font-bold uppercase tracking-widest rounded-lg bg-[#a78bfa] text-[#0a0012] hover:opacity-90 transition-all py-2"
                         >
                             Predict
                         </button>
@@ -72,7 +72,7 @@ const RequiredMarksTool: React.FC<Props> = ({ subjects, theme }) => {
                             ) : (
                                 <div className="text-center">
                                     <p className="text-[10px] font-bold opacity-50 uppercase mb-1">Average Marks per Remaining Subject</p>
-                                    <h4 className={`text-3xl font-black ${theme.accent}`}>{typeof result === 'number' ? result : result}</h4>
+                                    <h4 className="text-3xl font-black text-[#a78bfa]">{typeof result === 'number' ? result : result}</h4>
                                     <p className="text-[10px] opacity-60 mt-2 italic">
                                         You need to score at least {result} marks in each of your {remainingCount} remaining subjects to reach {parseFloat(targetSGPA).toFixed(2)} SGPA.
                                     </p>

@@ -8,16 +8,15 @@ interface Props {
     onClose: () => void;
     onSubmit: (subject: Partial<SGPASubject>) => void;
     initialData?: Partial<SGPASubject>;
-    theme: any;
+    theme?: any;
     enableCodes: boolean;
 }
 
-const SubjectEntryModal: React.FC<Props> = ({ isOpen, onClose, onSubmit, initialData, theme, enableCodes }) => {
+const SubjectEntryModal: React.FC<Props> = ({ isOpen, onClose, onSubmit, initialData, enableCodes }) => {
     const [name, setName] = useState(initialData?.name || '');
     const [code, setCode] = useState(initialData?.code || '');
     const [credits, setCredits] = useState(initialData?.credits?.toString() || '3');
     const [marks, setMarks] = useState(initialData?.marks?.toString() || '');
-    const [error, setError] = useState('');
 
     useEffect(() => {
         if (isOpen) {
@@ -25,22 +24,22 @@ const SubjectEntryModal: React.FC<Props> = ({ isOpen, onClose, onSubmit, initial
             setCode(initialData?.code || '');
             setCredits(initialData?.credits?.toString() || '3');
             setMarks(initialData?.marks?.toString() || '');
-            setError('');
         }
     }, [isOpen, initialData]);
 
     if (!isOpen) return null;
 
+    const numCredits = parseInt(credits);
+    const numMarks = marks === '' ? -1 : parseInt(marks);
+    const isNameInvalid = name !== '' && !name.trim();
+    const isCodeInvalid = enableCodes && code !== '' && !isValidCourseCode(code);
+    const isCreditsInvalid = credits !== '' && (isNaN(numCredits) || numCredits < 2 || numCredits > 6);
+    const isMarksInvalid = marks !== '' && (isNaN(numMarks) || numMarks < 0 || numMarks > 100);
+    const isFormValid = name.trim() && (!enableCodes || (code && isValidCourseCode(code))) && !isCreditsInvalid && !isMarksInvalid && credits !== '' && marks !== '';
+
     const handleSave = () => {
-        const numCredits = parseInt(credits);
-        const numMarks = marks === '' ? -1 : parseInt(marks);
-
-        if (!name.trim() || (enableCodes && (!code || !isValidCourseCode(code))) || isNaN(numCredits) || numCredits < 2 || numCredits > 6 || numMarks < 0 || numMarks > 100) {
-            return;
-        }
-
+        if (!isFormValid) return;
         const gp = calculateGradePoint(asMark(numMarks));
-
         onSubmit({
             name: sanitizeSubjectName(name),
             code: enableCodes ? code.toUpperCase() : '',
@@ -52,101 +51,72 @@ const SubjectEntryModal: React.FC<Props> = ({ isOpen, onClose, onSubmit, initial
         onClose();
     };
 
-    const numCredits = parseInt(credits);
-    const numMarks = marks === '' ? -1 : parseInt(marks);
-    const isNameInvalid = name !== '' && !name.trim();
-    const isCodeInvalid = enableCodes && code !== '' && !isValidCourseCode(code);
-    const isCreditsInvalid = credits !== '' && (isNaN(numCredits) || numCredits < 2 || numCredits > 6);
-    const isMarksInvalid = marks !== '' && (isNaN(numMarks) || numMarks < 0 || numMarks > 100);
-
-    const isFormValid = name.trim() &&
-        (!enableCodes || (code && isValidCourseCode(code))) &&
-        !isCreditsInvalid &&
-        !isMarksInvalid &&
-        credits !== '' &&
-        marks !== '';
-
     return (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className={`${theme.card} w-full max-w-md rounded-[2.5rem] p-10 border ${theme.border} shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-200`}>
-                <div className="flex justify-between items-center mb-8">
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+            <div className="bg-[#121215] w-full max-w-md rounded-xl p-8 border border-[#27272a] shadow-2xl">
+                <div className="flex justify-between items-center mb-6">
                     <div>
-                        <h3 className="text-xl font-black uppercase tracking-widest opacity-80">
+                        <h3 className="text-lg font-bold text-[#fafafa]">
                             {initialData?.id ? 'Edit Subject' : 'Add New Subject'}
                         </h3>
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mt-1">Course Entry</p>
+                        <p className="text-xs text-[#71717a] mt-0.5 uppercase tracking-widest">Course Entry</p>
                     </div>
-                    <button onClick={onClose} className="p-3 hover:bg-black/5 rounded-2xl transition-all active:scale-90">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <button onClick={onClose} className="p-2 hover:bg-[#27272a] rounded-lg transition-all text-[#71717a] hover:text-[#fafafa]">
+                        <span className="material-symbols-outlined">close</span>
                     </button>
                 </div>
 
-                <div className="space-y-6">
-                    <div className="space-y-2">
-                        <div className="flex justify-between items-center px-1">
-                            <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Subject Name</label>
-                            {isNameInvalid && <span className="text-[8px] font-bold text-red-500 uppercase tracking-tighter">Required</span>}
+                <div className="space-y-4">
+                    <div className="space-y-1.5">
+                        <div className="flex justify-between items-center">
+                            <label className="text-xs font-bold text-[#71717a] uppercase tracking-wider">Subject Name</label>
+                            {isNameInvalid && <span className="text-[10px] font-bold text-[#ef4444] uppercase">Required</span>}
                         </div>
                         <input
-                            type="text"
-                            placeholder="e.g. Data Structures"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            className={`w-full px-5 py-3 bg-transparent border-2 rounded-2xl outline-none transition-all ${isNameInvalid ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.1)]' : name !== '' ? 'border-blue-500/30' : theme.border} focus:ring-4 focus:ring-blue-500/10 font-bold`}
+                            type="text" placeholder="e.g. Data Structures" value={name} onChange={e => setName(e.target.value)}
+                            className={`w-full px-4 py-3 bg-[#18181b] border rounded-lg outline-none text-[#fafafa] font-medium transition-all placeholder:text-[#52525b] ${isNameInvalid ? 'border-[#ef4444]' : 'border-[#27272a] focus:border-[#a78bfa]'}`}
                         />
                     </div>
 
                     {enableCodes && (
-                        <div className="space-y-2">
-                            <div className="flex justify-between items-center px-1">
-                                <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Course Code</label>
-                                {isCodeInvalid && <span className="text-[8px] font-bold text-red-500 uppercase tracking-tighter">Format: CS-123</span>}
+                        <div className="space-y-1.5">
+                            <div className="flex justify-between items-center">
+                                <label className="text-xs font-bold text-[#71717a] uppercase tracking-wider">Course Code</label>
+                                {isCodeInvalid && <span className="text-[10px] font-bold text-[#ef4444] uppercase">Format: CS-123</span>}
                             </div>
                             <input
-                                type="text"
-                                placeholder="e.g. CS-123"
-                                value={code}
-                                onChange={(e) => setCode(e.target.value)}
-                                className={`w-full px-5 py-3 bg-transparent border-2 rounded-2xl outline-none transition-all ${isCodeInvalid ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.1)]' : code !== '' ? 'border-blue-500/30' : theme.border} focus:ring-4 focus:ring-blue-500/10 font-mono font-bold tracking-widest`}
+                                type="text" placeholder="e.g. CS-123" value={code} onChange={e => setCode(e.target.value)}
+                                className={`w-full px-4 py-3 bg-[#18181b] border rounded-lg outline-none text-[#fafafa] font-mono font-medium tracking-widest transition-all placeholder:text-[#52525b] ${isCodeInvalid ? 'border-[#ef4444]' : 'border-[#27272a] focus:border-[#a78bfa]'}`}
                             />
                         </div>
                     )}
 
-                    <div className="grid grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <div className="flex justify-between items-center px-1">
-                                <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Credit Hours</label>
-                                {isCreditsInvalid && <span className="text-[8px] font-bold text-red-500 uppercase tracking-tighter">2-6</span>}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                            <div className="flex justify-between items-center">
+                                <label className="text-xs font-bold text-[#71717a] uppercase tracking-wider">Credit Hours</label>
+                                {isCreditsInvalid && <span className="text-[10px] font-bold text-[#ef4444]">2-6</span>}
                             </div>
                             <input
-                                type="number"
-                                min="2"
-                                max="6"
-                                value={credits}
-                                onChange={(e) => setCredits(e.target.value)}
-                                className={`w-full px-5 py-3 bg-transparent border-2 rounded-2xl outline-none transition-all text-center text-xl font-black ${isCreditsInvalid ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.1)]' : credits !== '' ? 'border-blue-500/30' : theme.border} focus:ring-4 focus:ring-blue-500/10`}
+                                type="number" min="2" max="6" value={credits} onChange={e => setCredits(e.target.value)}
+                                className={`w-full px-4 py-3 bg-[#18181b] border rounded-lg outline-none text-center text-xl font-black text-[#fafafa] transition-all ${isCreditsInvalid ? 'border-[#ef4444]' : 'border-[#27272a] focus:border-[#a78bfa]'}`}
                             />
                         </div>
-                        <div className="space-y-2">
-                            <div className="flex justify-between items-center px-1">
-                                <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Obtained Marks</label>
-                                {isMarksInvalid && <span className="text-[8px] font-bold text-red-500 uppercase tracking-tighter">0-100</span>}
+                        <div className="space-y-1.5">
+                            <div className="flex justify-between items-center">
+                                <label className="text-xs font-bold text-[#71717a] uppercase tracking-wider">Marks</label>
+                                {isMarksInvalid && <span className="text-[10px] font-bold text-[#ef4444]">0-100</span>}
                             </div>
                             <input
-                                type="number"
-                                min="0"
-                                max="100"
-                                value={marks}
-                                onChange={(e) => setMarks(e.target.value)}
-                                className={`w-full px-5 py-3 bg-transparent border-2 rounded-2xl outline-none transition-all text-center text-xl font-black ${isMarksInvalid ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.1)]' : marks !== '' ? 'border-blue-500/30' : theme.border} focus:ring-4 focus:ring-blue-500/10`}
+                                type="number" min="0" max="100" value={marks} onChange={e => setMarks(e.target.value)} placeholder="0-100"
+                                className={`w-full px-4 py-3 bg-[#18181b] border rounded-lg outline-none text-center text-xl font-black text-[#fafafa] transition-all placeholder:text-[#52525b] ${isMarksInvalid ? 'border-[#ef4444]' : 'border-[#27272a] focus:border-[#a78bfa]'}`}
                             />
                         </div>
                     </div>
 
                     <button
-                        onClick={handleSave}
-                        disabled={!isFormValid}
-                        className={`w-full py-5 mt-6 ${theme.primary} text-white font-black uppercase tracking-[0.3em] rounded-2xl shadow-2xl transition-all active:scale-95 disabled:opacity-20 disabled:grayscale disabled:cursor-not-allowed`}
+                        onClick={handleSave} disabled={!isFormValid}
+                        className="w-full py-4 mt-2 bg-[#a78bfa] text-[#0a0012] font-bold uppercase tracking-wider rounded-lg hover:opacity-90 active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                         Save Subject
                     </button>

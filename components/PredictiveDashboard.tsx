@@ -3,10 +3,10 @@ import { useAcademicStore } from '../src/domain/store';
 import { calculateProjectedCGPA } from '../src/domain/gpa/engine';
 
 interface Props {
-    theme: any;
+    theme?: any;
 }
 
-const PredictiveDashboard: React.FC<Props> = ({ theme }) => {
+const PredictiveDashboard: React.FC<Props> = () => {
     const {
         semesters,
         projectionMode,
@@ -25,7 +25,7 @@ const PredictiveDashboard: React.FC<Props> = ({ theme }) => {
     ];
 
     return (
-        <div className={`p-4 sm:p-8 rounded-[2.5rem] border ${theme.border} bg-white/5 backdrop-blur-md animate-in slide-in-from-bottom-4 duration-500`}>
+        <div className="p-4 sm:p-8 rounded-xl border border-[#27272a] bg-[#121215] animate-in slide-in-from-bottom-4 duration-500">
             <div className="flex flex-col gap-5 mb-8">
                 <div>
                     <h3 className="text-sm font-black uppercase tracking-[0.3em] opacity-40 mb-2">Outcome Simulator</h3>
@@ -50,13 +50,14 @@ const PredictiveDashboard: React.FC<Props> = ({ theme }) => {
                     <button
                         key={mode.id}
                         onClick={() => setProjectionMode(mode.id as any)}
-                        className={`p-6 rounded-[2rem] border-2 transition-all duration-300 flex flex-col items-center gap-3 group relative overflow-hidden ${projectionMode === mode.id
-                            ? `${theme.border} bg-blue-500/10 shadow-[0_10px_30px_rgba(59,130,246,0.1)]`
-                            : 'border-transparent hover:bg-white/5 hover:border-white/10'
-                            }`}
+                    className={`p-6 rounded-xl border-2 transition-all duration-300 flex flex-col items-center gap-3 group relative overflow-hidden ${
+                        projectionMode === mode.id
+                            ? 'border-[#a78bfa] bg-[#a78bfa]/10'
+                            : 'border-transparent hover:bg-[#27272a] hover:border-[#27272a]'
+                    }`}
                     >
                         <span className="text-2xl group-hover:scale-125 transition-transform duration-500">{mode.icon}</span>
-                        <span className={`text-[9px] font-black uppercase tracking-widest ${projectionMode === mode.id ? 'text-blue-500' : 'opacity-40'}`}>
+                        <span className={`text-[9px] font-black uppercase tracking-widest ${projectionMode === mode.id ? 'text-[#a78bfa]' : 'text-[#52525b]'}`}>
                             {mode.label}
                         </span>
                         {projectionMode === mode.id && (

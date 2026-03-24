@@ -8,7 +8,6 @@ import { exportCGPA_PDF } from '../services/pdfService';
 import { useKeyboardShortcuts } from '../src/core/useKeyboardShortcuts';
 import UserInfoModal from './UserInfoModal';
 import ProbationAlert from './ProbationAlert';
-import SemesterEntryModal from './SemesterEntryModal';
 
 interface Props {
   onExportReady?: (fn: () => void) => void;
@@ -47,9 +46,9 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
 
   const getCgpaLabel = (gpa: number) => {
     if (gpa >= 3.75) return 'First Class with Distinction';
-    if (gpa >= 3.0)  return 'First Class';
-    if (gpa >= 2.5)  return 'Second Class';
-    if (gpa >= 2.0)  return 'Pass';
+    if (gpa >= 3.0) return 'First Class';
+    if (gpa >= 2.5) return 'Second Class';
+    if (gpa >= 2.0) return 'Pass';
     return 'Academic Probation';
   };
 
@@ -137,9 +136,9 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
   const showAddButton = semesters.length < MAX_ROWS && (MAX_CREDITS - totalCredits) >= MIN_ROOM;
 
   const tabs = [
-    { id: 'forecast' as const, label: 'Forecasting',  icon: 'trending_up' },
-    { id: 'simulate' as const, label: 'Outcome Sim',  icon: 'science' },
-    { id: 'retake'   as const, label: 'Retake ROI',   icon: 'refresh' },
+    { id: 'forecast' as const, label: 'Forecasting', icon: 'trending_up' },
+    { id: 'simulate' as const, label: 'Outcome Sim', icon: 'science' },
+    { id: 'retake' as const, label: 'Retake ROI', icon: 'refresh' },
   ];
 
   return (

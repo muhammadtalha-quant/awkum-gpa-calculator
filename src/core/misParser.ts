@@ -19,9 +19,9 @@
  */
 
 export interface ParsedSubject {
-    code: string;
-    name: string;
-    marks: number;
+  code: string;
+  name: string;
+  marks: number;
 }
 
 // Code inside parentheses, anywhere on the line (no $ anchor!)
@@ -35,24 +35,24 @@ const PURE_NUMBER = /^\s*(\d{1,3})\s*$/;
  * (without the code) and the code itself.
  */
 function extractCourseInfo(line: string): { name: string; code: string } | null {
-    const codeMatch = line.match(CODE_IN_PARENS);
-    if (!codeMatch) return null;
+  const codeMatch = line.match(CODE_IN_PARENS);
+  if (!codeMatch) return null;
 
-    const code = codeMatch[1].toUpperCase();
+  const code = codeMatch[1].toUpperCase();
 
-    // The line may be tab-separated: [rowNum] [CourseName(Code)] [TutorName]
-    const cols = line.split('\t');
+  // The line may be tab-separated: [rowNum] [CourseName(Code)] [TutorName]
+  const cols = line.split('\t');
 
-    // Find the column that contains the code
-    const courseCol = cols.find(c => CODE_IN_PARENS.test(c)) ?? '';
+  // Find the column that contains the code
+  const courseCol = cols.find((c) => CODE_IN_PARENS.test(c)) ?? '';
 
-    // Strip the (CODE) part from the column to get just the name
-    const rawName = courseCol.replace(CODE_IN_PARENS, '').trim();
+  // Strip the (CODE) part from the column to get just the name
+  const rawName = courseCol.replace(CODE_IN_PARENS, '').trim();
 
-    // Also strip any leading row number like "1 " or "12 "
-    const name = rawName.replace(/^\d+\s+/, '').trim();
+  // Also strip any leading row number like "1 " or "12 "
+  const name = rawName.replace(/^\d+\s+/, '').trim();
 
-    return name ? { name, code } : null;
+  return name ? { name, code } : null;
 }
 
 /**
@@ -61,52 +61,48 @@ function extractCourseInfo(line: string): { name: string; code: string } | null 
  * Deduplicates by course code (last occurrence wins).
  */
 export function parseMISText(raw: string): ParsedSubject[] {
-    const lines = raw.split(/[\r\n]+/);
-    const seen = new Map<string, ParsedSubject>();
+  const lines = raw.split(/[\r\n]+/);
+  const seen = new Map<string, ParsedSubject>();
 
-    let i = 0;
-    while (i < lines.length) {
-        const info = extractCourseInfo(lines[i]);
+  let i = 0;
+  while (i < lines.length) {
+    const info = extractCourseInfo(lines[i]);
 
-        if (info) {
-            // Collect numeric-only lines that follow immediately
-            const numbers: number[] = [];
-            let j = i + 1;
+    if (info) {
+      // Collect numeric-only lines that follow immediately
+      const numbers: number[] = [];
+      let j = i + 1;
 
-            while (j < lines.length && numbers.length < 5) {
-                const trimmed = lines[j].trim();
+      while (j < lines.length && numbers.length < 5) {
+        const trimmed = lines[j].trim();
 
-                if (PURE_NUMBER.test(trimmed)) {
-                    numbers.push(parseInt(trimmed, 10));
-                    j++;
-                } else if (trimmed === '-' || trimmed === '') {
-                    // dash = Retotling, blank = spacing — skip but stop after dash
-                    const isDash = trimmed === '-';
-                    j++;
-                    if (isDash) break;
-                } else {
-                    break; // Hit something non-numeric/non-dash → stop
-                }
-            }
-
-            // Total marks = 4th number (index 3). Fallback to last available.
-            const totalMarks =
-                numbers.length >= 4
-                    ? numbers[3]
-                    : numbers.length > 0
-                        ? numbers[numbers.length - 1]
-                        : 0;
-
-            if (info.name && totalMarks > 0 && totalMarks <= 100) {
-                seen.set(info.code, { code: info.code, name: info.name, marks: totalMarks });
-            }
-
-            i = j;
-            continue;
+        if (PURE_NUMBER.test(trimmed)) {
+          numbers.push(parseInt(trimmed, 10));
+          j++;
+        } else if (trimmed === '-' || trimmed === '') {
+          // dash = Retotling, blank = spacing — skip but stop after dash
+          const isDash = trimmed === '-';
+          j++;
+          if (isDash) break;
+        } else {
+          break; // Hit something non-numeric/non-dash → stop
         }
+      }
 
-        i++;
+      // Total marks = 4th number (index 3). Fallback to last available.
+      const totalMarks =
+        numbers.length >= 4 ? numbers[3] : numbers.length > 0 ? numbers[numbers.length - 1] : 0;
+
+      if (info.name && totalMarks > 0 && totalMarks <= 100) {
+        seen.set(info.code, { code: info.code, name: info.name, marks: totalMarks });
+      }
+
+      i = j;
+      continue;
     }
 
-    return Array.from(seen.values());
+    i++;
+  }
+
+  return Array.from(seen.values());
 }

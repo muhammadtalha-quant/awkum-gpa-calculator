@@ -8,49 +8,65 @@ interface Props {
 }
 
 const NAV_ITEMS: { page: Page; icon: string; label: string }[] = [
-  { page: 'sgpa',  icon: 'calculate', label: 'SGPA Calculator' },
-  { page: 'cgpa',  icon: 'analytics', label: 'CGPA Calculator' },
-  { page: 'rules', icon: 'gavel',     label: 'University Rules' },
+  { page: 'sgpa', icon: 'calculate', label: 'SGPA Calculator' },
+  { page: 'cgpa', icon: 'analytics', label: 'CGPA Calculator' },
+  { page: 'rules', icon: 'gavel', label: 'University Rules' },
 ];
 
 const SideNav: React.FC<Props> = ({ activePage, onNavigate }) => {
   return (
-    <aside className="hidden md:flex flex-col h-screen sticky top-0 w-64 bg-[#0c0c0f] border-r border-[#27272a] flex-shrink-0">
-      {/* Brand */}
-      <div className="p-6 border-b border-[#27272a]">
-        <h1 className="text-lg font-black text-[#a78bfa] uppercase tracking-tighter">AWKUM GPA</h1>
-        <p className="text-[10px] text-[#71717a] tracking-widest uppercase mt-0.5">Academic Utility</p>
+    <aside className="hidden lg:flex w-64 h-full fixed left-0 bg-[#0c0c0f] border-r border-white/5 flex-col gap-4 py-8 z-50 mt-16">
+      <div className="px-6 mb-4">
+        <h2
+          className="text-xl font-black text-zinc-100 font-headline uppercase tracking-tight"
+          style={{ fontFamily: 'var(--font-headline)' }}
+        >
+          Obsidian Academic
+        </h2>
+        <p
+          className="text-[10px] font-label font-bold text-zinc-500 tracking-[0.2em] uppercase"
+          style={{ fontFamily: 'var(--font-label)' }}
+        >
+          AWKUM Scholar v2.0
+        </p>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
+      <nav className="flex flex-col gap-2 px-3">
         {NAV_ITEMS.map(({ page, icon, label }) => {
           const active = activePage === page;
           return (
-            <button
+            <div
               key={page}
               onClick={() => onNavigate(page)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 text-left ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all cursor-pointer font-label text-sm tracking-wider uppercase ${
                 active
-                  ? 'bg-[#18181b] text-[#a78bfa] font-bold border-l-2 border-[#a78bfa]'
-                  : 'text-[#a1a1aa] hover:bg-[#18181b] hover:text-[#fafafa] border-l-2 border-transparent'
+                  ? 'bg-violet-500/10 text-violet-400 border-r-4 border-violet-500 font-bold'
+                  : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900/50'
               }`}
+              style={{ fontFamily: 'var(--font-label)' }}
             >
               <span
-                className="material-symbols-outlined text-[20px]"
+                className="material-symbols-outlined"
                 style={active ? { fontVariationSettings: "'FILL' 1" } : undefined}
               >
                 {icon}
               </span>
-              <span>{label}</span>
-            </button>
+              <span>{label.replace(' Calculator', '').replace('University ', '')}</span>
+            </div>
           );
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="p-4 border-t border-[#27272a]">
-        <p className="text-[10px] text-[#52525b] text-center">© {new Date().getFullYear()} AWKUMIAN</p>
+      <div className="mt-auto px-6">
+        <button
+          className="w-full py-3 bg-primary-container text-on-primary font-bold rounded-xl active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+          onClick={() => {
+            /* Potential reset or new calculation */
+          }}
+        >
+          <span className="material-symbols-outlined">add</span>
+          New Calculation
+        </button>
       </div>
     </aside>
   );

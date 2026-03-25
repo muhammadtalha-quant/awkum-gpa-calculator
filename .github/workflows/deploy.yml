@@ -1,9 +1,8 @@
-
 name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: ["main"]
+    branches: ['main']
   workflow_dispatch:
 
 permissions:
@@ -12,7 +11,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
+  group: 'pages'
   cancel-in-progress: true
 
 jobs:
@@ -25,9 +24,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          # Removed cache: 'npm' as it requires a package-lock.json
+          cache: 'npm'
       - name: Install dependencies
         run: npm install
+      - name: Check formatting
+        run: npm run fmt
+      - name: Lint
+        run: npm run lint
+      - name: Unit Tests & Coverage
+        run: npm run coverage
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+      - name: E2E Tests
+        run: npx playwright test
       - name: Build
         run: npm run build
       - name: Setup Pages

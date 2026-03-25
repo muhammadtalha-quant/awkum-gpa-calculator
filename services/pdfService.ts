@@ -30,7 +30,7 @@ const drawHeader = async (doc: jsPDF, title: string, userInfo: UserInfo) => {
       doc.addImage(fallbackImg, 'PNG', 15, 12, 22, 22);
       logoLoaded = true;
     } catch (innerE) {
-      console.warn("Logo failed to load.");
+      console.warn('Logo failed to load.');
     }
   }
 
@@ -40,7 +40,7 @@ const drawHeader = async (doc: jsPDF, title: string, userInfo: UserInfo) => {
     doc.rect(15, 12, 22, 22);
     doc.setFontSize(6);
     doc.setTextColor(0, 90, 193);
-    doc.text("AWKUM", 20, 24);
+    doc.text('AWKUM', 20, 24);
   }
 
   // Right-aligned Passport Photo - Adjusted Y coordinate
@@ -51,18 +51,18 @@ const drawHeader = async (doc: jsPDF, title: string, userInfo: UserInfo) => {
       doc.setLineWidth(0.1);
       doc.rect(165, 48, 25, 30);
     } catch (e) {
-      console.warn("Photo add error", e);
+      console.warn('Photo add error', e);
     }
   }
 
   doc.setFontSize(18);
   doc.setTextColor(0, 90, 193);
-  doc.setFont("helvetica", "bold");
-  doc.text("Abdul Wali Khan University Mardan", 42, 20);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Abdul Wali Khan University Mardan', 42, 20);
 
   doc.setFontSize(11);
   doc.setTextColor(100, 100, 100);
-  doc.setFont("helvetica", "normal");
+  doc.setFont('helvetica', 'normal');
   doc.text(title, 42, 27);
 
   doc.setDrawColor(0, 90, 193);
@@ -76,30 +76,41 @@ const drawHeader = async (doc: jsPDF, title: string, userInfo: UserInfo) => {
   let currentY = 53;
   const lineHeight = 6;
 
-  const degreeText = userInfo.programme === "Undergraduate (BS)"
-    ? `BS ${userInfo.subject}${userInfo.minor ? ' - ' + userInfo.minor : ''}`
-    : `${userInfo.programme} ${userInfo.subject}`;
+  const degreeText =
+    userInfo.programme === 'Undergraduate (BS)'
+      ? `BS ${userInfo.subject}${userInfo.minor ? ' - ' + userInfo.minor : ''}`
+      : `${userInfo.programme} ${userInfo.subject}`;
 
   // Column 1
-  doc.setFont("helvetica", "bold"); doc.text("Student Name:", startX, currentY);
-  doc.setFont("helvetica", "normal"); doc.text(userInfo.name.toUpperCase() || 'N/A', startX + 30, currentY);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Student Name:', startX, currentY);
+  doc.setFont('helvetica', 'normal');
+  doc.text(userInfo.name.toUpperCase() || 'N/A', startX + 30, currentY);
 
   currentY += lineHeight;
-  doc.setFont("helvetica", "bold"); doc.text("Father's Name:", startX, currentY);
-  doc.setFont("helvetica", "normal"); doc.text(userInfo.fatherName.toUpperCase() || 'N/A', startX + 30, currentY);
+  doc.setFont('helvetica', 'bold');
+  doc.text("Father's Name:", startX, currentY);
+  doc.setFont('helvetica', 'normal');
+  doc.text(userInfo.fatherName.toUpperCase() || 'N/A', startX + 30, currentY);
 
   currentY += lineHeight;
-  doc.setFont("helvetica", "bold"); doc.text("Registration No:", startX, currentY);
-  doc.setFont("helvetica", "normal"); doc.text(userInfo.registrationNumber || 'N/A', startX + 30, currentY);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Registration No:', startX, currentY);
+  doc.setFont('helvetica', 'normal');
+  doc.text(userInfo.registrationNumber || 'N/A', startX + 30, currentY);
 
   // Column 2
   currentY = 53;
-  doc.setFont("helvetica", "bold"); doc.text("Degree:", col2X, currentY);
-  doc.setFont("helvetica", "normal"); doc.text(degreeText, col2X + 25, currentY);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Degree:', col2X, currentY);
+  doc.setFont('helvetica', 'normal');
+  doc.text(degreeText, col2X + 25, currentY);
 
   currentY += lineHeight;
-  doc.setFont("helvetica", "bold"); doc.text("Semester-Section:", col2X, currentY);
-  doc.setFont("helvetica", "normal"); doc.text(`${userInfo.semester}-${userInfo.section}`, col2X + 35, currentY);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Semester-Section:', col2X, currentY);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`${userInfo.semester}-${userInfo.section}`, col2X + 35, currentY);
 
   doc.setDrawColor(230, 230, 230);
   doc.setLineWidth(0.2);
@@ -108,17 +119,22 @@ const drawHeader = async (doc: jsPDF, title: string, userInfo: UserInfo) => {
   return 85;
 };
 
-export async function exportSGPA_PDF(subjects: SGPASubject[], gpa: number, grade: string, userInfo: UserInfo) {
+export async function exportSGPA_PDF(
+  subjects: SGPASubject[],
+  gpa: number,
+  grade: string,
+  userInfo: UserInfo,
+) {
   const doc = new jsPDF() as jsPDFWithAutoTable;
-  const startY = await drawHeader(doc, "PROVISIONAL SEMESTER GRADE SHEET", userInfo);
+  const startY = await drawHeader(doc, 'PROVISIONAL SEMESTER GRADE SHEET', userInfo);
 
   const head = [['Subject Description', 'Credits', 'Marks', 'Grade Point', 'Grade']];
-  const body = subjects.map(s => [
-    s.code ? `${s.name} (${s.code})` : (s.name || 'Untitled Subject'),
+  const body = subjects.map((s) => [
+    s.code ? `${s.name} (${s.code})` : s.name || 'Untitled Subject',
     s.credits,
     s.marks,
     s.gradePoint.toFixed(2),
-    s.gradeLetter
+    s.gradeLetter,
   ]);
 
   autoTable(doc, {
@@ -133,8 +149,8 @@ export async function exportSGPA_PDF(subjects: SGPASubject[], gpa: number, grade
       1: { halign: 'center' },
       2: { halign: 'center' },
       3: { halign: 'center' },
-      4: { halign: 'center' }
-    }
+      4: { halign: 'center' },
+    },
   });
 
   const finalY = doc.lastAutoTable.finalY + 15;
@@ -147,24 +163,34 @@ export async function exportSGPA_PDF(subjects: SGPASubject[], gpa: number, grade
 
   doc.setFontSize(14);
   doc.setTextColor(0, 0, 0);
-  doc.setFont("helvetica", "bold");
+  doc.setFont('helvetica', 'bold');
   doc.text(`Semester GPA: ${gpa.toFixed(2)}`, 25, finalY + 14);
   doc.text(`Grade: ${grade}`, 140, finalY + 14);
 
   doc.setFontSize(8);
-  doc.setFont("helvetica", "italic");
+  doc.setFont('helvetica', 'italic');
   doc.setTextColor(150);
-  doc.text("Note: This is a computer-generated provisional document. Accuracy is subject to verification with official record.", 105, 285, { align: 'center' });
+  doc.text(
+    'Note: This is a computer-generated provisional document. Accuracy is subject to verification with official record.',
+    105,
+    285,
+    { align: 'center' },
+  );
 
   doc.save(`${userInfo.registrationNumber}_SGPA.pdf`);
 }
 
-export async function exportCGPA_PDF(semesters: CGPASemester[], cgpa: number, grade: string, userInfo: UserInfo) {
+export async function exportCGPA_PDF(
+  semesters: CGPASemester[],
+  cgpa: number,
+  grade: string,
+  userInfo: UserInfo,
+) {
   const doc = new jsPDF() as jsPDFWithAutoTable;
-  const startY = await drawHeader(doc, "PROVISIONAL CUMULATIVE GRADE SHEET", userInfo);
+  const startY = await drawHeader(doc, 'PROVISIONAL CUMULATIVE GRADE SHEET', userInfo);
 
   // Check if we have detailed subjects (Expert Mode)
-  const isExpertMode = semesters.some(s => s.subjects && s.subjects.length > 0);
+  const isExpertMode = semesters.some((s) => s.subjects && s.subjects.length > 0);
 
   if (isExpertMode) {
     let currentY = startY;
@@ -177,9 +203,13 @@ export async function exportCGPA_PDF(semesters: CGPASemester[], cgpa: number, gr
       }
 
       doc.setFontSize(10);
-      doc.setFont("helvetica", "bold");
+      doc.setFont('helvetica', 'bold');
       doc.setTextColor(0, 0, 0);
-      doc.text(`${semester.name} (SGPA: ${semester.sgpa}, Credits: ${semester.credits})`, 15, currentY + 5);
+      doc.text(
+        `${semester.name} (SGPA: ${semester.sgpa}, Credits: ${semester.credits})`,
+        15,
+        currentY + 5,
+      );
       currentY += 8;
 
       const head = [['Course Code', 'Subject Name', 'Credits', 'Marks', 'GP', 'Grade']];
@@ -189,7 +219,7 @@ export async function exportCGPA_PDF(semesters: CGPASemester[], cgpa: number, gr
         s.credits,
         s.marks,
         s.gradePoint.toFixed(2),
-        s.gradeLetter
+        s.gradeLetter,
       ]);
 
       autoTable(doc, {
@@ -205,9 +235,9 @@ export async function exportCGPA_PDF(semesters: CGPASemester[], cgpa: number, gr
           2: { halign: 'center', cellWidth: 15 },
           3: { halign: 'center', cellWidth: 15 },
           4: { halign: 'center', cellWidth: 15 },
-          5: { halign: 'center', cellWidth: 15 }
+          5: { halign: 'center', cellWidth: 15 },
         },
-        margin: { left: 15, right: 15 }
+        margin: { left: 15, right: 15 },
       });
 
       currentY = doc.lastAutoTable.finalY + 10;
@@ -227,24 +257,28 @@ export async function exportCGPA_PDF(semesters: CGPASemester[], cgpa: number, gr
     doc.rect(15, finalY, 180, 22, 'S');
 
     doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
+    doc.setFont('helvetica', 'bold');
     doc.setTextColor(0, 0, 0);
     doc.text(`Cumulative GPA: ${cgpa.toFixed(2)}`, 25, finalY + 14);
     doc.text(`Overall Grade: ${grade}`, 140, finalY + 14);
 
     doc.setFontSize(8);
-    doc.setFont("helvetica", "italic");
+    doc.setFont('helvetica', 'italic');
     doc.setTextColor(150);
-    doc.text("Note: This is a provisional transcript generated for student use. Official documents issued by Exam Dept.", 105, 285, { align: 'center' });
-
+    doc.text(
+      'Note: This is a provisional transcript generated for student use. Official documents issued by Exam Dept.',
+      105,
+      285,
+      { align: 'center' },
+    );
   } else {
     // Quick Mode (Original Implementation)
     const head = [['Semester Order', 'Semester SGPA', 'Credit Hours', 'Quality Points']];
-    const body = semesters.map(s => [
+    const body = semesters.map((s) => [
       s.name || 'Untitled Semester',
       Number(s.sgpa).toFixed(2),
       s.credits,
-      (Number(s.sgpa) * Number(s.credits)).toFixed(2)
+      (Number(s.sgpa) * Number(s.credits)).toFixed(2),
     ]);
 
     autoTable(doc, {
@@ -257,8 +291,8 @@ export async function exportCGPA_PDF(semesters: CGPASemester[], cgpa: number, gr
       columnStyles: {
         1: { halign: 'center' },
         2: { halign: 'center' },
-        3: { halign: 'center' }
-      }
+        3: { halign: 'center' },
+      },
     });
 
     const finalY = doc.lastAutoTable.finalY + 15;
@@ -270,14 +304,19 @@ export async function exportCGPA_PDF(semesters: CGPASemester[], cgpa: number, gr
     doc.rect(15, finalY, 180, 22, 'S');
 
     doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
+    doc.setFont('helvetica', 'bold');
     doc.text(`Cumulative GPA: ${cgpa.toFixed(2)}`, 25, finalY + 14);
     doc.text(`Overall Grade: ${grade}`, 140, finalY + 14);
 
     doc.setFontSize(8);
-    doc.setFont("helvetica", "italic");
+    doc.setFont('helvetica', 'italic');
     doc.setTextColor(150);
-    doc.text("Note: This is a provisional transcript generated for student use. Official documents issued by Exam Dept.", 105, 285, { align: 'center' });
+    doc.text(
+      'Note: This is a provisional transcript generated for student use. Official documents issued by Exam Dept.',
+      105,
+      285,
+      { align: 'center' },
+    );
   }
 
   doc.save(`${userInfo.registrationNumber}_CGPA.pdf`);

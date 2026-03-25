@@ -1,71 +1,39 @@
 import React, { useState, useEffect } from 'react';
-import { UserInfo, Credit, Mark, GradePoint, SGPASubject } from '../src/domain/types';
-import { useAcademicStore } from '../src/domain/store';
+import { UserInfo, SGPASubject } from '../src/domain/types';
+import { useSGPALogic } from '../src/domain/gpa/useSGPALogic';
 import { isValidCourseCode } from '../src/core/validation';
 import { exportSGPA_PDF } from '../services/pdfService';
-import { calculateGradePoint } from '../src/domain/grading/engine';
-import { calculateSGPA } from '../src/domain/gpa/engine';
-import { getLetterFromGP } from '../src/domain/grading/engine';
 import UserInfoModal from './UserInfoModal';
 import MISParserModal from './MISParserModal';
 import RequiredMarksTool from './RequiredMarksTool';
-import { GRADE_RANGES } from '../constants';
 
 interface Props {
   onExportReady?: (fn: () => void) => void;
 }
 
 const SGPACalculator: React.FC<Props> = ({ onExportReady }) => {
-  const { subjects, setSubjects } = useAcademicStore();
+  const {
+    subjects,
+    setSubjects,
+    errorMsg,
+    prevCgpa,
+    setPrevCgpa,
+    prevCredits,
+    setPrevCredits,
+    sgpaValue,
+    finalGrade,
+    projectedCgpa,
+    addCourse,
+    updateSubject,
+    removeSubject,
+  } = useSGPALogic();
 
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isMISModalOpen, setIsMISModalOpen] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [prevCgpa, setPrevCgpa] = useState('');
-  const [prevCredits, setPrevCredits] = useState('');
 
-  const MAX_CREDITS = 21;
-
-  // Register export handler with parent
   useEffect(() => {
-    if (onExportReady) {
-      onExportReady(() => setIsExportModalOpen(true));
-    }
+    if (onExportReady) onExportReady(() => setIsExportModalOpen(true));
   }, [onExportReady]);
-
-  // Credit pruning
-  useEffect(() => {
-    const total = subjects.reduce((s, c) => s + (Number(c.credits) || 0), 0);
-    if (total > MAX_CREDITS) {
-      const copy = [...subjects];
-      while (copy.reduce((s, c) => s + (Number(c.credits) || 0), 0) > MAX_CREDITS && copy.length > 1) copy.pop();
-      setSubjects(copy);
-      setErrorMsg('Automatically adjusted subjects to maintain the 21-credit hour limit.');
-    }
-  }, [subjects, setSubjects]);
-
-  const sgpaValue = calculateSGPA(subjects.map(s => ({ gradePoint: s.gradePoint, credits: s.credits })));
-  const finalGrade = getLetterFromGP(sgpaValue);
-
-  // Projected CGPA
-  const sgpaNum = Number(sgpaValue);
-  const currentCredits = subjects.reduce((s, c) => s + (Number(c.credits) || 0), 0);
-  const projectedCgpa = (() => {
-    const pc = parseFloat(prevCgpa);
-    const ph = parseFloat(prevCredits);
-    if (!isNaN(pc) && !isNaN(ph) && ph > 0 && currentCredits > 0 && sgpaNum > 0) {
-      return ((pc * ph + sgpaNum * currentCredits) / (ph + currentCredits)).toFixed(2);
-    }
-    return null;
-  })();
-
-  const getGpaBadge = (gpa: number) => {
-    if (gpa >= 3.75) return { label: 'Distinction', color: 'bg-[#34d399]/10 text-[#34d399] border-[#34d399]/20' };
-    if (gpa >= 3.0)  return { label: 'Excellent Progress', color: 'bg-[#34d399]/10 text-[#34d399] border-[#34d399]/20' };
-    if (gpa >= 2.5)  return { label: 'Good Standing', color: 'bg-[#a78bfa]/10 text-[#a78bfa] border-[#a78bfa]/20' };
-    if (gpa >= 2.0)  return { label: 'Satisfactory', color: 'bg-[#71717a]/10 text-[#a1a1aa] border-[#71717a]/20' };
-    return            { label: 'At Risk', color: 'bg-[#ef4444]/10 text-[#ef4444] border-[#ef4444]/20' };
-  };
 
   const handlePdfExport = (userInfo: UserInfo) => {
     exportSGPA_PDF(subjects, Number(sgpaValue), finalGrade, userInfo);
@@ -74,296 +42,232 @@ const SGPACalculator: React.FC<Props> = ({ onExportReady }) => {
   const handleMISImport = (imported: SGPASubject[]) => {
     const merged = [...subjects];
     for (const imp of imported) {
-      const idx = merged.findIndex(s => s.code === imp.code);
-      if (idx >= 0) merged[idx] = imp; else merged.push(imp);
+      const idx = merged.findIndex((s) => s.code === imp.code);
+      if (idx >= 0) merged[idx] = imp;
+      else merged.push(imp);
     }
     setSubjects(merged);
   };
 
-  const addCourse = () => {
-    const newSub: SGPASubject = {
-      id: (Date.now() + Math.random()).toString(),
-      name: '',
-      code: '',
-      credits: 3 as Credit,
-      marks: '' as unknown as Mark,
-      gradePoint: 0 as GradePoint,
-      gradeLetter: 'F',
-    };
-    setSubjects([...subjects, newSub]);
-    setErrorMsg('');
+  const getGpaBadge = (gpa: number) => {
+    if (gpa >= 3.75) return { label: 'Distinction', color: 'bg-primary/10 text-primary border-primary/20' };
+    if (gpa >= 3.0) return { label: 'Excellent Progress', color: 'bg-primary/10 text-primary border-primary/20' };
+    if (gpa >= 2.5) return { label: 'Good Standing', color: 'bg-primary-fixed-dim/10 text-primary-fixed-dim border-primary-fixed-dim/20' };
+    if (gpa >= 2.0) return { label: 'Satisfactory', color: 'bg-zinc-800 text-zinc-400 border-white/5' };
+    return { label: 'At Risk', color: 'bg-error/10 text-error border-error/20' };
   };
 
-  const updateSubject = (id: string, field: keyof SGPASubject, raw: string) => {
-    setSubjects(subjects.map(s => {
-      if (s.id !== id) return s;
-      if (field === 'name') return { ...s, name: raw };
-      if (field === 'credits') {
-        const v = parseInt(raw);
-        return { ...s, credits: (isNaN(v) ? s.credits : v) as Credit };
-      }
-      if (field === 'marks') {
-        if (raw === '') return { ...s, marks: '' as unknown as Mark, gradePoint: 0 as GradePoint, gradeLetter: 'F' };
-        const v = parseInt(raw);
-        if (isNaN(v) || v < 0 || v > 100) return s;
-        const gp = calculateGradePoint(v as Mark);
-        return { ...s, marks: v as Mark, gradePoint: gp, gradeLetter: getLetterFromGP(gp) };
-      }
-      return s;
-    }));
-  };
-
-  const removeSubject = (id: string) => setSubjects(subjects.filter(s => s.id !== id));
-
-  const allCodesFilled = subjects.every(s => s.code && isValidCourseCode(s.code));
-  const isExportUnlocked = allCodesFilled && subjects.length > 0;
+  const sgpaNum = Number(sgpaValue);
   const badge = sgpaNum > 0 ? getGpaBadge(sgpaNum) : null;
-
-
+  const isExportUnlocked = subjects.length > 0 && subjects.every((s) => s.code && isValidCourseCode(s.code));
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto w-full pb-24 md:pb-10">
-      {/* Modals */}
+    <div className="space-y-8 animate-in fade-in duration-500">
       <UserInfoModal
         isOpen={isExportModalOpen}
         onClose={() => setIsExportModalOpen(false)}
         onSubmit={handlePdfExport}
         title="Semester Grade Sheet Details"
-        theme={null}
       />
       <MISParserModal
         isOpen={isMISModalOpen}
         onClose={() => setIsMISModalOpen(false)}
         onImport={handleMISImport}
-        existingSubjectCodes={subjects.map(s => s.code || '').filter(Boolean)}
-        theme={null}
+        existingSubjectCodes={subjects.map((s) => s.code || '').filter(Boolean)}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left column: 8 */}
-        <div className="lg:col-span-8 space-y-6">
-
-          {/* Header card */}
-          <div className="bg-[#121215] border border-[#27272a] rounded-xl p-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <h1 className="text-2xl font-bold tracking-tight text-[#fafafa]">SGPA Calculator</h1>
-                <p className="text-[#71717a] text-sm mt-1">Semester Grade Point Average Calculation</p>
-              </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="lg:col-span-8 space-y-8">
+          <section className="bg-bg-surface rounded-3xl p-8 flex flex-col md:flex-row justify-between items-center gap-6 border border-white/5 shadow-2xl">
+            <div>
+              <h1 className="text-3xl font-black font-headline text-white tracking-tight">SGPA Simulator</h1>
+              <p className="text-zinc-500 text-xs font-black font-label uppercase tracking-widest mt-2">
+                Operational analytics for the current semester
+              </p>
             </div>
-          </div>
-
-          {/* Course Table */}
-          <div className="bg-[#121215] border border-[#27272a] rounded-xl overflow-hidden">
-            {subjects.length === 0 ? (
-              <div className="py-16 text-center border-2 border-dashed border-[#27272a] rounded-xl mx-4 my-4">
-                <span className="material-symbols-outlined text-5xl text-[#3f3f46]">school</span>
-                <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-[#52525b] mt-4 mb-6">No Courses Added Yet</h3>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                  <button
-                    onClick={addCourse}
-                    className="px-6 py-3 rounded-lg bg-[#a78bfa] text-[#0a0012] font-bold uppercase tracking-wider hover:opacity-90 active:scale-95 transition-all text-sm"
-                  >
-                    Add Course Manually
-                  </button>
-                  <button
-                    onClick={() => setIsMISModalOpen(true)}
-                    className="px-6 py-3 rounded-lg border border-[#a78bfa]/40 text-[#a78bfa] font-bold uppercase tracking-wider hover:bg-[#a78bfa]/10 active:scale-95 transition-all text-sm flex items-center gap-2"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">content_paste</span>
-                    Paste from MIS
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-[#18181b] border-b border-[#27272a]">
-                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[#71717a]">Course Name</th>
-                        <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-[#71717a] text-center">Cr. Hours</th>
-                        <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-[#71717a] text-center">Marks</th>
-                        <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-[#71717a] text-center">GPA</th>
-                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[#71717a] text-right">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#27272a]">
-                      {subjects.map(sub => (
-                        <tr key={sub.id} className="hover:bg-[#18181b] transition-colors">
-                          <td className="px-6 py-4">
-                            <input
-                              type="text"
-                              value={sub.name}
-                              onChange={e => updateSubject(sub.id, 'name', e.target.value)}
-                              placeholder="Course name…"
-                              className="bg-transparent border-none outline-none text-[#fafafa] w-full placeholder:text-[#52525b]"
-                            />
-                          </td>
-                          <td className="px-4 py-4 text-center">
-                            <input
-                              type="number"
-                              min={2} max={6}
-                              value={sub.credits}
-                              onChange={e => updateSubject(sub.id, 'credits', e.target.value)}
-                              className="bg-[#18181b] border border-[#27272a] rounded px-2 py-1 text-center w-16 focus:border-[#a78bfa] focus:ring-1 focus:ring-[#a78bfa] outline-none text-[#fafafa]"
-                            />
-                          </td>
-                          <td className="px-4 py-4 text-center">
-                            <input
-                              type="number"
-                              min={0} max={100}
-                              value={sub.marks === '' ? '' : sub.marks}
-                              onChange={e => updateSubject(sub.id, 'marks', e.target.value)}
-                              placeholder="0-100"
-                              className="bg-[#18181b] border border-[#27272a] rounded px-2 py-1 text-center w-16 focus:border-[#a78bfa] focus:ring-1 focus:ring-[#a78bfa] outline-none text-[#fafafa] placeholder:text-[#52525b]"
-                            />
-                          </td>
-                          <td className="px-4 py-4 text-center font-mono text-[#34d399] font-bold">
-                            {sub.gradePoint > 0 ? sub.gradePoint.toFixed(2) : '—'}
-                          </td>
-                          <td className="px-6 py-4 text-right">
-                            <button
-                              onClick={() => removeSubject(sub.id)}
-                              className="text-[#ef4444] opacity-60 hover:opacity-100 transition-opacity"
-                            >
-                              <span className="material-symbols-outlined text-[20px]">delete</span>
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            )}
-            {/* Add course button */}
-            <div className="p-4 border-t border-[#27272a]">
+            <div className="flex gap-4 w-full md:w-auto">
+              <button
+                onClick={() => setIsMISModalOpen(true)}
+                className="flex-1 md:flex-none px-6 py-3 rounded-2xl bg-white/5 border border-white/5 text-zinc-400 text-[10px] font-black font-label uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-3"
+              >
+                <span className="material-symbols-outlined text-[18px]">cloud_download</span>
+                Import MIS
+              </button>
               <button
                 onClick={addCourse}
-                className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-[#27272a] rounded-lg text-[#71717a] hover:border-[#a78bfa] hover:text-[#a78bfa] transition-all group"
+                className="flex-1 md:flex-none px-6 py-3 rounded-2xl bg-primary text-on-primary text-[10px] font-black font-label uppercase tracking-widest hover:shadow-glow transition-all flex items-center justify-center gap-3 active:scale-95"
               >
-                <span className="material-symbols-outlined group-hover:scale-110 transition-transform">add_circle</span>
-                <span className="font-bold text-sm">Add Course</span>
+                <span className="material-symbols-outlined text-[18px]">add_circle</span>
+                Add Course
               </button>
             </div>
-          </div>
+          </section>
 
-          {errorMsg && (
-            <div className="flex items-center gap-3 text-[#ef4444] text-xs font-bold uppercase tracking-widest bg-[#ef4444]/10 p-4 rounded-lg border border-[#ef4444]/20">
-              <span className="material-symbols-outlined text-[18px]">warning</span>
-              {errorMsg}
+          <section className="bg-bg-surface rounded-3xl overflow-hidden border border-white/5 shadow-2xl relative">
+            <div className="p-8 border-b border-white/5 flex justify-between items-center bg-white/[0.01]">
+                <div className="flex items-center gap-3">
+                    <span className="material-symbols-outlined text-primary text-[20px]">list_alt</span>
+                    <h3 className="font-black font-headline text-[11px] uppercase tracking-[0.3em] text-zinc-400">Current Vector Mapping</h3>
+                </div>
+                {errorMsg && <span className="text-[9px] font-black text-primary animate-pulse uppercase tracking-wider">{errorMsg}</span>}
             </div>
-          )}
-
-
-          {/* Required Marks Tool */}
-          {subjects.length > 0 && (
-            <div className="bg-[#121215] border border-[#27272a] rounded-xl p-6">
-              <RequiredMarksTool subjects={subjects} theme={null} />
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-bg-surface-lowest">
+                    <th className="px-8 py-5 font-black font-label text-[9px] tracking-[0.3em] text-zinc-600 uppercase">Registry Entry</th>
+                    <th className="px-6 py-5 font-black font-label text-[9px] tracking-[0.3em] text-zinc-600 uppercase text-center w-24">Units</th>
+                    <th className="px-6 py-5 font-black font-label text-[9px] tracking-[0.3em] text-zinc-600 uppercase text-center w-24">Score</th>
+                    <th className="px-6 py-5 font-black font-label text-[9px] tracking-[0.3em] text-zinc-600 uppercase text-center w-20">GP</th>
+                    <th className="px-8 py-5"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {subjects.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-24 text-center text-zinc-700 font-label text-[10px] font-black uppercase tracking-widest">
+                        Neural grid initialized. Awaiting course entry.
+                      </td>
+                    </tr>
+                  ) : (
+                    subjects.map((sub: SGPASubject) => (
+                      <tr key={sub.id} className="group hover:bg-white/[0.01] transition-all duration-300">
+                        <td className="px-8 py-6">
+                          <input
+                            className="bg-transparent border-none outline-none text-white font-black font-headline text-sm w-full placeholder:text-zinc-800 focus:text-primary transition-colors pr-8"
+                            value={sub.name}
+                            onChange={(e) => updateSubject(sub.id, 'name', e.target.value)}
+                            placeholder="e.g. Advanced AI Models"
+                          />
+                        </td>
+                        <td className="px-6 py-6 text-center">
+                          <div className="inline-flex items-center justify-center p-1 rounded-xl bg-bg-surface-lowest border border-white/5 shadow-inner-glow group-hover:border-white/10 transition-all">
+                              <input
+                                type="number"
+                                min={2}
+                                max={6}
+                                value={sub.credits}
+                                onChange={(e) => updateSubject(sub.id, 'credits', e.target.value)}
+                                className="bg-transparent border-none outline-none text-center w-12 font-black font-mono text-xs text-primary transition-all"
+                              />
+                          </div>
+                        </td>
+                        <td className="px-6 py-6 text-center">
+                          <div className="inline-flex items-center justify-center p-1 rounded-xl bg-bg-surface-lowest border border-white/5 shadow-inner-glow group-hover:border-white/10 transition-all">
+                              <input
+                                type="number"
+                                min={0}
+                                max={100}
+                                value={sub.marks === '' ? '' : sub.marks}
+                                onChange={(e) => updateSubject(sub.id, 'marks', e.target.value)}
+                                placeholder="00"
+                                className="bg-transparent border-none outline-none text-center w-12 font-black font-mono text-xs text-primary transition-all placeholder:text-zinc-800"
+                              />
+                          </div>
+                        </td>
+                        <td className="px-6 py-6 text-center">
+                          <span className={`font-black font-mono text-sm px-3 py-1.5 rounded-lg ${sub.gradePoint >= 3.5 ? "text-primary bg-primary/10" : sub.gradePoint >= 2.0 ? "text-primary-fixed-dim bg-white/5" : "text-zinc-700"}`}>
+                            {sub.gradePoint > 0 ? sub.gradePoint.toFixed(2) : '0.00'}
+                          </span>
+                        </td>
+                        <td className="px-8">
+                          <button
+                            onClick={() => removeSubject(sub.id)}
+                            className="w-10 h-10 flex items-center justify-center rounded-xl bg-error/0 text-error/30 hover:bg-error/10 hover:text-error transition-all group-hover:text-error/60"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">delete_sweep</span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
-          )}
+          </section>
         </div>
 
-        {/* Right column: 4 */}
-        <div className="lg:col-span-4 space-y-6">
-
-          {/* SGPA Result Card */}
-          <div className="bg-[#121215] border border-[#a78bfa]/30 rounded-xl p-8 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-              <span className="material-symbols-outlined text-[80px] text-[#a78bfa]">school</span>
+        <div className="lg:col-span-4 space-y-8">
+          <section className="bg-bg-surface rounded-3xl p-10 border border-white/5 shadow-glow relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-8 opacity-0 group-hover:opacity-10 transition-opacity">
+                <span className="material-symbols-outlined text-8xl text-primary">data_usage</span>
             </div>
-            <div className="relative z-10">
-              <p className="text-[#71717a] text-xs font-bold uppercase tracking-widest">Semester SGPA</p>
-              <div className="flex items-baseline gap-2 mt-2">
-                <span className="text-6xl font-black text-[#a78bfa] tracking-tighter">
-                  {subjects.length > 0 && sgpaNum > 0 ? sgpaNum.toFixed(2) : '—'}
-                </span>
-                <span className="text-[#71717a] font-mono">/ 4.0</span>
-              </div>
-              {badge && subjects.length > 0 && sgpaNum > 0 && (
-                <div className="mt-4">
-                  <span className={`px-3 py-1 text-xs font-bold rounded-full border ${badge.color}`}>
-                    {badge.label}
-                  </span>
+            
+            <div className="flex flex-col items-center justify-center text-center relative z-10">
+                <p className="text-[10px] font-black font-label text-zinc-500 uppercase tracking-[0.4em] mb-4">Current Performance Mean</p>
+                <div className="relative group/score">
+                    <span className="text-8xl font-black font-headline text-white tracking-tighter text-shadow-glow drop-shadow-2xl transition-transform duration-700 group-hover/score:scale-105 inline-block">
+                        {sgpaNum.toFixed(2)}
+                    </span>
+                    <div className="absolute -top-4 -right-8">
+                        {badge && (
+                            <div className={`px-3 py-1 rounded-full text-[8px] font-black uppercase border animate-bounce-slow shadow-soft backdrop-blur-md ${badge.color}`}>
+                                {badge.label}
+                            </div>
+                        )}
+                    </div>
                 </div>
-              )}
-            </div>
-          </div>
-
-          {/* Quick CGPA Utility */}
-          <div className="bg-[#121215] border border-[#27272a] rounded-xl p-6 space-y-5">
-            <div>
-              <h3 className="text-base font-bold text-[#fafafa]">Quick CGPA Utility</h3>
-              <p className="text-xs text-[#71717a] mt-0.5">Calculate impact on your total CGPA</p>
-            </div>
-            <div className="space-y-3">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[#71717a] uppercase tracking-wider">Previous CGPA</label>
-                <input
-                  type="number"
-                  step="0.01" min="0" max="4"
-                  value={prevCgpa}
-                  onChange={e => setPrevCgpa(e.target.value)}
-                  placeholder="e.g. 3.20"
-                  className="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-4 py-3 text-[#fafafa] focus:border-[#a78bfa] focus:ring-1 focus:ring-[#a78bfa] outline-none transition-all placeholder:text-[#52525b] text-sm"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[#71717a] uppercase tracking-wider">Total Previous Cr. Hours</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={prevCredits}
-                  onChange={e => setPrevCredits(e.target.value)}
-                  placeholder="e.g. 64"
-                  className="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-4 py-3 text-[#fafafa] focus:border-[#a78bfa] focus:ring-1 focus:ring-[#a78bfa] outline-none transition-all placeholder:text-[#52525b] text-sm"
-                />
-              </div>
-              <div className="pt-4 border-t border-[#27272a]">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-bold text-[#71717a]">New Projected CGPA</span>
-                  <span className="text-2xl font-black text-[#fafafa] tracking-tighter">
-                    {projectedCgpa ?? '—'}
-                  </span>
+                <div className="mt-8 flex gap-4 w-full">
+                    <button
+                        disabled={!isExportUnlocked}
+                        onClick={() => setIsExportModalOpen(true)}
+                        className={`flex-1 group/btn relative h-14 rounded-2xl overflow-hidden transition-all active:scale-95 flex items-center justify-center gap-3 ${isExportUnlocked ? "bg-primary text-on-primary shadow-glow" : "bg-white/5 text-zinc-700 cursor-not-allowed"}`}
+                    >
+                        <div className="absolute inset-0 bg-white/10 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300"></div>
+                        <span className="material-symbols-outlined text-[20px] relative z-10">picture_as_pdf</span>
+                        <span className="text-[10px] font-black font-label uppercase tracking-widest relative z-10">Generate Sheet</span>
+                    </button>
                 </div>
-                {projectedCgpa && (
-                  <div className="w-full bg-[#27272a] h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-[#a78bfa] h-full rounded-full transition-all" style={{ width: `${Math.min(100, (parseFloat(projectedCgpa) / 4) * 100)}%` }} />
-                  </div>
+                {!isExportUnlocked && subjects.length > 0 && (
+                    <p className="mt-4 text-[8px] font-black font-label text-error/60 uppercase tracking-widest flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[14px]">warning</span>
+                        Course codes missing for generation
+                    </p>
                 )}
-              </div>
             </div>
-          </div>
+          </section>
 
-          {/* Stats */}
-          <div className="bg-[#121215] border border-[#27272a] rounded-xl p-6">
+          <section className="bg-bg-surface rounded-3xl p-8 border border-white/5 shadow-2xl space-y-8">
+             <div className="flex items-center gap-3 border-b border-white/5 pb-6">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                    <span className="material-symbols-outlined text-[16px]">psychology</span>
+                </div>
+                <h3 className="font-black font-headline text-[10px] uppercase tracking-[0.3em] text-zinc-400">Projection Engine</h3>
+            </div>
+            
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 border border-[#27272a] rounded-lg bg-[#0f0f12]">
-                <p className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider">Total Cr.</p>
-                <p className="text-2xl font-bold text-[#fafafa] mt-1">
-                  {String(currentCredits).padStart(2, '0')}
-                </p>
-              </div>
-              <div className="p-4 border border-[#27272a] rounded-lg bg-[#0f0f12]">
-                <p className="text-[10px] font-bold text-[#71717a] uppercase tracking-wider">Total Points</p>
-                <p className="text-2xl font-bold text-[#fafafa] mt-1">
-                  {subjects.reduce((s, c) => s + (Number(c.gradePoint) * Number(c.credits)), 0).toFixed(1)}
-                </p>
-              </div>
+                <div className="space-y-3">
+                    <label className="text-[9px] font-black font-label text-zinc-600 uppercase tracking-widest ml-1">Previous CGPA</label>
+                    <input
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={prevCgpa}
+                        onChange={(e) => setPrevCgpa(e.target.value)}
+                        className="w-full bg-bg-surface-lowest border border-white/5 rounded-2xl p-4 text-center font-black font-mono text-zinc-400 outline-none focus:border-primary/50 transition-all shadow-inner-glow"
+                    />
+                </div>
+                <div className="space-y-3">
+                    <label className="text-[9px] font-black font-label text-zinc-600 uppercase tracking-widest ml-1">Historical Cr</label>
+                    <input
+                        type="number"
+                        placeholder="00"
+                        value={prevCredits}
+                        onChange={(e) => setPrevCredits(e.target.value)}
+                        className="w-full bg-bg-surface-lowest border border-white/5 rounded-2xl p-4 text-center font-black font-mono text-zinc-400 outline-none focus:border-primary/50 transition-all shadow-inner-glow"
+                    />
+                </div>
             </div>
-          </div>
 
-          {/* Export */}
-          {isExportUnlocked && (
-            <button
-              onClick={() => setIsExportModalOpen(true)}
-              className="w-full flex items-center justify-center gap-2 py-4 bg-[#a78bfa] text-[#0a0012] font-bold rounded-xl hover:opacity-90 active:scale-95 transition-all"
-            >
-              <span className="material-symbols-outlined text-[20px]">picture_as_pdf</span>
-              Export DMC
-            </button>
-          )}
+            {projectedCgpa && (
+                <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 flex flex-col items-center justify-center text-center animate-in zoom-in-95 duration-500 shadow-inner-glow">
+                    <p className="text-[8px] font-black font-label text-zinc-600 uppercase tracking-[0.4em] mb-2">Refined Graduation Vector</p>
+                    <span className="text-4xl font-black font-headline text-primary-fixed-dim tracking-tight shadow-glow">{projectedCgpa}</span>
+                </div>
+            )}
+          </section>
+
+          <RequiredMarksTool subjects={subjects} />
         </div>
       </div>
     </div>

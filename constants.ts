@@ -2,12 +2,7 @@ import { GradeRange } from './src/domain/types';
 
 export const AWKUM_LOGO_URL = '/AWKUM.png';
 
-export const PROGRAMMES = [
-  "Undergraduate (BS)",
-  "Graduation(MS)",
-  "M.Phil",
-  "Ph.D"
-];
+export const PROGRAMMES = ['Undergraduate (BS)', 'Graduation(MS)', 'M.Phil', 'Ph.D'];
 
 export const GRADE_RANGES: GradeRange[] = [
   { label: 'A+', min: 90, max: 100, gpRange: '4.00' },
@@ -30,7 +25,7 @@ export const THEMES = {
       text: 'text-[#343b58]',
       primary: 'bg-[#565f89]',
       accent: 'text-[#9699a8]',
-      border: 'border-[#cfc9c2]'
+      border: 'border-[#cfc9c2]',
     },
     catppuccin: {
       bg: 'bg-[#eff1f5]',
@@ -38,7 +33,7 @@ export const THEMES = {
       text: 'text-[#4c4f69]',
       primary: 'bg-[#8839ef]',
       accent: 'text-[#1e66f5]',
-      border: 'border-[#bcc0cc]'
+      border: 'border-[#bcc0cc]',
     },
     gruvbox: {
       bg: 'bg-[#f9f5d7]',
@@ -46,8 +41,8 @@ export const THEMES = {
       text: 'text-[#3c3836]',
       primary: 'bg-[#98971a]',
       accent: 'text-[#b57614]',
-      border: 'border-[#7c6f64]/30'
-    }
+      border: 'border-[#7c6f64]/30',
+    },
   },
   dark: {
     tokyonight: {
@@ -56,7 +51,7 @@ export const THEMES = {
       text: 'text-[#c0caf5]',
       primary: 'bg-[#7aa2f7]',
       accent: 'text-[#565f89]',
-      border: 'border-[#414868]'
+      border: 'border-[#414868]',
     },
     catppuccin: {
       bg: 'bg-[#1e1e2e]',
@@ -64,7 +59,7 @@ export const THEMES = {
       text: 'text-[#cdd6f4]',
       primary: 'bg-[#cba6f7]',
       accent: 'text-[#89b4fa]',
-      border: 'border-[#313244]'
+      border: 'border-[#313244]',
     },
     gruvbox: {
       bg: 'bg-[#282828]',
@@ -72,7 +67,7 @@ export const THEMES = {
       text: 'text-[#ebdbb2]',
       primary: 'bg-[#b8bb26]',
       accent: 'text-[#fabd2f]',
-      border: 'border-[#928374]/30'
-    }
-  }
+      border: 'border-[#928374]/30',
+    },
+  },
 };

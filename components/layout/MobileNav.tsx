@@ -8,34 +8,34 @@ interface Props {
 }
 
 const NAV_ITEMS: { page: Page; icon: string; label: string }[] = [
-  { page: 'sgpa',  icon: 'calculate', label: 'SGPA' },
-  { page: 'cgpa',  icon: 'analytics', label: 'CGPA' },
-  { page: 'rules', icon: 'gavel',     label: 'Rules' },
+  { page: 'sgpa', icon: 'calculate', label: 'SGPA' },
+  { page: 'cgpa', icon: 'analytics', label: 'CGPA' },
+  { page: 'rules', icon: 'gavel', label: 'Rules' },
 ];
 
 const MobileNav: React.FC<Props> = ({ activePage, onNavigate }) => {
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around h-16 bg-[#0c0c0f] border-t border-[#27272a]">
+    <nav className="lg:hidden fixed bottom-0 w-full z-50 h-20 bg-[#0c0c0f]/95 backdrop-blur-lg border-t border-white/5 flex justify-around items-center px-2 pb-6 rounded-t-[20px] shadow-[0_-8px_30px_rgba(167,139,250,0.08)]">
       {NAV_ITEMS.map(({ page, icon, label }) => {
         const active = activePage === page;
         return (
-          <button
+          <div
             key={page}
             onClick={() => onNavigate(page)}
-            className={`flex flex-col items-center gap-0.5 transition-colors ${
-              active ? 'text-[#a78bfa]' : 'text-[#a1a1aa]'
+            className={`flex flex-col items-center justify-center transition-all cursor-pointer ${
+              active
+                ? 'bg-violet-500/10 text-violet-400 rounded-2xl px-4 py-1 font-label text-[10px] font-bold uppercase tracking-[0.1em]'
+                : 'text-zinc-500 font-label text-[10px] font-bold uppercase tracking-[0.1em]'
             }`}
           >
             <span
-              className="material-symbols-outlined text-[22px]"
+              className="material-symbols-outlined"
               style={active ? { fontVariationSettings: "'FILL' 1" } : undefined}
             >
               {icon}
             </span>
-            <span className={`text-[10px] uppercase tracking-wider ${active ? 'font-bold' : 'font-medium'}`}>
-              {label}
-            </span>
-          </button>
+            <span>{label}</span>
+          </div>
         );
       })}
     </nav>

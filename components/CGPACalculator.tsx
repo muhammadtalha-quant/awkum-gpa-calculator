@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { UserInfo, GradePoint, Credit, asGP, asCredit, Mark, CGPASemester } from '../src/domain/types';
-import { useAcademicStore } from '../src/domain/store';
-import { getLetterFromGP } from '../src/domain/grading/engine';
-import { calculateGradePoint } from '../src/domain/grading/engine';
-import { calculateCGPA } from '../src/domain/gpa/engine';
+import { UserInfo, CGPASemester } from '../src/domain/types';
+import { useCGPALogic } from '../src/domain/gpa/useCGPALogic';
 import { exportCGPA_PDF } from '../services/pdfService';
-import { useKeyboardShortcuts } from '../src/core/useKeyboardShortcuts';
 import UserInfoModal from './UserInfoModal';
 import ProbationAlert from './ProbationAlert';
 
@@ -14,35 +10,27 @@ interface Props {
 }
 
 const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
-  const { semesters, addSemester, removeSemester, updateSemester, setSemesters } = useAcademicStore();
+  const {
+    semesters,
+    errorMsg,
+    cgpaNum,
+    overallGrade,
+    totalCredits,
+    qualityPoints,
+    handleAddSemester,
+    handleRemoveSemester,
+    updateSemester,
+  } = useCGPALogic();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-
-  const MAX_CREDITS = 216;
-  const MIN_ROOM = 12;
-  const MAX_ROWS = 12;
 
   useEffect(() => {
     if (onExportReady) onExportReady(() => setIsModalOpen(true));
   }, [onExportReady]);
 
-  useEffect(() => {
-    const total = semesters.reduce((s, sem) => s + (Number(sem.credits) || 0), 0);
-    if (total > MAX_CREDITS) {
-      const copy = [...semesters];
-      while (copy.reduce((s, sem) => s + (Number(sem.credits) || 0), 0) > MAX_CREDITS && copy.length > 1) copy.pop();
-      setSemesters(copy);
-      setErrorMsg('Adjusted semesters to maintain global credit limit.');
-    }
-  }, [semesters, setSemesters]);
-
-  const cgpaValue = calculateCGPA(semesters.map(s => ({ sgpa: s.sgpa, credits: s.credits })));
-  const overallGrade = getLetterFromGP(cgpaValue);
-  const cgpaNum = Number(cgpaValue);
-
-  const totalCredits = semesters.reduce((s, sem) => s + (Number(sem.credits) || 0), 0);
-  const qualityPoints = semesters.reduce((s, sem) => s + (Number(sem.sgpa) * Number(sem.credits)), 0);
+  const handlePdfExport = (userInfo: UserInfo) => {
+    exportCGPA_PDF(semesters, cgpaNum, overallGrade, userInfo);
+  };
 
   const getCgpaLabel = (gpa: number) => {
     if (gpa >= 3.75) return 'First Class with Distinction';
@@ -52,314 +40,182 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
     return 'Academic Probation';
   };
 
-  const handlePdfExport = (userInfo: UserInfo) => {
-    exportCGPA_PDF(semesters, cgpaNum, overallGrade, userInfo);
-  };
-
-  const handleAddSemester = () => {
-    if (semesters.length >= MAX_ROWS || (MAX_CREDITS - totalCredits) < MIN_ROOM) return;
-    setErrorMsg('');
-    const newId = Math.random().toString(36).substr(2, 9);
-    const initialCourse = { id: (Date.now() + Math.random()).toString(), name: '', code: '', credits: 3 as Credit, marks: '' as unknown as Mark, gradePoint: 0 as GradePoint, gradeLetter: 'F' };
-    setSemesters([...semesters, { id: newId, name: `Semester ${semesters.length + 1}`, sgpa: 0 as GradePoint, credits: 3 as Credit, subjects: [initialCourse] }]);
-  };
-
-
-  const handleRemove = (id: string) => {
-    setErrorMsg('');
-    if (semesters.length <= 1) setSemesters([]);
-    else removeSemester(id);
-  };
-
-  // Inline course update within a semester (for subject-level entry)
-  const handleAddCourseToSemester = (semId: string) => {
-    const sem = semesters.find(s => s.id === semId);
-    if (!sem) return;
-    const newCourse = {
-      id: (Date.now() + Math.random()).toString(),
-      name: '',
-      code: '',
-      credits: 3 as Credit,
-      marks: '' as unknown as Mark,
-      gradePoint: 0 as GradePoint,
-      gradeLetter: 'F',
-    };
-    const updated = [...(sem.subjects || []), newCourse];
-    const semCredits = updated.reduce((s, c) => s + (Number(c.credits) || 0), 0);
-    const semSgpa = updated.filter(c => c.gradePoint > 0).length > 0
-      ? Number((updated.reduce((s, c) => s + Number(c.gradePoint) * Number(c.credits), 0) / semCredits).toFixed(2))
-      : 0;
-    updateSemester(semId, { subjects: updated, credits: asCredit(semCredits), sgpa: asGP(semSgpa) });
-  };
-
-  const handleUpdateCourse = (semId: string, courseId: string, field: string, value: string) => {
-    const sem = semesters.find(s => s.id === semId);
-    if (!sem) return;
-    const updated = (sem.subjects || []).map(c => {
-      if (c.id !== courseId) return c;
-      if (field === 'name') return { ...c, name: value };
-      if (field === 'credits') {
-        const v = parseInt(value);
-        return { ...c, credits: (isNaN(v) ? c.credits : v) as Credit };
-      }
-      if (field === 'marks') {
-        if (value === '') return { ...c, marks: '' as unknown as Mark, gradePoint: 0 as GradePoint, gradeLetter: 'F' };
-        const v = parseInt(value);
-        if (isNaN(v) || v < 0 || v > 100) return c;
-        const gp = calculateGradePoint(v as Mark);
-        return { ...c, marks: v as Mark, gradePoint: gp, gradeLetter: getLetterFromGP(gp) };
-      }
-      return c;
-    });
-    const semCredits = updated.reduce((s, c) => s + (Number(c.credits) || 0), 0);
-    const semSgpa = semCredits > 0 && updated.some(c => c.gradePoint > 0)
-      ? Number((updated.reduce((s, c) => s + Number(c.gradePoint) * Number(c.credits), 0) / semCredits).toFixed(2))
-      : 0;
-    updateSemester(semId, { subjects: updated, credits: asCredit(semCredits), sgpa: asGP(Math.min(4, semSgpa)) });
-  };
-
-  const handleRemoveCourse = (semId: string, courseId: string) => {
-    const sem = semesters.find(s => s.id === semId);
-    if (!sem) return;
-    const updated = (sem.subjects || []).filter(c => c.id !== courseId);
-    const semCredits = updated.reduce((s, c) => s + (Number(c.credits) || 0), 0);
-    const semSgpa = semCredits > 0 && updated.some(c => c.gradePoint > 0)
-      ? Number((updated.reduce((s, c) => s + Number(c.gradePoint) * Number(c.credits), 0) / semCredits).toFixed(2))
-      : 0;
-    updateSemester(semId, { subjects: updated, credits: asCredit(semCredits), sgpa: asGP(Math.min(4, semSgpa)) });
-  };
-
-  const resetAll = () => { setErrorMsg(''); setSemesters([]); };
-
-  useKeyboardShortcuts({ escape: () => { setIsModalOpen(false); } });
-
-  const showAddButton = semesters.length < MAX_ROWS && (MAX_CREDITS - totalCredits) >= MIN_ROOM;
-
-  const tabs = [
-    { id: 'forecast' as const, label: 'Forecasting', icon: 'trending_up' },
-    { id: 'simulate' as const, label: 'Outcome Sim', icon: 'science' },
-    { id: 'retake' as const, label: 'Retake ROI', icon: 'refresh' },
-  ];
-
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto w-full pb-24 md:pb-10 space-y-8">
-      {/* Modals */}
-      <UserInfoModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSubmit={handlePdfExport} title="Cumulative Grade Sheet Details" isCGPA={true} rowCount={semesters.length} theme={null} />
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <UserInfoModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handlePdfExport}
+        title="Graduation Record Configuration"
+      />
 
-      {/* Dashboard Bento */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* CGPA Hero */}
-        <div className="md:col-span-2 p-6 rounded-xl bg-[#121215] border border-[#27272a] flex flex-col justify-between relative overflow-hidden group min-h-[160px]">
-          <div className="relative z-10">
-            <p className="text-[#71717a] text-sm font-medium">Cumulative Grade Point Average</p>
-            <h1 className="text-6xl font-black text-[#a78bfa] tracking-tighter mt-2">
-              {cgpaNum > 0 ? cgpaNum.toFixed(2) : '—'}
-            </h1>
-          </div>
-          {cgpaNum > 0 && (
-            <div className="mt-4 flex items-center gap-2 text-[#34d399]">
-              <span className="material-symbols-outlined text-[18px]">trending_up</span>
-              <span className="text-sm font-bold">{getCgpaLabel(cgpaNum)}</span>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="lg:col-span-8 space-y-8">
+          <section className="bg-bg-surface rounded-3xl p-8 flex flex-col md:flex-row justify-between items-center gap-6 border border-white/5 shadow-2xl overflow-hidden relative group">
+            <div className="absolute top-0 right-0 p-8 opacity-0 group-hover:opacity-10 transition-opacity">
+                <span className="material-symbols-outlined text-8xl text-primary">analytics</span>
             </div>
-          )}
-          <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
-            <span className="material-symbols-outlined text-[100px] text-[#a78bfa]">analytics</span>
-          </div>
-        </div>
-
-        <div className="p-6 rounded-xl bg-[#121215] border border-[#27272a]">
-          <p className="text-[#71717a] text-sm font-medium">Credits Earned</p>
-          <h3 className="text-4xl font-bold text-[#fafafa] mt-2">{totalCredits}</h3>
-          <p className="text-xs text-[#52525b] mt-2">Required: 132 Credits</p>
-        </div>
-
-        <div className="p-6 rounded-xl bg-[#121215] border border-[#27272a]">
-          <p className="text-[#71717a] text-sm font-medium">Quality Points</p>
-          <h3 className="text-4xl font-bold text-[#fafafa] mt-2">{qualityPoints.toFixed(1)}</h3>
-          <p className="text-xs text-[#52525b] mt-2">∑(SGPA × Credits)</p>
-        </div>
-      </div>
-
-      {/* Probation Alert */}
-      {cgpaNum > 0 && cgpaNum < 2.0 && <ProbationAlert cgpa={cgpaNum} theme={null} />}
-
-      {/* Transcript Breakdown */}
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold tracking-tight text-[#fafafa]">Transcript Breakdown</h2>
-          <div className="flex gap-3">
-            {showAddButton && (
-              <button
-                onClick={handleAddSemester}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#18181b] border border-[#27272a] text-[#fafafa] hover:bg-[#27272a] transition-colors text-sm font-medium"
-              >
-                <span className="material-symbols-outlined text-[18px]">add</span>
-                Add Semester
-              </button>
-            )}
-            {semesters.length > 0 && (
-              <button onClick={resetAll} className="px-4 py-2 rounded-lg text-[#ef4444] text-sm font-bold border border-[#ef4444]/20 hover:bg-[#ef4444]/10 transition-colors">
-                Reset All
-              </button>
-            )}
-          </div>
-        </div>
-
-        {semesters.length === 0 ? (
-          <div className="py-16 text-center border-2 border-dashed border-[#27272a] rounded-xl">
-            <span className="material-symbols-outlined text-5xl text-[#3f3f46]">library_books</span>
-            <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-[#52525b] mt-4 mb-6">No Semesters Added</h3>
+            <div className="relative z-10">
+              <h1 className="text-3xl font-black font-headline text-white tracking-tight">Cumulative Vector</h1>
+              <p className="text-zinc-500 text-xs font-black font-label uppercase tracking-widest mt-2">
+                Historical academic performance aggregation
+              </p>
+            </div>
             <button
               onClick={handleAddSemester}
-              className="px-8 py-3 rounded-lg bg-[#a78bfa] text-[#0a0012] font-bold uppercase tracking-wider hover:opacity-90 active:scale-95 transition-all text-sm"
+              className="relative z-10 w-full md:w-auto px-10 py-4 rounded-2xl bg-primary text-on-primary text-[10px] font-black font-label uppercase tracking-widest hover:shadow-glow transition-all flex items-center justify-center gap-3 active:scale-95 group/add"
             >
-              Add Academic Record
+              <div className="absolute inset-0 bg-white/10 translate-y-full group-hover/add:translate-y-0 transition-transform duration-300"></div>
+              <span className="material-symbols-outlined text-[20px] relative z-10">add_moderator</span>
+              <span className="relative z-10">Add Academic Block</span>
             </button>
-          </div>
-        ) : (
-          semesters.map((sem, si) => {
-            const semGpa = Number(sem.sgpa);
-            const semCH = Number(sem.credits);
-            return (
-              <div key={sem.id} className="bg-[#121215] border border-[#27272a] rounded-xl overflow-hidden">
-                {/* Semester header */}
-                <div className="px-6 py-4 bg-[#18181b] border-b border-[#27272a] flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <span className="w-8 h-8 rounded bg-[#a78bfa]/20 text-[#a78bfa] flex items-center justify-center font-bold text-sm">
-                      {si + 1}
-                    </span>
-                    <h3 className="font-bold text-[#fafafa]">{sem.name}</h3>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="flex gap-4 text-xs font-bold uppercase tracking-widest items-center">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[#52525b]">GPA:</span>
-                        {sem.subjects && sem.subjects.length > 0 ? (
-                          <span className="text-[#fafafa] font-black">{semGpa.toFixed(2)}</span>
-                        ) : (
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0" max="4"
-                            value={sem.sgpa || ''}
-                            onChange={(e) => updateSemester(sem.id, { sgpa: asGP(parseFloat(e.target.value) || 0) })}
-                            className="w-16 bg-[#18181b] border border-[#27272a] rounded px-2 py-1 text-center text-[#fafafa] focus:border-[#a78bfa] outline-none"
-                          />
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[#52525b]">CH:</span>
-                        {sem.subjects && sem.subjects.length > 0 ? (
-                          <span className="text-[#fafafa] font-black">{semCH}</span>
-                        ) : (
-                          <input
-                            type="number"
-                            min="12" max="21"
-                            value={sem.credits || ''}
-                            onChange={(e) => updateSemester(sem.id, { credits: asCredit(parseInt(e.target.value) || 0) })}
-                            className="w-16 bg-[#18181b] border border-[#27272a] rounded px-2 py-1 text-center text-[#fafafa] focus:border-[#a78bfa] outline-none"
-                          />
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
+          </section>
 
-                      <button
-                        onClick={() => handleRemove(sem.id)}
-                        className="p-1.5 rounded text-[#71717a] hover:text-[#ef4444] hover:bg-[#ef4444]/10 transition-all"
-                      >
-                        <span className="material-symbols-outlined text-[16px]">delete</span>
-                      </button>
-                    </div>
-                  </div>
+          {cgpaNum < 2.0 && cgpaNum > 0 && (
+            <div className="animate-in slide-in-from-top-4 duration-700">
+              <ProbationAlert cgpa={cgpaNum} />
+            </div>
+          )}
+
+          <section className="bg-bg-surface rounded-3xl overflow-hidden border border-white/5 shadow-2xl">
+            <div className="p-8 border-b border-white/5 flex justify-between items-center bg-white/[0.01]">
+                <div className="flex items-center gap-3">
+                    <span className="material-symbols-outlined text-primary text-[20px]">timeline</span>
+                    <h3 className="font-black font-headline text-[11px] uppercase tracking-[0.3em] text-zinc-400">Academic Trajectory</h3>
                 </div>
-
-                {/* Course table */}
-                {(sem.subjects && sem.subjects.length > 0) ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="text-xs uppercase tracking-wider text-[#71717a] border-b border-[#27272a]">
-                          <th className="px-6 py-3 font-semibold">Course Name</th>
-                          <th className="px-6 py-3 font-semibold">Cr. Hours</th>
-                          <th className="px-6 py-3 font-semibold text-center">Marks</th>
-                          <th className="px-6 py-3 font-semibold">Grade</th>
-                          <th className="px-6 py-3 font-semibold">G. Points</th>
-                          <th className="px-6 py-3 font-semibold text-right">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#27272a]">
-                        {sem.subjects.map(course => (
-                          <tr key={course.id} className="hover:bg-[#18181b] transition-colors">
-                            <td className="px-6 py-4">
-                              <input
-                                type="text"
-                                value={course.name}
-                                onChange={e => handleUpdateCourse(sem.id, course.id, 'name', e.target.value)}
-                                placeholder="Course name…"
-                                className="bg-transparent border-none outline-none text-[#fafafa] w-full placeholder:text-[#52525b] text-sm"
-                              />
-                            </td>
-                            <td className="px-6 py-4">
-                              <input
-                                type="number" min={2} max={6}
-                                value={course.credits}
-                                onChange={e => handleUpdateCourse(sem.id, course.id, 'credits', e.target.value)}
-                                className="bg-[#18181b] border border-[#27272a] rounded px-2 py-1 text-center w-16 focus:border-[#a78bfa] outline-none text-[#fafafa] text-sm"
-                              />
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                              <input
-                                type="number" min={0} max={100}
-                                value={course.marks === '' ? '' : course.marks}
-                                onChange={e => handleUpdateCourse(sem.id, course.id, 'marks', e.target.value)}
-                                placeholder="—"
-                                className="bg-[#18181b] border border-[#27272a] rounded px-2 py-1 text-center w-16 focus:border-[#a78bfa] outline-none text-[#fafafa] placeholder:text-[#52525b] text-sm"
-                              />
-                            </td>
-                            <td className="px-6 py-4">
-                              <span className="px-2 py-0.5 rounded bg-[#34d399]/10 text-[#34d399] text-xs font-bold">
-                                {course.gradeLetter}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 font-mono text-sm text-[#fafafa]">
-                              {course.gradePoint > 0 ? course.gradePoint.toFixed(2) : '—'}
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <button onClick={() => handleRemoveCourse(sem.id, course.id)} className="text-[#71717a] hover:text-[#ef4444] transition-colors">
-                                <span className="material-symbols-outlined text-[16px]">delete</span>
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="py-6 text-center text-[#52525b] text-sm">No courses yet</div>
-                )}
-
-                <div className="p-4 bg-[#09090b] flex justify-center border-t border-[#27272a]">
-                  <button
-                    onClick={() => handleAddCourseToSemester(sem.id)}
-                    className="text-[#a78bfa] text-sm font-semibold flex items-center gap-1 hover:underline"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">add_circle</span>
-                    Add Course
-                  </button>
+                {errorMsg && <span className="text-[9px] font-black text-primary animate-pulse uppercase tracking-wider">{errorMsg}</span>}
+            </div>
+            <div className="p-8 space-y-6">
+              {semesters.length === 0 ? (
+                <div className="py-24 text-center text-zinc-700 font-label text-[10px] font-black uppercase tracking-widest bg-bg-surface-lowest border border-dashed border-white/5 rounded-2xl">
+                    Neural history empty. Secure your first academic block.
                 </div>
-              </div>
-            );
-          })
-        )}
-      </div>
-
-      {errorMsg && (
-        <div className="flex items-center gap-3 text-[#ef4444] text-xs font-bold uppercase tracking-widest bg-[#ef4444]/10 p-4 rounded-lg border border-[#ef4444]/20">
-          <span className="material-symbols-outlined text-[18px]">warning</span>
-          {errorMsg}
+              ) : (
+                semesters.map((sem: CGPASemester, idx) => (
+                  <div key={sem.id} className="group flex flex-col md:flex-row items-center gap-6 p-6 bg-bg-surface-lowest border border-white/5 rounded-2xl hover:bg-white/[0.02] transition-all duration-300 shadow-inner-glow relative overflow-hidden">
+                    <div className="flex items-center gap-4 flex-1">
+                        <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center font-black font-mono text-zinc-600 group-hover:bg-primary/10 group-hover:text-primary transition-all">
+                            {idx + 1}
+                        </div>
+                        <div className="space-y-1">
+                            <h4 className="font-black font-headline text-sm text-white">{sem.name}</h4>
+                            <p className="text-[9px] font-black font-label text-zinc-700 uppercase tracking-widest">Index Mapping {sem.id.slice(0, 4)}</p>
+                        </div>
+                    </div>
+                    
+                    <div className="flex gap-4 items-center">
+                        <div className="space-y-2">
+                            <label className="text-[8px] font-black font-label text-zinc-600 uppercase tracking-widest ml-1">Credits</label>
+                            <input
+                                type="number"
+                                value={sem.credits}
+                                onChange={(e) => updateSemester(sem.id, { credits: parseInt(e.target.value) || 0 as any })}
+                                className="w-20 bg-black/20 border border-white/5 rounded-xl p-3 text-center font-black font-mono text-xs text-primary outline-none focus:border-primary/50"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[8px] font-black font-label text-zinc-600 uppercase tracking-widest ml-1">SGPA</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                value={sem.sgpa}
+                                onChange={(e) => updateSemester(sem.id, { sgpa: parseFloat(e.target.value) || 0 as any })}
+                                className="w-24 bg-black/20 border border-white/5 rounded-xl p-3 text-center font-black font-mono text-xs text-primary outline-none focus:border-primary/50"
+                            />
+                        </div>
+                        <button
+                            onClick={() => handleRemoveSemester(sem.id)}
+                            className="mt-6 w-10 h-10 flex items-center justify-center rounded-xl bg-error/0 text-error/30 hover:bg-error/10 hover:text-error transition-all"
+                        >
+                            <span className="material-symbols-outlined text-[18px]">close</span>
+                        </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
         </div>
-      )}
+
+        <div className="lg:col-span-4 space-y-8">
+          <section className="bg-bg-surface rounded-3xl p-10 border border-white/5 shadow-glow relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-8 opacity-0 group-hover:opacity-10 transition-opacity">
+                <span className="material-symbols-outlined text-8xl text-primary">equalizer</span>
+            </div>
+            
+            <div className="flex flex-col items-center justify-center text-center relative z-10">
+                <p className="text-[10px] font-black font-label text-zinc-500 uppercase tracking-[0.4em] mb-4">Cumulative Average (CGPA)</p>
+                <div className="relative group/score">
+                    <span className="text-8xl font-black font-headline text-white tracking-tighter text-shadow-glow drop-shadow-2xl transition-transform duration-700 group-hover/score:scale-105 inline-block">
+                        {cgpaNum.toFixed(2)}
+                    </span>
+                    <div className="absolute -top-4 -left-1/2 translate-x-1/2 w-max">
+                        <div className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[8px] font-black uppercase border border-primary/20 animate-pulse shadow-soft backdrop-blur-md">
+                            {overallGrade} GRADE
+                        </div>
+                    </div>
+                </div>
+                
+                <h4 className="mt-8 text-[11px] font-black font-label text-white uppercase tracking-[0.2em] bg-white/5 px-6 py-2 rounded-full border border-white/5">
+                    {getCgpaLabel(cgpaNum)}
+                </h4>
+
+                <div className="mt-10 grid grid-cols-2 gap-4 w-full h-14">
+                    <button
+                        onClick={() => setIsModalOpen(true)}
+                        className="group/btn relative rounded-2xl bg-white/5 border border-white/5 text-zinc-400 text-[9px] font-black font-label uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-3 active:scale-95"
+                    >
+                        <span className="material-symbols-outlined text-[18px]">verified_user</span>
+                        Export Record
+                    </button>
+                    <div className="flex items-center justify-center bg-bg-surface-lowest rounded-2xl border border-white/5 shadow-inner-glow px-4">
+                        <span className="text-[10px] font-black font-label uppercase tracking-widest text-zinc-600">Locked</span>
+                    </div>
+                </div>
+            </div>
+          </section>
+
+          <section className="bg-bg-surface rounded-3xl p-8 border border-white/5 shadow-2xl space-y-8">
+             <div className="flex items-center gap-3 border-b border-white/5 pb-6">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                    <span className="material-symbols-outlined text-[16px]">hub</span>
+                </div>
+                <h3 className="font-black font-headline text-[10px] uppercase tracking-[0.3em] text-zinc-400">Parameter Decomposition</h3>
+            </div>
+            
+            <div className="space-y-4">
+                <div className="p-5 bg-bg-surface-lowest border border-white/5 rounded-2xl flex justify-between items-center group/item hover:border-primary/20 transition-all">
+                    <div className="flex items-center gap-3">
+                        <span className="material-symbols-outlined text-zinc-700 group-hover/item:text-primary transition-colors">history_edu</span>
+                        <span className="text-[10px] font-black font-label text-zinc-500 uppercase tracking-widest">Quality Points</span>
+                    </div>
+                    <span className="font-black font-mono text-white tracking-widest">{qualityPoints.toFixed(2)}</span>
+                </div>
+                <div className="p-5 bg-bg-surface-lowest border border-white/5 rounded-2xl flex justify-between items-center group/item hover:border-primary/20 transition-all">
+                    <div className="flex items-center gap-3">
+                        <span className="material-symbols-outlined text-zinc-700 group-hover/item:text-primary transition-colors">bar_chart_4_bars</span>
+                        <span className="text-[10px] font-black font-label text-zinc-500 uppercase tracking-widest">Total Credits</span>
+                    </div>
+                    <span className="font-black font-mono text-white tracking-widest">{totalCredits}</span>
+                </div>
+                <div className="p-5 bg-bg-surface-lowest border border-white/5 rounded-2xl flex justify-between items-center group/item hover:border-primary/20 transition-all">
+                    <div className="flex items-center gap-3">
+                        <span className="material-symbols-outlined text-zinc-700 group-hover/item:text-primary transition-colors">calendar_month</span>
+                        <span className="text-[10px] font-black font-label text-zinc-500 uppercase tracking-widest">Modules Count</span>
+                    </div>
+                    <span className="font-black font-mono text-white tracking-widest">{semesters.length}</span>
+                </div>
+            </div>
+          </section>
+
+          <div className="p-8 rounded-3xl bg-primary/5 border border-primary/10 shadow-inner-glow">
+            <p className="text-[9px] font-black font-label text-primary uppercase tracking-[0.3em] mb-2">Notice</p>
+            <p className="text-[10px] text-zinc-500 leading-relaxed font-medium italic">
+                Credit hours are automatically regulated. Each academic block must maintain integrity between 12-21 credits.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

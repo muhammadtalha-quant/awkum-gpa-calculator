@@ -5,253 +5,371 @@ import { getLetterFromGP } from '../src/domain/grading/engine';
 import { SGPASubject, Credit, Mark } from '../src/domain/types';
 
 interface Props {
-    isOpen: boolean;
-    onClose: () => void;
-    onImport: (subjects: SGPASubject[]) => void;
-    existingSubjectCodes: string[];
-    theme?: any;
+  isOpen: boolean;
+  onClose: () => void;
+  onImport: (subjects: SGPASubject[]) => void;
+  existingSubjectCodes: string[];
+  theme?: any;
 }
 
 type Step = 'paste' | 'credits' | 'confirm';
 
 interface SubjectDraft extends ParsedSubject {
-    credits: number;
-    isDuplicate: boolean;
+  credits: number;
+  isDuplicate: boolean;
 }
 
 const DEFAULT_CREDITS = 3;
 
 const MISParserModal: React.FC<Props> = ({ isOpen, onClose, onImport, existingSubjectCodes }) => {
-    const [step, setStep] = useState<Step>('paste');
-    const [rawText, setRawText] = useState('');
-    const [drafts, setDrafts] = useState<SubjectDraft[]>([]);
-    const [globalCredits, setGlobalCredits] = useState(DEFAULT_CREDITS);
+  const [step, setStep] = useState<Step>('paste');
+  const [rawText, setRawText] = useState('');
+  const [drafts, setDrafts] = useState<SubjectDraft[]>([]);
+  const [globalCredits, setGlobalCredits] = useState(DEFAULT_CREDITS);
 
-    const detected = useMemo(() => parseMISText(rawText), [rawText]);
+  const detected = useMemo(() => parseMISText(rawText), [rawText]);
 
-    const toStep = (next: Step) => {
-        if (next === 'credits') {
-            setDrafts(detected.map(sub => ({
-                ...sub,
-                credits: DEFAULT_CREDITS,
-                isDuplicate: existingSubjectCodes.includes(sub.code)
-            })));
-            setGlobalCredits(DEFAULT_CREDITS);
-        }
-        setStep(next);
-    };
+  const toStep = (next: Step) => {
+    if (next === 'credits') {
+      setDrafts(
+        detected.map((sub) => ({
+          ...sub,
+          credits: DEFAULT_CREDITS,
+          isDuplicate: existingSubjectCodes.includes(sub.code),
+        })),
+      );
+      setGlobalCredits(DEFAULT_CREDITS);
+    }
+    setStep(next);
+  };
 
-    const applyGlobalCredits = (val: number) => {
-        setGlobalCredits(val);
-        setDrafts(prev => prev.map(d => ({ ...d, credits: val })));
-    };
+  const applyGlobalCredits = (val: number) => {
+    setGlobalCredits(val);
+    setDrafts((prev) => prev.map((d) => ({ ...d, credits: val })));
+  };
 
-    const updateCredit = (code: string, credits: number) => {
-        setDrafts(prev => prev.map(d => d.code === code ? { ...d, credits } : d));
-    };
+  const updateCredit = (code: string, credits: number) => {
+    setDrafts((prev) => prev.map((d) => (d.code === code ? { ...d, credits } : d)));
+  };
 
-    const handleImport = () => {
-        const subjects: SGPASubject[] = drafts.map(d => {
-            const gp = calculateGradePoint(d.marks as Mark);
-            return {
-                id: Date.now().toString(36) + Math.random().toString(36).slice(2),
-                name: d.name,
-                code: d.code,
-                credits: d.credits as Credit,
-                marks: d.marks as Mark,
-                gradePoint: gp,
-                gradeLetter: getLetterFromGP(gp)
-            };
-        });
-        onImport(subjects);
-        handleClose();
-    };
+  const handleImport = () => {
+    const subjects: SGPASubject[] = drafts.map((d) => {
+      const gp = calculateGradePoint(d.marks as Mark);
+      return {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+        name: d.name,
+        code: d.code,
+        credits: d.credits as Credit,
+        marks: d.marks as Mark,
+        gradePoint: gp,
+        gradeLetter: getLetterFromGP(gp),
+      };
+    });
+    onImport(subjects);
+    handleClose();
+  };
 
-    const handleClose = () => {
-        setStep('paste');
-        setRawText('');
-        setDrafts([]);
-        onClose();
-    };
+  const handleClose = () => {
+    setStep('paste');
+    setRawText('');
+    setDrafts([]);
+    onClose();
+  };
 
-    if (!isOpen) return null;
+  if (!isOpen) return null;
 
-    const stepNum = step === 'paste' ? 1 : step === 'credits' ? 2 : 3;
+  const stepNum = step === 'paste' ? 1 : step === 'credits' ? 2 : 3;
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
-            {/* Sheet on mobile, centered modal on tablet+ */}
-            <div className="w-full sm:max-w-2xl max-h-[95vh] sm:max-h-[90vh] flex flex-col rounded-t-xl sm:rounded-xl border-t sm:border border-[#27272a] bg-[#121215] shadow-2xl overflow-hidden">
-
-                {/* Header */}
-                <div className="flex items-center justify-between px-5 sm:px-10 py-5 sm:py-7 border-b border-[#27272a] flex-shrink-0">
-                    <div>
-                        <h2 className="text-sm font-black uppercase tracking-[0.3em] mb-1">MIS Bulk Importer</h2>
-                        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                            {['Paste', 'Credits', 'Confirm'].map((label, i) => (
-                                <React.Fragment key={label}>
-                                    <span className={`text-[9px] font-black uppercase tracking-widest ${i + 1 === stepNum ? 'text-blue-500' : 'opacity-30'}`}>
-                                        {i + 1}. {label}
-                                    </span>
-                                    {i < 2 && <span className="opacity-20 text-[9px]">›</span>}
-                                </React.Fragment>
-                            ))}
-                        </div>
-                    </div>
-                    <button onClick={handleClose} className="p-3 rounded-2xl hover:bg-black/10 transition-colors opacity-40 hover:opacity-100">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-
-                {/* Body */}
-                <div className="flex-1 overflow-y-auto p-4 sm:p-8">
-
-                    {/* ── Step 1: Paste ── */}
-                    {step === 'paste' && (
-                        <div className="space-y-5 animate-in fade-in duration-300">
-                            <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest leading-relaxed">
-                                Open your AWKUM MIS → Result → select all text on the page → paste below.
-                            </p>
-                            <textarea
-                                autoFocus
-                                value={rawText}
-                                onChange={e => setRawText(e.target.value)}
-                                rows={9}
-                                placeholder={"Paste your MIS result page text here...\n\nExample:\n1  Introduction To Management (SS-306)  Mr. Haider Zaman\n21\n20\n35\n76\n-"}
-                                className="w-full px-4 sm:px-6 py-4 sm:py-5 rounded-lg border border-[#27272a] bg-[#18181b] text-sm font-mono resize-none outline-none focus:border-[#a78bfa] transition-all placeholder:opacity-20 text-[#fafafa]"
-                            />
-                            {rawText.length > 0 && (
-                                <div className="flex flex-wrap items-center gap-3 px-4 py-3 rounded-lg border border-[#27272a] bg-[#18181b]">
-                                    <span className={`text-2xl font-black ${detected.length > 0 ? 'text-blue-500' : 'text-red-500'}`}>{detected.length}</span>
-                                    <span className="text-[10px] font-black uppercase tracking-widest opacity-50">
-                                        {detected.length === 1 ? 'Subject Detected' : 'Subjects Detected'}
-                                    </span>
-                                    {detected.length === 0 && (
-                                        <span className="text-[9px] text-red-500">— No course codes found</span>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* ── Step 2: Credits ── */}
-                    {step === 'credits' && (
-                        <div className="space-y-5 animate-in fade-in duration-300">
-                            <div className="flex flex-wrap items-center gap-3 p-4 rounded-lg border border-[#27272a] bg-[#a78bfa]/5">
-                                <label className="text-[9px] font-black uppercase tracking-widest opacity-50 flex-1 min-w-[8rem]">
-                                    Set all subjects to:
-                                </label>
-                                <div className="flex gap-2">
-                                    {[1, 2, 3, 4].map(cr => (
-                                        <button
-                                            key={cr}
-                                            onClick={() => applyGlobalCredits(cr)}
-                                            className={`w-10 h-10 rounded-lg font-black text-sm border transition-all ${globalCredits === cr ? 'bg-[#a78bfa] text-[#0a0012] border-[#a78bfa]' : 'border-[#27272a] hover:bg-[#18181b] text-[#fafafa]'}`}
-                                        >
-                                            {cr}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                {drafts.map(d => (
-                                    <div key={d.code} className={`flex flex-wrap items-center gap-3 px-4 py-3 rounded-lg border border-[#27272a] bg-[#18181b] ${d.isDuplicate ? 'border-[#f2a100]/30' : ''}`}>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                                                <span className="text-[9px] font-black text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded">{d.code}</span>
-                                                {d.isDuplicate && <span className="text-[8px] font-black text-orange-500 bg-orange-500/10 px-2 py-0.5 rounded">EXISTS</span>}
-                                            </div>
-                                            <p className="text-xs font-bold truncate">{d.name}</p>
-                                        </div>
-                                        <div className="flex items-center gap-2 flex-shrink-0">
-                                            <span className="text-[9px] opacity-40 font-black hidden sm:block">{d.marks} marks</span>
-                                            <div className="flex items-center border border-[#27272a] rounded-lg overflow-hidden">
-                                                {[1, 2, 3, 4].map(cr => (
-                                                    <button
-                                                        key={cr}
-                                                        onClick={() => updateCredit(d.code, cr)}
-                                                        className={`w-8 h-8 font-black text-xs transition-all ${d.credits === cr ? 'bg-[#a78bfa] text-[#0a0012]' : 'hover:bg-[#27272a] text-[#71717a]'}`}
-                                                    >
-                                                        {cr}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* ── Step 3: Confirm ── */}
-                    {step === 'confirm' && (
-                        <div className="space-y-4 animate-in fade-in duration-300">
-                            <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest">
-                                Review before importing {drafts.length} subject{drafts.length !== 1 ? 's' : ''}:
-                            </p>
-                            <div className="space-y-2">
-                                {drafts.map(d => {
-                                    const gp = calculateGradePoint(d.marks as Mark);
-                                    const letter = getLetterFromGP(gp);
-                                    return (
-                                        <div key={d.code} className="flex items-center justify-between gap-2 px-4 py-3 rounded-lg border border-[#27272a] bg-[#18181b]">
-                                            <div className="flex items-center gap-2 min-w-0 flex-1">
-                                                <span className="text-[9px] font-black text-blue-500 flex-shrink-0">{d.code}</span>
-                                                <span className="text-xs font-bold truncate">{d.name}</span>
-                                                {d.isDuplicate && <span className="text-[8px] font-black text-orange-500 flex-shrink-0">↩ UPDATE</span>}
-                                            </div>
-                                            <div className="flex items-center gap-2 sm:gap-4 opacity-70 flex-shrink-0">
-                                                <span className="text-[9px] font-black">{d.credits}Cr</span>
-                                                <span className="text-[9px] font-black hidden sm:block">{d.marks} marks</span>
-                                                <span className={`text-[9px] font-black px-2 py-0.5 rounded ${letter === 'F' ? 'text-red-500 bg-red-500/10' : 'text-green-500 bg-green-500/10'}`}>{letter}</span>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* Footer */}
-                <div className="flex justify-between items-center px-4 sm:px-8 py-4 sm:py-6 border-t border-[#27272a] flex-shrink-0">
-                    <button
-                        onClick={() => step === 'paste' ? handleClose() : setStep(step === 'confirm' ? 'credits' : 'paste')}
-                        className="px-4 sm:px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest opacity-40 hover:opacity-80 transition-all"
-                    >
-                        {step === 'paste' ? 'Cancel' : '← Back'}
-                    </button>
-                    {step === 'paste' && (
-                        <button
-                            disabled={detected.length === 0}
-                            onClick={() => toStep('credits')}
-                            className={`px-5 sm:px-8 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${detected.length > 0 ? 'bg-[#a78bfa] text-[#0a0012] hover:opacity-90 shadow-lg' : 'opacity-20 cursor-not-allowed bg-[#27272a] text-[#52525b]'}`}
-                        >
-                            Next: Credits →
-                        </button>
-                    )}
-                    {step === 'credits' && (
-                        <button
-                            onClick={() => toStep('confirm')}
-                            className="px-5 sm:px-8 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest bg-[#a78bfa] text-[#0a0012] hover:opacity-90 shadow-lg transition-all"
-                        >
-                            Next: Review →
-                        </button>
-                    )}
-                    {step === 'confirm' && (
-                        <button
-                            onClick={handleImport}
-                            className="px-5 sm:px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest bg-green-600 text-white hover:bg-green-500 shadow-lg transition-all"
-                        >
-                            ✓ Import {drafts.length}
-                        </button>
-                    )}
-                </div>
+  return (
+    <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-2xl animate-in fade-in duration-500">
+      {/* Modal Container */}
+      <div className="w-full sm:max-w-2xl max-h-[95vh] sm:max-h-[85vh] flex flex-col rounded-t-[2rem] sm:rounded-[2.5rem] border-t sm:border border-white/5 bg-bg-surface shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 duration-500">
+        {/* Header */}
+        <div className="flex flex-col px-8 sm:px-12 pt-10 pb-6 border-b border-white/5 relative bg-gradient-to-b from-primary/5 to-transparent">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                <span className="material-symbols-outlined">analytics</span>
+              </div>
+              <h2 className="text-xl font-black font-headline text-white uppercase tracking-tight">
+                MIS Intelligent Import
+              </h2>
             </div>
+            <button
+              onClick={handleClose}
+              className="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 text-zinc-500 hover:bg-white/10 hover:text-white transition-all"
+            >
+              <span className="material-symbols-outlined text-[20px]">close</span>
+            </button>
+          </div>
+
+          {/* Stepper */}
+          <div className="flex items-center gap-4">
+            {[
+              { step: 'paste', icon: 'content_paste' },
+              { step: 'credits', icon: 'edit_calendar' },
+              { step: 'confirm', icon: 'fact_check' },
+            ].map((s, i) => {
+              const isActive = step === s.step;
+              const isCompleted = (step === 'credits' && i === 0) || (step === 'confirm' && i < 2);
+              return (
+                <React.Fragment key={s.step}>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black transition-all ${isActive ? 'bg-primary text-on-primary ring-4 ring-primary/20' : isCompleted ? 'bg-primary/20 text-primary' : 'bg-surface-container-highest text-zinc-700'}`}
+                    >
+                      {isCompleted ? (
+                        <span className="material-symbols-outlined text-[14px]">check</span>
+                      ) : (
+                        i + 1
+                      )}
+                    </div>
+                    <span
+                      className={`text-[10px] font-black uppercase tracking-widest hidden sm:block ${isActive ? 'text-primary' : 'text-zinc-700'}`}
+                    >
+                      {s.step}
+                    </span>
+                  </div>
+                  {i < 2 && (
+                    <div
+                      className={`h-px flex-1 mx-2 sm:mx-0 ${isCompleted ? 'bg-primary/30' : 'bg-white/5'}`}
+                    ></div>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
         </div>
-    );
+
+        {/* Body Content */}
+        <div className="flex-1 overflow-y-auto p-8 sm:p-12 space-y-8 custom-scrollbar">
+          {/* Step 1: Paste Mode */}
+          {step === 'paste' && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+              <div className="p-5 rounded-2xl bg-primary/5 border border-primary/10 flex gap-4">
+                <span className="material-symbols-outlined text-primary text-2xl">info</span>
+                <p className="text-xs text-zinc-400 font-body leading-relaxed">
+                  Copy the entire content from your{' '}
+                  <span className="text-white font-bold">MIS Result Page</span> (Ctrl+A then Ctrl+C)
+                  and paste it below. Our engine will automatically extract grades and course data.
+                </p>
+              </div>
+              <textarea
+                autoFocus
+                value={rawText}
+                onChange={(e) => setRawText(e.target.value)}
+                rows={8}
+                placeholder={'Paste MIS raw text here...'}
+                className="w-full px-6 py-6 rounded-2xl border border-white/5 bg-bg-surface-lowest text-zinc-300 font-mono text-xs resize-none outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-zinc-800"
+              />
+              {rawText.length > 0 && (
+                <div
+                  className={`p-6 rounded-2xl border flex items-center justify-between transition-all ${detected.length > 0 ? 'bg-primary/10 border-primary/20' : 'bg-zinc-950 border-white/5 opacity-50'}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <span className="text-4xl font-black font-headline text-primary">
+                      {detected.length}
+                    </span>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                        Analysis Result
+                      </p>
+                      <p className="text-sm font-bold text-white">
+                        {detected.length === 0
+                          ? 'No courses identified'
+                          : `${detected.length} Courses Extracted`}
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    className={`material-symbols-outlined text-3xl ${detected.length > 0 ? 'text-primary' : 'text-zinc-800'}`}
+                  >
+                    {detected.length > 0 ? 'task_alt' : 'error'}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step 2: Credits Configuration */}
+          {step === 'credits' && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl bg-bg-surface-lowest border border-white/5">
+                <div>
+                  <h4 className="text-xs font-black uppercase tracking-widest text-white mb-1">
+                    Batch Configuration
+                  </h4>
+                  <p className="text-[10px] text-zinc-500">
+                    Apply uniform credits to all detected subjects
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  {[2, 3, 4].map((cr) => (
+                    <button
+                      key={cr}
+                      onClick={() => applyGlobalCredits(cr)}
+                      className={`w-12 h-12 rounded-xl font-black text-xs border transition-all ${globalCredits === cr ? 'bg-primary text-on-primary border-primary shadow-lg shadow-primary/20' : 'border-white/10 text-zinc-500 hover:text-white hover:bg-white/5'}`}
+                    >
+                      {cr}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3">
+                {drafts.map((d) => (
+                  <div
+                    key={d.code}
+                    className={`flex items-center gap-4 p-5 rounded-2xl border bg-bg-surface-lowest transition-all ${d.isDuplicate ? 'border-orange-500/20' : 'border-white/5'}`}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[8px] font-black font-mono text-primary px-1.5 py-0.5 bg-primary/10 rounded uppercase tracking-wider">
+                          {d.code}
+                        </span>
+                        {d.isDuplicate && (
+                          <span className="text-[8px] font-black text-orange-500 px-1.5 py-0.5 bg-orange-500/10 rounded">
+                            EXISTING
+                          </span>
+                        )}
+                      </div>
+                      <h5 className="text-sm font-bold text-white truncate">{d.name}</h5>
+                    </div>
+                    <div className="flex items-center bg-zinc-950 rounded-xl p-1 border border-white/5">
+                      {[2, 3, 4].map((cr) => (
+                        <button
+                          key={cr}
+                          onClick={() => updateCredit(d.code, cr)}
+                          className={`w-9 h-9 rounded-lg font-black text-[10px] transition-all ${d.credits === cr ? 'bg-white/10 text-white' : 'text-zinc-600 hover:text-zinc-400'}`}
+                        >
+                          {cr}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Confirmation Review */}
+          {step === 'confirm' && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">
+                Final Dataset Preview
+              </h4>
+              <div className="bg-bg-surface-lowest rounded-2xl border border-white/5 divide-y divide-white/5 overflow-hidden">
+                {drafts.map((d) => {
+                  const gp = calculateGradePoint(d.marks as Mark);
+                  const letter = getLetterFromGP(gp);
+                  return (
+                    <div
+                      key={d.code}
+                      className="flex items-center justify-between p-5 hover:bg-white/5 transition-colors"
+                    >
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div
+                          className={`w-10 h-10 rounded-xl flex items-center justify-center font-black font-headline ${letter === 'F' ? 'bg-error/10 text-error' : 'bg-primary/10 text-primary'}`}
+                        >
+                          {letter}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-white truncate max-w-[150px] sm:max-w-none">
+                            {d.name}
+                          </p>
+                          <span className="text-[9px] font-mono text-zinc-600 uppercase tracking-wider">
+                            {d.code}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-6">
+                        <div className="text-right hidden sm:block">
+                          <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">
+                            Mark
+                          </p>
+                          <p className="text-xs font-bold text-zinc-300">{d.marks}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">
+                            Cr.
+                          </p>
+                          <p className="text-xs font-bold text-white">{d.credits}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="p-6 bg-primary/5 border border-primary/20 rounded-2xl">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-4">
+                    <div className="text-center">
+                      <p className="text-[9px] font-black text-primary/60 uppercase">Total Items</p>
+                      <p className="text-2xl font-black text-primary">{drafts.length}</p>
+                    </div>
+                    <div className="w-px h-8 bg-primary/20"></div>
+                    <div className="text-center">
+                      <p className="text-[9px] font-black text-primary/60 uppercase">
+                        Total Credits
+                      </p>
+                      <p className="text-2xl font-black text-primary">
+                        {drafts.reduce((acc, d) => acc + d.credits, 0)}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="material-symbols-outlined text-primary/20 text-4xl">
+                    inventory_2
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer Controls */}
+        <footer className="px-8 sm:px-12 py-8 border-t border-white/5 bg-bg-surface-lowest flex items-center justify-between gap-4">
+          <button
+            onClick={() =>
+              step === 'paste' ? handleClose() : setStep(step === 'confirm' ? 'credits' : 'paste')
+            }
+            className="px-6 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:bg-white/5 transition-all"
+          >
+            {step === 'paste' ? 'Cancel' : 'Back Step'}
+          </button>
+
+          {step === 'paste' && (
+            <button
+              disabled={detected.length === 0}
+              onClick={() => toStep('credits')}
+              className={`px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl transition-all ${detected.length > 0 ? 'bg-primary text-on-primary hover:scale-[1.02]' : 'bg-surface-container-highest text-zinc-700 opacity-30 cursor-not-allowed'}`}
+            >
+              Analyze & Next
+            </button>
+          )}
+
+          {step === 'credits' && (
+            <button
+              onClick={() => toStep('confirm')}
+              className="px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] bg-primary text-on-primary shadow-2xl hover:scale-[1.02] transition-all"
+            >
+              Final Verification
+            </button>
+          )}
+
+          {step === 'confirm' && (
+            <button
+              onClick={handleImport}
+              className="px-10 py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.3em] bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-2xl hover:scale-[1.02] transition-all flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined text-[16px]">download_done</span>
+              Commit Import
+            </button>
+          )}
+        </footer>
+      </div>
+    </div>
+  );
 };
 
 export default MISParserModal;

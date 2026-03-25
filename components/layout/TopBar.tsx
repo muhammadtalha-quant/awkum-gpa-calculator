@@ -8,8 +8,8 @@ interface Props {
 }
 
 const PAGE_TITLES: Record<Page, string> = {
-  sgpa:  'SGPA Calculator',
-  cgpa:  'CGPA Calculator',
+  sgpa: 'SGPA Calculator',
+  cgpa: 'CGPA Calculator',
   rules: 'University Rules',
 };
 
@@ -31,32 +31,64 @@ interface TopBarProps {
 
 const TopBar: React.FC<TopBarProps> = ({ activePage, onExport, onMenuClick }) => {
   const exportLabel = EXPORT_LABELS[activePage];
-  const exportIcon  = EXPORT_ICONS[activePage];
+  const exportIcon = EXPORT_ICONS[activePage];
 
   return (
-    <header className="sticky top-0 z-50 flex items-center justify-between h-16 px-6 bg-[#09090b] border-b border-[#27272a]">
-      {/* Left: brand */}
+    <header className="fixed top-0 w-full z-[100] h-16 bg-zinc-950/90 backdrop-blur-xl border-b border-white/5 flex justify-between items-center px-6 max-w-full">
       <div className="flex items-center gap-3">
-        {/* Mobile hamburger */}
         <button
           onClick={onMenuClick}
-          className="md:hidden text-[#a1a1aa] hover:text-[#fafafa] transition-colors"
+          className="lg:hidden text-[#a1a1aa] hover:text-[#fafafa] transition-colors"
           aria-label="Open menu"
         >
           <span className="material-symbols-outlined">menu</span>
         </button>
-        <span className="text-xl font-bold tracking-tighter text-[#fafafa]">AWKUM GPA Calculator</span>
+        <div
+          className="text-lg font-bold text-zinc-50 tracking-tighter font-headline"
+          style={{ fontFamily: 'var(--font-headline)' }}
+        >
+          AWKUM GPA Calculator
+        </div>
       </div>
 
-      {/* Right: export button + desktop label */}
-      <div className="flex items-center gap-4">
+      <div className="hidden lg:flex items-center gap-8">
+        <nav className="flex gap-6 items-center">
+          <a
+            className={`font-['Space_Grotesk'] font-medium tracking-tight hover:text-violet-300 transition-colors duration-300 ${activePage === 'sgpa' ? 'text-violet-400 font-semibold' : 'text-zinc-400'}`}
+            href="#"
+          >
+            SGPA Calculator
+          </a>
+          <a
+            className={`font-['Space_Grotesk'] font-medium tracking-tight hover:text-violet-300 transition-colors duration-300 ${activePage === 'cgpa' ? 'text-violet-400 font-semibold' : 'text-zinc-400'}`}
+            href="#"
+          >
+            CGPA Calculator
+          </a>
+          <a
+            className={`font-['Space_Grotesk'] font-medium tracking-tight hover:text-violet-300 transition-colors duration-300 ${activePage === 'rules' ? 'text-violet-400 font-semibold' : 'text-zinc-400'}`}
+            href="#"
+          >
+            Grading Rules
+          </a>
+        </nav>
+        <div className="flex gap-4">
+          <span className="material-symbols-outlined text-zinc-400 cursor-pointer hover:text-primary transition-colors">
+            share
+          </span>
+          <span className="material-symbols-outlined text-zinc-400 cursor-pointer hover:text-primary transition-colors">
+            settings
+          </span>
+        </div>
+      </div>
 
+      <div className="lg:hidden flex items-center gap-4">
         {exportLabel && onExport && (
           <button
             onClick={onExport}
-            className="flex items-center gap-2 bg-[#a78bfa] text-[#0a0012] font-bold px-4 py-2 rounded-lg text-sm hover:opacity-90 active:scale-95 transition-all"
+            className="flex items-center gap-2 bg-primary-container text-on-primary font-bold px-4 py-1.5 rounded-lg text-xs hover:opacity-90 active:scale-95 transition-all"
           >
-            <span className="material-symbols-outlined text-[18px]">{exportIcon}</span>
+            <span className="material-symbols-outlined text-[16px]">{exportIcon}</span>
             <span>{exportLabel}</span>
           </button>
         )}

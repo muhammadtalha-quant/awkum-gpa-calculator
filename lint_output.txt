@@ -1,0 +1,59 @@
+
+> awkum-gpa-calculator@3.0.0 lint
+> eslint "{src,components}/**/*.{ts,tsx}" App.tsx index.tsx --max-warnings 0
+
+
+/home/talha/awkum-gpa-calculator/components/MISParserModal.tsx
+  81:9  warning  'stepNum' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/talha/awkum-gpa-calculator/components/Pagination.tsx
+  10:79  warning  'theme' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/talha/awkum-gpa-calculator/components/ProbationAlert.tsx
+  22:9  warning  'subtextColor' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/talha/awkum-gpa-calculator/components/SemesterSubjectTable.tsx
+   2:41  warning  'Credit' is defined but never used                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+  13:82  warning  'theme' is defined but never used                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+  34:6   warning  React Hook useEffect has a missing dependency: 'onUpdate'. Either include it or remove the dependency array. If 'onUpdate' changes too often, find the parent component that defines it and wrap that definition in useCallback  react-hooks/exhaustive-deps
+
+/home/talha/awkum-gpa-calculator/components/SubjectEntryModal.tsx
+  2:23  warning  'Mark' is defined but never used    @typescript-eslint/no-unused-vars
+  2:29  warning  'Credit' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/talha/awkum-gpa-calculator/components/UserInfoModal.tsx
+   38:10  warning  'formTouched' is assigned a value but never used                 @typescript-eslint/no-unused-vars
+  193:27  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+/home/talha/awkum-gpa-calculator/components/layout/TopBar.tsx
+   5:11  warning  'Props' is defined but never used                 @typescript-eslint/no-unused-vars
+  10:7   warning  'PAGE_TITLES' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/talha/awkum-gpa-calculator/components/pages/UniversityRules.tsx
+  44:43  warning  'idx' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/talha/awkum-gpa-calculator/src/domain/gpa/useCGPALogic.ts
+  5:10  warning  'Credit' is defined but never used      @typescript-eslint/no-unused-vars
+  5:18  warning  'GradePoint' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/talha/awkum-gpa-calculator/src/domain/store.ts
+   8:3   warning  'asMark' is defined but never used         @typescript-eslint/no-unused-vars
+  10:3   warning  'asGP' is defined but never used           @typescript-eslint/no-unused-vars
+  13:25  warning  'calculateCGPA' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/talha/awkum-gpa-calculator/src/features/analytics/GPATrendChart.tsx
+  3:3  warning  'LineChart' is defined but never used  @typescript-eslint/no-unused-vars
+  4:3  warning  'Line' is defined but never used       @typescript-eslint/no-unused-vars
+
+/home/talha/awkum-gpa-calculator/src/services/pdfWorker.ts
+   2:8   warning  'autoTable' is defined but never used            @typescript-eslint/no-unused-vars
+   3:10  warning  'SGPASubject' is defined but never used          @typescript-eslint/no-unused-vars
+   3:23  warning  'UserInfo' is defined but never used             @typescript-eslint/no-unused-vars
+  12:13  warning  'subjects' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  12:23  warning  'gpa' is assigned a value but never used         @typescript-eslint/no-unused-vars
+  12:28  warning  'grade' is assigned a value but never used       @typescript-eslint/no-unused-vars
+  12:35  warning  'userInfo' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  12:45  warning  'logoBase64' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+✖ 28 problems (1 error, 27 warnings)
+

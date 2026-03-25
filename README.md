@@ -6,15 +6,16 @@ This repository contains the client-side web application for calculating SGPA an
 
 We have detailed documentation available for different aspects of the project:
 
--   [**Features**](./documentation/FEATURES.md): Learn about the calculation modes, grading logic, and PDF export features.
--   [**Architecture**](./documentation/ARCHITECTURE.md): An overview of the tech stack and client-side architecture.
--   [**Code Design**](./documentation/CODE_DESIGN.md): Details on the component hierarchy and state management.
+- [**Features**](./documentation/FEATURES.md): Learn about the calculation modes, grading logic, and PDF export features.
+- [**Architecture**](./documentation/ARCHITECTURE.md): An overview of the tech stack and client-side architecture.
+- [**Code Design**](./documentation/CODE_DESIGN.md): Details on the component hierarchy and state management.
 
 ## Quick Start
 
 ### Prerequisites
--   Node.js (v18 or higher)
--   npm or yarn
+
+- Node.js (v18 or higher)
+- npm or yarn
 
 ### Installation
 

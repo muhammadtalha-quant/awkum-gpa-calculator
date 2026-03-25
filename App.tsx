@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import './src/styles/design-system.css';
 import SideNav from './components/layout/SideNav';
 import TopBar from './components/layout/TopBar';
 import MobileNav from './components/layout/MobileNav';
@@ -24,26 +25,37 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#09090b] text-[#fafafa]">
-      {/* Sidebar */}
-      <SideNav activePage={activePage} onNavigate={setActivePage} />
+    <div className="min-h-screen bg-background text-[#fafafa] selection:bg-primary/30">
+      {/* Top Bar */}
+      <TopBar
+        activePage={activePage}
+        onExport={activePage !== 'rules' ? handleExport : undefined}
+      />
 
-      {/* Main area */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <TopBar
-          activePage={activePage}
-          onExport={activePage !== 'rules' ? handleExport : undefined}
-        />
+      <div className="flex h-full">
+        {/* Sidebar */}
+        <SideNav activePage={activePage} onNavigate={setActivePage} />
 
-        <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
-          {activePage === 'sgpa' && (
-            <SGPACalculator onExportReady={(fn) => { sgpaExportRef.current = fn; }} />
-          )}
-          {activePage === 'cgpa' && (
-            <CGPACalculator onExportReady={(fn) => { cgpaExportRef.current = fn; }} />
-          )}
-          {activePage === 'rules' && <UniversityRules />}
-        </div>
+        {/* Main area */}
+        <main className="flex-1 lg:ml-64 pt-16 pb-32 px-4 md:px-8 max-w-7xl mx-auto glow-bg min-w-0">
+          <div className="py-8">
+            {activePage === 'sgpa' && (
+              <SGPACalculator
+                onExportReady={(fn) => {
+                  sgpaExportRef.current = fn;
+                }}
+              />
+            )}
+            {activePage === 'cgpa' && (
+              <CGPACalculator
+                onExportReady={(fn) => {
+                  cgpaExportRef.current = fn;
+                }}
+              />
+            )}
+            {activePage === 'rules' && <UniversityRules />}
+          </div>
+        </main>
       </div>
 
       {/* Mobile bottom nav */}

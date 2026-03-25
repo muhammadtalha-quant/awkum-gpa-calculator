@@ -10,7 +10,8 @@
     "tests": "vitest run && npx playwright install chromium && playwright test",
     "coverage": "vitest run --coverage",
     "fmt": "prettier --write \"{src,components}/**/*.{ts,tsx,css}\" App.tsx index.tsx index.html",
-    "lint": "eslint \"{src,components}/**/*.{ts,tsx}\" App.tsx index.tsx --max-warnings 0"
+    "lint": "eslint \"{src,components}/**/*.{ts,tsx}\" App.tsx index.tsx --max-warnings 0",
+    "all": "npm run fmt && npm run lint && npm run tests && npm run coverage && npm run build"
   },
   "dependencies": {
     "jspdf": "^4.1.0",

@@ -169,4 +169,8 @@ psd
 thumb
 sketch
 
+# Stich Generated Files
+stitch/
+
+
 # End of https://www.toptal.com/developers/gitignore/api/node,react,linux

@@ -172,5 +172,7 @@ sketch
 # Stich Generated Files
 stitch/
 
+# Antigravity generated text files
+*.txt
 
 # End of https://www.toptal.com/developers/gitignore/api/node,react,linux

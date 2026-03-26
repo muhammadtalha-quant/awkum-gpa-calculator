@@ -31,8 +31,10 @@ jobs:
         run: npm run fmt
       - name: Lint
         run: npm run lint
-      - name: Unit Tests & Coverage
-        run: npm run coverage
+      - name: Unit Tests
+        run: npm run test:unit
+      - name: Coverage
+        run: npm run test:unit:coverage
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
       - name: E2E Tests

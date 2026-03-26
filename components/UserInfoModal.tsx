@@ -107,9 +107,9 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-2xl animate-in">
-      <div className="w-full max-w-xl rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/5 bg-bg-surface animate-zoom-in">
+      <div className="w-full max-w-4xl rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/5 bg-bg-surface animate-zoom-in">
         {/* Header */}
-        <div className="p-6 sm:p-10 text-center relative overflow-hidden bg-gradient-to-b from-primary/5 to-transparent">
+        <div className="p-8 sm:p-10 text-center relative overflow-hidden bg-gradient-to-b from-primary/5 to-transparent">
           <div className="relative z-10">
             <h3 className="text-2xl font-black font-headline text-white uppercase tracking-[0.2em] mb-2">
               {title}
@@ -118,17 +118,17 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
               Official AWKUM Credential Verification
             </p>
           </div>
-          <div className="absolute top-0 right-0 p-8 opacity-5">
+          <div className="absolute top-0 right-0 p-10 opacity-5">
             <span className="material-symbols-outlined text-6xl">verified_user</span>
           </div>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="px-6 sm:px-10 pb-10 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar"
+          className="px-8 sm:px-12 pb-10 space-y-4 max-h-[85vh] overflow-y-auto custom-scrollbar"
         >
           {/* Identity Section */}
-          <section className="space-y-6">
+          <section className="space-y-4">
             <div className="flex items-center gap-4">
               <span className="text-[10px] font-black font-label text-primary uppercase tracking-widest">
                 Personal Identity
@@ -136,8 +136,8 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
               <div className="h-px bg-white/5 flex-1"></div>
             </div>
 
-            <div className="flex flex-col md:flex-row items-center gap-8">
-              <div className="relative group">
+            <div className="flex flex-col lg:flex-row items-start gap-12">
+              <div className="relative group shrink-0 mx-auto lg:mx-0">
                 <div
                   onClick={() => fileInputRef.current?.click()}
                   className="w-28 h-28 rounded-2xl border-2 border-dashed border-white/10 flex items-center justify-center cursor-pointer overflow-hidden bg-bg-surface-lowest hover:border-primary/50 transition-all duration-500 shadow-xl"
@@ -164,7 +164,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
                 />
               </div>
 
-              <div className="flex-1 w-full space-y-4">
+              <div className="flex-1 w-full grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-[9px] font-black font-label text-zinc-400 uppercase tracking-widest ml-1">
                     Full Name
@@ -189,27 +189,26 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
                     className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-xl outline-none focus:border-primary focus:ring-1 focus:ring-primary text-sm font-bold text-on-surface transition-all placeholder:text-zinc-600"
                   />
                 </div>
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[9px] font-black font-label text-zinc-400 uppercase tracking-widest ml-1">
-                Registration Number
-              </label>
-              <div className="flex items-center bg-bg-surface-lowest border border-white/5 rounded-xl overflow-hidden focus-within:border-primary transition-all">
-                <div className="px-5 py-3.5 bg-white/5 text-[10px] font-black text-zinc-400 uppercase tracking-widest">
-                  AWKUM -
+                <div className="space-y-1.5 md:col-span-2">
+                  <label className="text-[9px] font-black font-label text-zinc-400 uppercase tracking-widest ml-1">
+                    Registration Number
+                  </label>
+                  <div className="flex items-center bg-bg-surface-lowest border border-white/5 rounded-xl overflow-hidden focus-within:border-primary transition-all">
+                    <div className="px-5 py-3.5 bg-white/5 text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+                      AWKUM -
+                    </div>
+                    <input
+                      type="text"
+                      maxLength={8}
+                      placeholder="00000000"
+                      value={info.registrationNumber}
+                      onChange={(e) =>
+                        setInfo({ ...info, registrationNumber: e.target.value.replace(/\D/g, '') })
+                      }
+                      className="flex-1 bg-transparent px-5 py-3.5 outline-none text-sm font-black tracking-[0.3em] text-on-surface"
+                    />
+                  </div>
                 </div>
-                <input
-                  type="text"
-                  maxLength={8}
-                  placeholder="00000000"
-                  value={info.registrationNumber}
-                  onChange={(e) =>
-                    setInfo({ ...info, registrationNumber: e.target.value.replace(/\D/g, '') })
-                  }
-                  className="flex-1 bg-transparent px-5 py-3.5 outline-none text-sm font-black tracking-[0.3em] text-on-surface"
-                />
               </div>
             </div>
           </section>
@@ -324,7 +323,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
                   }
                   setInfo({ ...info, isCompleted: compl, semester: sem });
                 }}
-                className={`w-full flex items-center justify-between p-5 rounded-2xl border transition-all ${info.isCompleted ? 'bg-primary/20 border-primary/40 text-primary' : 'bg-white/5 border-white/5 text-zinc-500 hover:border-white/10'}`}
+                className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all ${info.isCompleted ? 'bg-primary/20 border-primary/40 text-primary' : 'bg-white/5 border-white/5 text-zinc-500 hover:border-white/10'}`}
               >
                 <span className="text-xs font-black uppercase tracking-widest">
                   Graduation Status Completed
@@ -338,7 +337,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
             )}
 
             {cgpaConstraintError && (
-              <div className="p-5 bg-error/10 border border-error/20 rounded-2xl text-error flex items-center gap-3 animate-bounce-short">
+              <div className="p-4 bg-error/10 border border-error/20 rounded-2xl text-error flex items-center gap-3 animate-bounce-short">
                 <span className="material-symbols-outlined text-xl">warning</span>
                 <p className="text-[10px] font-black uppercase tracking-widest leading-relaxed">
                   {cgpaConstraintError}
@@ -347,7 +346,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
             )}
 
             <div
-              className={`p-6 rounded-[2rem] transition-all bg-white/5 border border-white/5 ${info.isVerified ? 'border-primary/30' : ''}`}
+              className={`p-4 rounded-[2rem] transition-all bg-white/5 border border-white/5 ${info.isVerified ? 'border-primary/30' : ''}`}
             >
               <div className="flex items-start gap-4">
                 <input

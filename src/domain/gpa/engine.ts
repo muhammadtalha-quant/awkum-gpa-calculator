@@ -11,14 +11,18 @@ export function calculateSGPA(data: { gradePoint: GradePoint; credits: Credit }[
   let totalCredits = 0;
 
   data.forEach((item) => {
-    totalWeightedGP += item.gradePoint * item.credits;
-    totalCredits += item.credits;
+    // Ensure numeric extraction to prevent NaN propagation
+    const gp = Number(item.gradePoint) || 0;
+    const cr = Number(item.credits) || 0;
+    totalWeightedGP += gp * cr;
+    totalCredits += cr;
   });
 
-  if (totalCredits === 0) return asGP(0);
+  if (totalCredits <= 0) return asGP(0);
 
   const res = totalWeightedGP / totalCredits;
-  return asGP(Number(res.toFixed(2)));
+  // Standardized rounding to 2 decimal places
+  return asGP((Math.round(res * 100) / 100) as any);
 }
 
 /**
@@ -51,17 +55,24 @@ export function calculateRequiredSGPA(
   targetCGPA: number,
   nextSemesterCredits: number,
 ): number | 'ACHIEVED' | 'IMPOSSIBLE' {
-  if (nextSemesterCredits <= 0) return 'IMPOSSIBLE';
+  const nextCr = Number(nextSemesterCredits) || 0;
+  const currCr = Number(currentTotalCredits) || 0;
+  const currCGPA = Number(currentCGPA) || 0;
+  const target = Number(targetCGPA) || 0;
 
-  const currentQP = currentCGPA * currentTotalCredits;
-  const targetQP = targetCGPA * (currentTotalCredits + nextSemesterCredits);
+  if (nextCr <= 0) return 'IMPOSSIBLE';
+
+  // targetCGPA * (currCr + nextCr) = currCGPA * currCr + requiredSGPA * nextCr
+  const currentQP = currCGPA * currCr;
+  const targetQP = target * (currCr + nextCr);
   const requiredQP = targetQP - currentQP;
-  const requiredSGPA = requiredQP / nextSemesterCredits;
+  const requiredSGPA = requiredQP / nextCr;
 
   if (requiredSGPA > 4.0) return 'IMPOSSIBLE';
   if (requiredSGPA <= 0) return 'ACHIEVED';
 
-  return Number(requiredSGPA.toFixed(2));
+  // Standardized rounding
+  return Math.round(requiredSGPA * 100) / 100;
 }
 
 /**
@@ -71,25 +82,34 @@ export function calculateRequiredSGPA(
  * - 'ACHIEVED': If target is already reached.
  * - 'IMPOSSIBLE': If target requires > 4.0 GP average.
  */
+/**
+ * Calculates the required marks for remaining components to reach a target SGPA.
+ * Supports weighted remaining credits.
+ */
 export function calculateRequiredMarks(
   filledWeightedGP: number,
   totalCredits: number,
   remainingCredits: number,
   targetSGPA: number,
 ): number | 'ACHIEVED' | 'IMPOSSIBLE' {
-  if (remainingCredits <= 0) return 'ACHIEVED';
+  const remCr = Number(remainingCredits) || 0;
+  const totalCr = Number(totalCredits) || 0;
+  const target = Number(targetSGPA) || 0;
+  const filledQP = Number(filledWeightedGP) || 0;
 
-  const targetWeightedGP = targetSGPA * totalCredits;
-  const requiredWeightedGP = targetWeightedGP - filledWeightedGP;
-  const requiredGP = requiredWeightedGP / remainingCredits;
+  if (remCr <= 0) return 'ACHIEVED';
+
+  const targetWeightedGP = target * totalCr;
+  const requiredWeightedGP = targetWeightedGP - filledQP;
+  const requiredGP = requiredWeightedGP / remCr;
 
   if (requiredGP > 4.0) return 'IMPOSSIBLE';
   if (requiredGP <= 0) return 'ACHIEVED';
 
   // Reverse AWKUM Formula: Marks = (GP - 2.00) / 0.05 + 50
-  if (requiredGP < 2.0) return 50; // Minimum passing marks
+  if (requiredGP < 2.0) return 50;
   const marks = (requiredGP - 2.0) / 0.05 + 50;
-  return Math.ceil(marks);
+  return Math.ceil(Math.min(100, marks)); // Cap at 100
 }
 
 /**

@@ -1,12 +1,20 @@
 import React from 'react';
 import { useAcademicStore } from '../src/domain/store';
 import { calculateProjectedCGPA } from '../src/domain/gpa/engine';
+import { GradePoint, Credit } from '../src/domain/types';
 
 const PredictiveDashboard: React.FC = () => {
   const { semesters, projectionMode, setProjectionMode, futureCredits, setFutureCredits } =
     useAcademicStore();
 
-  const projectedCGPA = calculateProjectedCGPA(semesters, projectionMode as any, futureCredits);
+  const projectedCGPA = calculateProjectedCGPA(
+    semesters.map((s) => ({
+      sgpa: (s.sgpa === '' ? 0 : s.sgpa) as GradePoint,
+      credits: (s.credits === '' ? 0 : s.credits) as Credit,
+    })),
+    projectionMode as any,
+    futureCredits,
+  );
 
   const modes = [
     { id: 'current', label: 'Current Path', icon: '🎯' },

@@ -9,6 +9,7 @@ interface Props {
   onClose: () => void;
   onImport: (subjects: SGPASubject[]) => void;
   existingSubjectCodes: string[];
+  targetSemester?: number;
 }
 
 type Step = 'paste' | 'credits' | 'confirm';
@@ -20,13 +21,19 @@ interface SubjectDraft extends ParsedSubject {
 
 const DEFAULT_CREDITS = 3;
 
-const MISParserModal: React.FC<Props> = ({ isOpen, onClose, onImport, existingSubjectCodes }) => {
+const MISParserModal: React.FC<Props> = ({
+  isOpen,
+  onClose,
+  onImport,
+  existingSubjectCodes,
+  targetSemester,
+}) => {
   const [step, setStep] = useState<Step>('paste');
   const [rawText, setRawText] = useState('');
   const [drafts, setDrafts] = useState<SubjectDraft[]>([]);
   const [globalCredits, setGlobalCredits] = useState(DEFAULT_CREDITS);
 
-  const detected = useMemo(() => parseMISText(rawText), [rawText]);
+  const detected = useMemo(() => parseMISText(rawText, targetSemester), [rawText, targetSemester]);
 
   const toStep = (next: Step) => {
     if (next === 'credits') {
@@ -57,7 +64,7 @@ const MISParserModal: React.FC<Props> = ({ isOpen, onClose, onImport, existingSu
       return {
         id: crypto.randomUUID(),
         name: d.name,
-        code: d.code,
+        code: d.code || '',
         credits: d.credits as Credit,
         marks: d.marks as Mark,
         gradePoint: gp,
@@ -80,7 +87,7 @@ const MISParserModal: React.FC<Props> = ({ isOpen, onClose, onImport, existingSu
   return (
     <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-2xl animate-in">
       {/* Modal Container */}
-      <div className="w-full sm:max-w-2xl max-h-[95vh] sm:max-h-[85vh] flex flex-col rounded-t-[2rem] sm:rounded-[2.5rem] border-t sm:border border-white/5 bg-bg-surface shadow-2xl overflow-hidden animate-slide-in-top">
+      <div className="w-full sm:max-w-4xl max-h-[95vh] sm:max-h-[85vh] flex flex-col rounded-t-[2rem] sm:rounded-[2.5rem] border-t sm:border border-white/5 bg-bg-surface shadow-2xl overflow-hidden animate-slide-in-top">
         {/* Header */}
         <div className="flex flex-col px-8 sm:px-12 pt-10 pb-6 border-b border-white/5 relative bg-gradient-to-b from-primary/5 to-transparent">
           <div className="flex items-center justify-between mb-4">
@@ -140,7 +147,7 @@ const MISParserModal: React.FC<Props> = ({ isOpen, onClose, onImport, existingSu
         </div>
 
         {/* Body Content */}
-        <div className="flex-1 overflow-y-auto p-8 sm:p-12 space-y-8 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto px-8 sm:px-12 py-8 space-y-6 custom-scrollbar">
           {/* Step 1: Paste Mode */}
           {step === 'paste' && (
             <div className="space-y-6 animate-slide-in-top">

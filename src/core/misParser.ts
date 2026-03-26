@@ -1,21 +1,11 @@
 /**
- * AWKUM MIS Result Text Parser — Fixed for Real Format
+ * AWKUM MIS Result Text Parser — Enhanced for Robust Pattern Recognition
  *
- * ACTUAL COPY-PASTE FORMAT FROM BROWSER (tab-separated columns):
- *
- *   1\tIntroduction To Management (SS-306)\tMr. Haider Zaman\t
- *   21         ← Mid
- *   20         ← Internal
- *   35         ← Final
- *   76         ← Total  ← WE WANT THIS
- *   -          ← Retotling (ignore)
- *
- * Key fixes vs. previous version:
- *  1. Course code is NOT at end of line — tutor name follows after a tab.
- *     Regex must NOT anchor to $ (end).
- *  2. Name is extracted from the tab-split column that contains the code,
- *     NOT the whole raw line.
- *  3. Row number at start of line is stripped from the first column.
+ * Strategy:
+ * 1. Loosen regex for course codes (handle more variations).
+ * 2. Identify subject block by course code presence.
+ * 3. Use heuristic (Math.max) to identify "Total" marks instead of static indexing.
+ * 4. Handle "Absent", "Withheld", "-", and secondary numbers gracefully.
  */
 
 export interface ParsedSubject {
@@ -24,81 +14,105 @@ export interface ParsedSubject {
   marks: number;
 }
 
-// Code inside parentheses, anywhere on the line (no $ anchor!)
-const CODE_IN_PARENS = /\(([A-Za-z]{2,6}-?\d{3,4})\)/i;
+// Identifies semester blocks (e.g., "1st Semester (Subject-Wise Scores)")
+const SEMESTER_HEADER = /(\d+)(st|nd|rd|th)\s*Semester\s*\(Subject-Wise\s*Scores\)/i;
 
-// A line that is purely a number (0-100) with optional surrounding whitespace/tabs
-const PURE_NUMBER = /^\s*(\d{1,3})\s*$/;
+// More inclusive regex: handle various prefixes and 2-5 digits, optional spaces
+const CODE_IN_PARENS = /\(([A-Z]{2,8}\s*-?\s*\d{2,5})\)/i;
+
+// Match numeric marks, including potential abbreviations for 0
+const MARK_VALUE = /^\s*(\d{1,3}|ABS|WH|W|R|F|-)\s*$/i;
 
 /**
- * Given a raw line from the MIS paste, extract the course name
- * (without the code) and the code itself.
+ * Normalizes mark string to number
  */
+function normalizeMark(val: string): number {
+  const trimmed = val.trim().toUpperCase();
+  if (/^\d{1,3}$/.test(trimmed)) return parseInt(trimmed, 10);
+  // ABS, WH, -, etc. all result in 0 marks but are valid rows
+  return 0;
+}
+
 function extractCourseInfo(line: string): { name: string; code: string } | null {
   const codeMatch = line.match(CODE_IN_PARENS);
   if (!codeMatch) return null;
 
-  const code = codeMatch[1].toUpperCase();
+  const code = codeMatch[1].replace(/\s+/g, '').toUpperCase();
 
-  // The line may be tab-separated: [rowNum] [CourseName(Code)] [TutorName]
+  // Tab-split columns
   const cols = line.split('\t');
-
-  // Find the column that contains the code
   const courseCol = cols.find((c) => CODE_IN_PARENS.test(c)) ?? '';
 
-  // Strip the (CODE) part from the column to get just the name
-  const rawName = courseCol.replace(CODE_IN_PARENS, '').trim();
-
-  // Also strip any leading row number like "1 " or "12 "
-  const name = rawName.replace(/^\d+\s+/, '').trim();
+  // Extract name by removing (CODE) and row headers
+  const name = courseCol
+    .replace(CODE_IN_PARENS, '')
+    .replace(/^\d+\s+/, '')
+    .trim();
 
   return name ? { name, code } : null;
 }
 
-/**
- * Parses the full MIS copy-paste text.
- * Returns detected subjects with code, name, and Total marks.
- * Deduplicates by course code (last occurrence wins).
- */
-export function parseMISText(raw: string): ParsedSubject[] {
+export function parseMISText(raw: string, targetSemester?: number): ParsedSubject[] {
   const lines = raw.split(/[\r\n]+/);
   const seen = new Map<string, ParsedSubject>();
 
+  let activeSemester = 1; // Default context
   let i = 0;
+
   while (i < lines.length) {
+    const semMatch = lines[i].match(SEMESTER_HEADER);
+    if (semMatch) {
+      activeSemester = parseInt(semMatch[1], 10);
+
+      // In SGPA mode (targetSemester undefined), we stop if we encounter a NEW semester header
+      // AFTER having found at least some subjects in the initial segment.
+      if (targetSemester === undefined && seen.size > 0) break;
+    }
+
     const info = extractCourseInfo(lines[i]);
 
     if (info) {
-      // Collect numeric-only lines that follow immediately
-      const numbers: number[] = [];
-      let j = i + 1;
+      // Filtering logic:
+      // SGPA Mode: Always process until we hit next semester header (controlled by break above)
+      // CGPA Mode: Process only if current segment matches target semester index
+      const isTarget = targetSemester === undefined ? true : activeSemester === targetSemester;
 
-      while (j < lines.length && numbers.length < 5) {
-        const trimmed = lines[j].trim();
+      if (isTarget) {
+        // Heuristic context: scan next ~8 lines for mark values
+        const candidates: number[] = [];
+        let j = i + 1;
+        let linesScanned = 0;
 
-        if (PURE_NUMBER.test(trimmed)) {
-          numbers.push(parseInt(trimmed, 10));
+        while (j < lines.length && linesScanned < 8) {
+          const trimmed = lines[j].trim();
+
+          if (MARK_VALUE.test(trimmed)) {
+            candidates.push(normalizeMark(trimmed));
+          } else if (
+            trimmed !== '' &&
+            (extractCourseInfo(lines[j]) || SEMESTER_HEADER.test(lines[j]))
+          ) {
+            // Stop scanning if we hit another course block or a semester header
+            break;
+          }
+
+          if (trimmed !== '') linesScanned++;
           j++;
-        } else if (trimmed === '-' || trimmed === '') {
-          // dash = Retotling, blank = spacing — skip but stop after dash
-          const isDash = trimmed === '-';
-          j++;
-          if (isDash) break;
-        } else {
-          break; // Hit something non-numeric/non-dash → stop
         }
+
+        const rawMax = candidates.length > 0 ? Math.max(...candidates) : 0;
+
+        // Ensure we have a valid entry with at least some name/code trace
+        if (info.code && rawMax > 0 && rawMax <= 100) {
+          seen.set(info.code, {
+            code: info.code,
+            name: info.name || `COURSE ${info.code}`,
+            marks: rawMax,
+          });
+        }
+        i = j;
+        continue;
       }
-
-      // Total marks = 4th number (index 3). Fallback to last available.
-      const totalMarks =
-        numbers.length >= 4 ? numbers[3] : numbers.length > 0 ? numbers[numbers.length - 1] : 0;
-
-      if (info.name && totalMarks > 0 && totalMarks <= 100) {
-        seen.set(info.code, { code: info.code, name: info.name, marks: totalMarks });
-      }
-
-      i = j;
-      continue;
     }
 
     i++;

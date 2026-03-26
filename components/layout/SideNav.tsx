@@ -50,7 +50,7 @@ const SideNav: React.FC<Props> = ({ activePage, onNavigate, mobileOpen, onClose 
             className="text-[10px] font-label font-bold text-zinc-500 tracking-[0.2em] uppercase"
             style={{ fontFamily: 'var(--font-label)' }}
           >
-            AWKUM Scholar v2.0
+            AWKUM Scholar v3.0
           </p>
         </div>
 

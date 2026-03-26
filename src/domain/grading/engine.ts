@@ -10,8 +10,10 @@ export function calculateGradePoint(marks: Mark): GradePoint {
   if (roundedMarks >= 90) return asGP(4.0);
   if (roundedMarks < 50) return asGP(0.0);
 
+  // AWKUM Linear Formula: 2.00 + (Marks - 50) * 0.05
   const gp = 2.0 + (roundedMarks - 50) * 0.05;
-  return asGP(Number(gp.toFixed(2)));
+  // Standardized rounding to 2 decimal places for stability
+  return asGP((Math.round(gp * 100) / 100) as any);
 }
 
 export function getLetterFromGP(gp: GradePoint): string {

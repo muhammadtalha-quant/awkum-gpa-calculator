@@ -9,7 +9,7 @@ export type GradePoint = number & { readonly __brand: 'GradePoint' };
 export interface SGPASubject {
   id: string;
   name: string;
-  code?: string;
+  code: string;
   credits: Credit;
   marks: Mark | '';
   gradePoint: GradePoint;
@@ -19,10 +19,10 @@ export interface SGPASubject {
 export interface CGPASemester {
   id: string;
   name: string;
-  sgpa: GradePoint;
-  credits: Credit;
-  subjects?: SGPASubject[];
-  gradeLetter?: string;
+  sgpa: GradePoint | '';
+  credits: Credit | '';
+  subjects: SGPASubject[];
+  isLocked?: boolean; // For future features
 }
 
 export interface UserInfo {

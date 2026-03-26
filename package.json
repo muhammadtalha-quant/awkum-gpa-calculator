@@ -14,7 +14,7 @@
     "ci:install-browsers": "playwright install chromium --with-deps",
     "fmt": "prettier --write \"{src,components}/**/*.{ts,tsx,css}\" App.tsx index.tsx index.html",
     "lint": "eslint \"{src,components}/**/*.{ts,tsx}\" App.tsx index.tsx --max-warnings 0",
-    "all": "npm run fmt && npm run lint && npm run test && npm run test:unit:coverage && npm run build"
+    "play": "npm run fmt && npm run lint && npm run test && npm run test:unit:coverage && npm run build && npm run preview"
   },
   "dependencies": {
     "jspdf": "^4.1.0",

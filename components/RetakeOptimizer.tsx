@@ -1,9 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAcademicStore } from '../src/domain/store';
-import {
-  distributeRetakeMarks,
-  RetakeDistributionResult,
-} from '../src/domain/gpa/engine';
+import { distributeRetakeMarks, RetakeDistributionResult } from '../src/domain/gpa/engine';
 
 interface Props {
   currentCGPA: number;
@@ -14,6 +11,14 @@ const RetakeOptimizer: React.FC<Props> = ({ currentCGPA }) => {
   const { semesters } = useAcademicStore();
 
   const [targetCGPA, setTargetCGPA] = useState<string>(Math.min(4.0, currentCGPA + 0.5).toFixed(2));
+
+  const parsedTarget = parseFloat(targetCGPA);
+  const isTargetValid = !isNaN(parsedTarget) && parsedTarget > currentCGPA && parsedTarget <= 4.0;
+
+  const result = useMemo(() => {
+    if (!isTargetValid) return null;
+    return distributeRetakeMarks(semesters as any, parsedTarget);
+  }, [semesters, parsedTarget, isTargetValid]);
 
   const hasSubjects = semesters.some((s) => s.subjects && s.subjects.length > 0);
 
@@ -30,11 +35,6 @@ const RetakeOptimizer: React.FC<Props> = ({ currentCGPA }) => {
       </div>
     );
   }
-
-  const parsedTarget = parseFloat(targetCGPA);
-  const isTargetValid = !isNaN(parsedTarget) && parsedTarget > currentCGPA && parsedTarget <= 4.0;
-
-  const result = isTargetValid ? distributeRetakeMarks(semesters as any, parsedTarget) : null;
 
   const recommendations: RetakeDistributionResult[] = Array.isArray(result) ? result : [];
   const isTooHigh = result === 'TARGET_TOO_HIGH';

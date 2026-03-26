@@ -12,168 +12,201 @@ import { calculateGradePoint, getLetterFromGP } from '../domain/grading/engine';
 import { calculateSGPA } from '../domain/gpa/engine';
 
 interface AcademicState {
-  subjects: SGPASubject[];
+  // Unified State Model: subjects now always live inside semesters
   semesters: CGPASemester[];
 
-  // Actions
-  setSubjects: (subjects: SGPASubject[]) => void;
-  updateSubject: (id: string, updates: Partial<SGPASubject>) => void;
-  addSubject: () => void;
-  removeSubject: (id: string) => void;
+  // Selection/UI State
+  activeSemesterId: string | null;
+  hydrationReady: boolean;
 
+  // Forecasting/Analytics State
+  projectionMode: 'current' | 'best' | 'expected' | 'worst';
+  futureCredits: number;
+
+  // Global Actions
   setSemesters: (semesters: CGPASemester[]) => void;
-  updateSemester: (id: string, updates: Partial<CGPASemester>) => void;
-  updateSemesterSubject: (
-    semesterId: string,
-    subjectId: string,
-    updates: Partial<SGPASubject>,
-  ) => void;
   addSemester: () => void;
   removeSemester: (id: string) => void;
+  updateSemester: (id: string, updates: Partial<CGPASemester>) => void;
 
-  // Simulation State
-  projectionMode: 'current' | 'best' | 'worst' | 'expected';
-  futureCredits: number;
-  setProjectionMode: (mode: 'current' | 'best' | 'worst' | 'expected') => void;
+  // Forecasting Actions
+  setProjectionMode: (mode: 'current' | 'best' | 'expected' | 'worst') => void;
   setFutureCredits: (credits: number) => void;
+
+  // Subject Actions (Scoped to semester)
+  addSubject: (semesterId: string) => void;
+  removeSubject: (semesterId: string, subjectId: string) => void;
+  updateSubject: (semesterId: string, subjectId: string, updates: Partial<SGPASubject>) => void;
+
+  // Persistence/Lifecycle
+  setHydrationReady: (ready: boolean) => void;
+  resetAll: () => void;
 }
+
+const STORAGE_NAME = 'awkum-academic-v2';
 
 export const useAcademicStore = create<AcademicState>()(
   persist(
     (set) => ({
-      subjects: [],
       semesters: [],
-      projectionMode: 'current',
-      futureCredits: 0,
+      activeSemesterId: null,
+      hydrationReady: false,
+      projectionMode: 'expected',
+      futureCredits: 15,
 
-      setProjectionMode: (mode: 'current' | 'best' | 'worst' | 'expected') =>
-        set({ projectionMode: mode }),
-      setFutureCredits: (credits: number) => set({ futureCredits: credits }),
+      setHydrationReady: (ready) => set({ hydrationReady: ready }),
 
-      setSubjects: (subjects: SGPASubject[]) => set({ subjects }),
+      setSemesters: (semesters) => set({ semesters }),
 
-      updateSubject: (id: string, updates: Partial<SGPASubject>) =>
-        set((state: AcademicState) => {
-          const newSubjects = state.subjects.map((s: SGPASubject) => {
-            if (s.id === id) {
-              const updated = { ...s, ...updates };
-              // Auto-recalculate GP if marks or credits change
-              if (updates.marks !== undefined && updates.marks !== '') {
-                const gp = calculateGradePoint(updates.marks as Mark);
-                updated.gradePoint = gp;
-                updated.gradeLetter = getLetterFromGP(gp);
-              } else if (updates.marks === '') {
-                updated.gradePoint = 0 as GradePoint;
-                updated.gradeLetter = 'F';
-              }
-              return updated;
-            }
-            return s;
-          });
-          return { subjects: newSubjects };
+      setProjectionMode: (projectionMode) => set({ projectionMode }),
+      setFutureCredits: (futureCredits) => set({ futureCredits }),
+
+      addSemester: () =>
+        set((state) => {
+          const newSemesterId = crypto.randomUUID();
+          return {
+            semesters: [
+              ...state.semesters,
+              {
+                id: newSemesterId,
+                name: `Semester ${state.semesters.length + 1}`,
+                sgpa: 0 as GradePoint,
+                credits: 3 as Credit, // Default credits for a single 3-unit subject
+                subjects: [
+                  {
+                    id: crypto.randomUUID(),
+                    name: '',
+                    code: '',
+                    credits: 3 as Credit,
+                    marks: '' as Mark | '',
+                    gradePoint: 0 as GradePoint,
+                    gradeLetter: 'F',
+                  },
+                ],
+              },
+            ],
+          };
         }),
 
-      addSubject: () =>
-        set((state: AcademicState) => ({
-          subjects: [
-            ...state.subjects,
-            {
-              id: crypto.randomUUID(),
-              name: '',
-              credits: 3 as Credit,
-              marks: '' as Mark | '',
-              gradePoint: 0 as GradePoint,
-              gradeLetter: 'F',
-            },
-          ],
+      removeSemester: (id) =>
+        set((state) => ({
+          semesters: state.semesters
+            .filter((s) => s.id !== id)
+            .map((s, i) => ({ ...s, name: `Semester ${i + 1}` })),
         })),
 
-      removeSubject: (id: string) =>
-        set((state: AcademicState) => ({
-          subjects: state.subjects.filter((s: SGPASubject) => s.id !== id),
-        })),
-
-      setSemesters: (semesters: CGPASemester[]) => set({ semesters }),
-
-      updateSemester: (id: string, updates: Partial<CGPASemester>) =>
-        set((state: AcademicState) => ({
-          semesters: state.semesters.map((s: CGPASemester) =>
-            s.id === id ? { ...s, ...updates } : s,
-          ),
-        })),
-
-      updateSemesterSubject: (
-        semesterId: string,
-        subjectId: string,
-        updates: Partial<SGPASubject>,
-      ) =>
-        set((state: AcademicState) => {
-          const nextSemesters = state.semesters.map((sem: CGPASemester) => {
-            if (sem.id === semesterId) {
-              const nextSubjects = (sem.subjects || []).map((sub: SGPASubject) => {
-                if (sub.id === subjectId) {
-                  const updated = { ...sub, ...updates };
-                  if (updates.marks !== undefined && updates.marks !== '') {
-                    const gp = calculateGradePoint(updates.marks as Mark);
-                    updated.gradePoint = gp;
-                    updated.gradeLetter = getLetterFromGP(gp);
-                  } else if (updates.marks === '') {
-                    updated.gradePoint = 0 as GradePoint;
-                    updated.gradeLetter = 'F';
-                  }
-                  return updated;
-                }
-                return sub;
-              });
-
-              // Auto-recalculate semester SGPA and Credits
-              const semGp = calculateSGPA(
-                nextSubjects.map((s: SGPASubject) => ({
-                  gradePoint: s.gradePoint,
-                  credits: s.credits,
+      updateSemester: (id, updates) =>
+        set((state) => ({
+          semesters: state.semesters.map((s) => {
+            if (s.id !== id) return s;
+            const next = { ...s, ...updates };
+            if (updates.subjects) {
+              next.sgpa = calculateSGPA(
+                updates.subjects.map((sub) => ({
+                  gradePoint: sub.gradePoint,
+                  credits: sub.credits,
                 })),
               );
-              const semCredits = nextSubjects.reduce(
-                (sum: number, s: SGPASubject) => sum + (Number(s.credits) || 0),
-                0,
+              next.credits = asProgramCredit(
+                updates.subjects.reduce((sum, sub) => sum + (Number(sub.credits) || 0), 0),
               );
-
-              return {
-                ...sem,
-                subjects: nextSubjects,
-                sgpa: semGp,
-                credits: asProgramCredit(Math.min(21, Math.max(0, semCredits))),
-              };
             }
-            return sem;
+            return next;
+          }),
+        })),
+
+      addSubject: (semesterId) =>
+        set((state) => ({
+          semesters: state.semesters.map((sem) => {
+            if (sem.id !== semesterId) return sem;
+            const nextSubjects = [
+              ...sem.subjects,
+              {
+                id: crypto.randomUUID(),
+                name: '',
+                code: '',
+                credits: 3 as Credit,
+                marks: '' as Mark | '',
+                gradePoint: 0 as GradePoint,
+                gradeLetter: 'F',
+              },
+            ];
+            const sgpa = calculateSGPA(nextSubjects);
+            const credits = nextSubjects.reduce((s, sub) => s + (Number(sub.credits) || 0), 0);
+            return { ...sem, subjects: nextSubjects, sgpa, credits: asProgramCredit(credits) };
+          }),
+        })),
+
+      removeSubject: (semesterId, subjectId) =>
+        set((state) => {
+          const nextSemesters = state.semesters.map((sem) => {
+            if (sem.id !== semesterId) return sem;
+            const nextSubjects = sem.subjects.filter((sub) => sub.id !== subjectId);
+            const sgpa = calculateSGPA(nextSubjects);
+            const credits = nextSubjects.reduce((s, sub) => s + (Number(sub.credits) || 0), 0);
+            return { ...sem, subjects: nextSubjects, sgpa, credits: asProgramCredit(credits) };
           });
           return { semesters: nextSemesters };
         }),
 
-      addSemester: () =>
-        set((state: AcademicState) => ({
-          semesters: [
-            ...state.semesters,
-            {
-              id: crypto.randomUUID(),
-              name: `Semester ${state.semesters.length + 1}`,
-              sgpa: 0 as GradePoint,
-              credits: 15 as Credit,
-              subjects: [],
-            },
-          ],
-        })),
+      updateSubject: (semesterId, subjectId, updates) =>
+        set((state) => {
+          const nextSemesters = state.semesters.map((sem) => {
+            if (sem.id !== semesterId) return sem;
+            const nextSubjects = sem.subjects.map((sub) => {
+              if (sub.id !== subjectId) return sub;
+              const updated = { ...sub, ...updates };
 
-      removeSemester: (id: string) =>
-        set((state: AcademicState) => ({
-          semesters: state.semesters
-            .filter((s: CGPASemester) => s.id !== id)
-            .map((s: CGPASemester, idx: number) => ({ ...s, name: `Semester ${idx + 1}` })),
-        })),
+              // Recalculate GP/Letter if marks change
+              if (updates.marks !== undefined) {
+                if (updates.marks === '') {
+                  updated.gradePoint = 0 as GradePoint;
+                  updated.gradeLetter = 'F';
+                } else {
+                  const gp = calculateGradePoint(updates.marks as Mark);
+                  updated.gradePoint = gp;
+                  updated.gradeLetter = getLetterFromGP(gp);
+                }
+              }
+              return updated;
+            });
+
+            const sgpa = calculateSGPA(nextSubjects);
+            const credits = nextSubjects.reduce((s, sub) => s + (Number(sub.credits) || 0), 0);
+            return { ...sem, subjects: nextSubjects, sgpa, credits: asProgramCredit(credits) };
+          });
+          return { semesters: nextSemesters };
+        }),
+
+      resetAll: () => set({ semesters: [], activeSemesterId: null }),
     }),
     {
-      name: 'awkum-academic-storage',
+      name: STORAGE_NAME,
+      version: 2, // Bump version for unified model
       storage: createJSONStorage(() => localStorage),
+      onRehydrateStorage: () => (state) => {
+        state?.setHydrationReady(true);
+      },
+      migrate: (persistedState: any, version: number) => {
+        if (version === 1) {
+          // Migration from old v1 (split subjects/semesters) to v2 (unified)
+          const oldState = persistedState as { subjects: any[]; semesters: any[] };
+          const migratedSemesters = [...(oldState.semesters || [])];
+
+          // If there were orphan subjects in the old SGPA tool, move them to a "Legacy" semester
+          if (oldState.subjects && oldState.subjects.length > 0) {
+            migratedSemesters.push({
+              id: 'legacy-import',
+              name: 'Imported Semester',
+              subjects: oldState.subjects,
+              sgpa: calculateSGPA(oldState.subjects),
+              credits: oldState.subjects.reduce((s, sub) => s + (Number(sub.credits) || 0), 0),
+            });
+          }
+          return { ...oldState, semesters: migratedSemesters, activeSemesterId: null };
+        }
+        return persistedState;
+      },
     },
   ),
 );

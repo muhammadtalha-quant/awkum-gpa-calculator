@@ -94,7 +94,6 @@ const TopBar: React.FC<TopBarProps> = ({ activePage, onNavigate, onExport, onMen
         >
           <span className="material-symbols-outlined text-[20px]">share</span>
         </button>
-
       </div>
 
       <div className="lg:hidden flex items-center gap-4">

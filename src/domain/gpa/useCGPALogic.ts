@@ -1,52 +1,47 @@
 import { useMemo } from 'react';
 import { useAcademicStore } from '../store';
-import { calculateCGPA, calculateSGPA } from './engine';
-import { SGPASubject, asProgramCredit } from '../types';
+import { GradePoint, Credit } from '../types';
+import { calculateCGPA } from './engine';
 import { getLetterFromGP } from '../grading/engine';
-import { CGPASemester } from '../types';
 
 export const useCGPALogic = (
   MAX_CREDITS: number = 216,
   MIN_ROOM: number = 12,
   MAX_ROWS: number = 12,
 ) => {
-  const { semesters, addSemester, removeSemester, updateSemester, setSemesters } =
+  const { semesters, addSemester, removeSemester, updateSemester, updateSubject, hydrationReady } =
     useAcademicStore();
-  const errorMsg = useMemo(() => {
-    const total = semesters.reduce(
-      (s: number, sem: CGPASemester) => s + (Number(sem.credits) || 0),
-      0,
-    );
-    if (total > MAX_CREDITS) {
-      return (
-        `Warning: Total program credits (${total}) exceed the ${MAX_CREDITS}-credit limit. ` +
-        `Review semester credit assignments.`
-      );
-    }
-    return '';
-  }, [semesters, MAX_CREDITS]);
-
-  const cgpaValue = useMemo(
-    () => calculateCGPA(semesters.map((s) => ({ sgpa: s.sgpa, credits: s.credits }))),
-    [semesters],
-  );
-
-  const overallGrade = useMemo(() => getLetterFromGP(cgpaValue), [cgpaValue]);
-  const cgpaNum = Number(cgpaValue);
 
   const totalCredits = useMemo(
     () => semesters.reduce((s, sem) => s + (Number(sem.credits) || 0), 0),
     [semesters],
   );
 
-  const qualityPoints = useMemo(
+  const errorMsg = useMemo(() => {
+    if (totalCredits > MAX_CREDITS) {
+      return `Warning: Total program credits (${totalCredits}) exceed the ${MAX_CREDITS}-limit.`;
+    }
+    return '';
+  }, [totalCredits, MAX_CREDITS]);
+
+  const cgpaValue = useMemo(
     () =>
-      semesters.reduce(
-        (s: number, sem: CGPASemester) => s + Number(sem.sgpa) * Number(sem.credits),
-        0,
+      calculateCGPA(
+        semesters.map((s) => ({
+          sgpa: (s.sgpa === '' ? 0 : s.sgpa) as GradePoint,
+          credits: (s.credits === '' ? 0 : s.credits) as Credit,
+        })),
       ),
     [semesters],
   );
+
+  const qualityPoints = useMemo(
+    () => semesters.reduce((s, sem) => s + (Number(sem.sgpa) || 0) * (Number(sem.credits) || 0), 0),
+    [semesters],
+  );
+
+  const overallGrade = useMemo(() => getLetterFromGP(cgpaValue), [cgpaValue]);
+  const cgpaNum = Number(cgpaValue);
 
   const handleAddSemester = () => {
     if (semesters.length >= MAX_ROWS || MAX_CREDITS - totalCredits < MIN_ROOM) return;
@@ -54,25 +49,11 @@ export const useCGPALogic = (
   };
 
   const handleRemoveSemester = (id: string) => {
-    if (semesters.length <= 1) setSemesters([]);
-    else removeSemester(id);
-  };
-
-  const updateSemesterSubjects = (id: string, subjects: SGPASubject[]) => {
-    const semGp = calculateSGPA(
-      subjects.map((s) => ({ gradePoint: s.gradePoint, credits: s.credits })),
-    );
-    const semCredits = subjects.reduce((sum, s) => sum + (Number(s.credits) || 0), 0);
-    updateSemester(id, {
-      subjects,
-      sgpa: semGp,
-      credits: asProgramCredit(Math.min(21, Math.max(0, semCredits))),
-    });
+    removeSemester(id);
   };
 
   return {
     semesters,
-    setSemesters,
     errorMsg,
     cgpaValue,
     cgpaNum,
@@ -82,6 +63,7 @@ export const useCGPALogic = (
     handleAddSemester,
     handleRemoveSemester,
     updateSemester,
-    updateSemesterSubjects,
+    updateSubject,
+    hydrationReady,
   };
 };

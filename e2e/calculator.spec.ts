@@ -30,7 +30,7 @@ test.describe('GPA Calculator Core User Journeys', () => {
 
         // Check SGPA (85 -> 4.0, 75 -> 3.0 approx)
         // (4.0 * 3 + 3.0 * 3) / 6 = 3.50
-        await expect(page.locator('span.text-8xl.font-black')).toContainText('3.50');
+        await expect(page.locator('span.font-black.font-headline.text-white').first()).toContainText('3.50');
     });
 
     test('should manage CGPA semesters and calculate cumulative average', async ({ page }) => {
@@ -55,7 +55,7 @@ test.describe('GPA Calculator Core User Journeys', () => {
         await secondRow.locator('input[type="number"]').nth(1).fill('3.7'); // SGPA
 
         // CGPA = (3.5 * 18 + 3.7 * 18) / 36 = 3.6
-        await expect(page.locator('span.text-8xl.font-black')).toContainText('3.60');
+        await expect(page.locator('span.font-black.font-headline.text-white').first()).toContainText('3.60');
     });
 
     test('should open MIS parser and handle imports', async ({ page }) => {

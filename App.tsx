@@ -38,7 +38,7 @@ const App: React.FC = () => {
         <SideNav activePage={activePage} onNavigate={setActivePage} />
 
         {/* Main area */}
-        <main className="flex-1 lg:ml-64 pt-16 pb-32 px-4 md:px-8 max-w-7xl mx-auto glow-bg min-w-0">
+        <main className="lg:ml-64 pt-24 pb-32 lg:pb-8 px-4 md:px-8 max-w-7xl mx-auto min-h-screen min-w-0">
           <div className="py-8">
             {activePage === 'sgpa' && (
               <SGPACalculator

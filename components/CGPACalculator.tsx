@@ -51,7 +51,7 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 space-y-8">
-          <section className="bg-bg-surface rounded-3xl p-8 flex flex-col md:flex-row justify-between items-center gap-6 border border-white/5 shadow-2xl overflow-hidden relative group">
+          <section className="bg-bg-surface rounded-3xl p-4 sm:p-8 flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-6 border border-white/5 shadow-2xl overflow-hidden relative group">
             <div className="absolute top-0 right-0 p-8 opacity-0 group-hover:opacity-10 transition-opacity">
               <span className="material-symbols-outlined text-8xl text-primary">analytics</span>
             </div>
@@ -95,7 +95,7 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                 </span>
               )}
             </div>
-            <div className="p-8 space-y-6">
+            <div className="p-4 sm:p-8 space-y-6">
               {semesters.length === 0 ? (
                 <div className="py-24 text-center text-zinc-700 font-label text-[10px] font-black uppercase tracking-widest bg-bg-surface-lowest border border-dashed border-white/5 rounded-2xl">
                   Neural history empty. Secure your first academic block.
@@ -104,7 +104,7 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                 semesters.map((sem: CGPASemester, idx) => (
                   <div
                     key={sem.id}
-                    className="group flex flex-col md:flex-row items-center gap-6 p-6 bg-bg-surface-lowest border border-white/5 rounded-2xl hover:bg-white/[0.02] transition-all duration-300 shadow-inner-glow relative overflow-hidden"
+                    className="group flex flex-col gap-4 sm:gap-6 p-4 sm:p-6 bg-bg-surface-lowest border border-white/5 rounded-2xl hover:bg-white/[0.02] transition-all duration-300 shadow-inner-glow relative overflow-hidden"
                   >
                     <div className="flex items-center gap-4 flex-1">
                       <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center font-black font-mono text-zinc-600 group-hover:bg-primary/10 group-hover:text-primary transition-all">
@@ -118,7 +118,7 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                       </div>
                     </div>
 
-                    <div className="flex gap-4 items-center">
+                    <div className="flex flex-wrap gap-4 items-center">
                       <div className="space-y-2">
                         <label className="text-[8px] font-black font-label text-zinc-600 uppercase tracking-widest ml-1">
                           Credits
@@ -131,7 +131,7 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                               credits: parseInt(e.target.value) || (0 as any),
                             })
                           }
-                          className="w-20 bg-black/20 border border-white/5 rounded-xl p-3 text-center font-black font-mono text-xs text-primary outline-none focus:border-primary/50"
+                          className="w-20 bg-black/20 border border-white/5 rounded-xl p-3 text-center font-black font-mono text-xs text-on-surface outline-none focus:border-primary/50"
                         />
                       </div>
                       <div className="space-y-2">
@@ -147,7 +147,7 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                               sgpa: parseFloat(e.target.value) || (0 as any),
                             })
                           }
-                          className="w-24 bg-black/20 border border-white/5 rounded-xl p-3 text-center font-black font-mono text-xs text-primary outline-none focus:border-primary/50"
+                          className="w-24 bg-black/20 border border-white/5 rounded-xl p-3 text-center font-black font-mono text-xs text-on-surface outline-none focus:border-primary/50"
                         />
                       </div>
                       <button
@@ -165,7 +165,7 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
         </div>
 
         <div className="lg:col-span-4 space-y-8">
-          <section className="bg-bg-surface rounded-3xl p-10 border border-white/5 shadow-glow relative overflow-hidden group">
+          <section className="bg-bg-surface rounded-3xl p-6 sm:p-10 border border-white/5 shadow-glow relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-8 opacity-0 group-hover:opacity-10 transition-opacity">
               <span className="material-symbols-outlined text-8xl text-primary">equalizer</span>
             </div>
@@ -175,7 +175,7 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                 Cumulative Average (CGPA)
               </p>
               <div className="relative group/score">
-                <span className="text-8xl font-black font-headline text-white tracking-tighter text-shadow-glow drop-shadow-2xl transition-transform duration-700 group-hover/score:scale-105 inline-block">
+                <span className="text-6xl sm:text-8xl font-black font-headline text-white tracking-tighter text-shadow-glow drop-shadow-2xl transition-transform duration-700 group-hover/score:scale-105 inline-block">
                   {cgpaNum.toFixed(2)}
                 </span>
                 <div className="absolute -top-4 -left-1/2 translate-x-1/2 w-max">
@@ -206,7 +206,7 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
             </div>
           </section>
 
-          <section className="bg-bg-surface rounded-3xl p-8 border border-white/5 shadow-2xl space-y-8">
+          <section className="bg-bg-surface rounded-3xl p-4 sm:p-8 border border-white/5 shadow-2xl space-y-6 sm:space-y-8">
             <div className="flex items-center gap-3 border-b border-white/5 pb-6">
               <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                 <span className="material-symbols-outlined text-[16px]">hub</span>

@@ -20,7 +20,7 @@ const UniversityRules: React.FC = () => {
       {/* Bento Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Grading Policy Table — 8 cols */}
-        <div className="lg:col-span-8 bg-bg-surface border border-white/5 rounded-[2rem] p-8 overflow-hidden shadow-xl">
+        <div className="lg:col-span-8 bg-bg-surface border border-white/5 rounded-[2rem] p-4 sm:p-8 overflow-hidden shadow-xl">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center text-violet-400">
               <span className="material-symbols-outlined">table_chart</span>
@@ -82,7 +82,7 @@ const UniversityRules: React.FC = () => {
         {/* Right column — 4 cols */}
         <div className="lg:col-span-4 space-y-8">
           {/* Passing Criteria */}
-          <div className="bg-primary text-on-primary p-8 rounded-[2rem] shadow-2xl relative overflow-hidden group">
+          <div className="bg-primary text-on-primary p-4 sm:p-8 rounded-[2rem] shadow-2xl relative overflow-hidden group">
             <div className="absolute -right-4 -top-4 opacity-10 group-hover:opacity-20 transition-opacity">
               <span
                 className="material-symbols-outlined text-8xl"
@@ -102,7 +102,7 @@ const UniversityRules: React.FC = () => {
           </div>
 
           {/* Academic Probation */}
-          <div className="bg-surface-container-low border border-white/5 rounded-[2rem] p-8 shadow-xl">
+          <div className="bg-surface-container-low border border-white/5 rounded-[2rem] p-4 sm:p-8 shadow-xl">
             <div className="flex items-center gap-3 mb-6">
               <span className="material-symbols-outlined text-error">warning</span>
               <h3 className="font-headline font-bold text-white uppercase tracking-tight">
@@ -135,7 +135,7 @@ const UniversityRules: React.FC = () => {
         </div>
 
         {/* Math Models */}
-        <div className="lg:col-span-6 bg-surface-container-low border border-white/5 rounded-[2rem] p-10 flex flex-col items-center text-center shadow-lg">
+        <div className="lg:col-span-6 bg-surface-container-low border border-white/5 rounded-[2rem] p-6 sm:p-10 flex flex-col items-center text-center shadow-lg">
           <span className="text-[10px] font-black tracking-[0.3em] text-primary uppercase mb-8">
             SGPA Model
           </span>
@@ -152,7 +152,7 @@ const UniversityRules: React.FC = () => {
           </p>
         </div>
 
-        <div className="lg:col-span-6 bg-surface-container-low border border-white/5 rounded-[2rem] p-10 flex flex-col items-center text-center shadow-lg">
+        <div className="lg:col-span-6 bg-surface-container-low border border-white/5 rounded-[2rem] p-6 sm:p-10 flex flex-col items-center text-center shadow-lg">
           <span className="text-[10px] font-black tracking-[0.2em] text-[#34d399] uppercase mb-8">
             CGPA Model
           </span>
@@ -170,7 +170,7 @@ const UniversityRules: React.FC = () => {
         </div>
 
         {/* Marks to GP Conversion */}
-        <div className="lg:col-span-12 bg-surface-container-low border border-white/5 rounded-[2rem] p-10 shadow-lg glow-bg">
+        <div className="lg:col-span-12 bg-surface-container-low border border-white/5 rounded-[2rem] p-6 sm:p-10 shadow-lg glow-bg">
           <div className="flex items-center gap-4 mb-8">
             <span className="material-symbols-outlined text-primary text-3xl">functions</span>
             <h3 className="text-xl font-bold font-headline text-white">

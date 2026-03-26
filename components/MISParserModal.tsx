@@ -158,7 +158,7 @@ const MISParserModal: React.FC<Props> = ({ isOpen, onClose, onImport, existingSu
                 onChange={(e) => setRawText(e.target.value)}
                 rows={8}
                 placeholder={'Paste MIS raw text here...'}
-                className="w-full px-6 py-6 rounded-2xl border border-white/5 bg-bg-surface-lowest text-zinc-300 font-mono text-xs resize-none outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-zinc-800"
+                className="w-full px-6 py-6 rounded-2xl border border-white/5 bg-bg-surface-lowest text-zinc-300 font-mono text-xs resize-none outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-zinc-600"
               />
               {rawText.length > 0 && (
                 <div

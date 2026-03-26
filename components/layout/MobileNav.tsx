@@ -15,7 +15,7 @@ const NAV_ITEMS: { page: Page; icon: string; label: string }[] = [
 
 const MobileNav: React.FC<Props> = ({ activePage, onNavigate }) => {
   return (
-    <nav className="lg:hidden fixed bottom-0 w-full z-50 h-20 bg-[#0c0c0f]/95 backdrop-blur-lg border-t border-white/5 flex justify-around items-center px-2 pb-6 rounded-t-[20px] shadow-[0_-8px_30px_rgba(167,139,250,0.08)]">
+    <nav className="lg:hidden fixed bottom-0 w-full z-50 h-20 bg-[#0c0c0f]/95 backdrop-blur-lg border-t border-white/5 flex justify-around items-center px-2 pb-safe rounded-t-[20px] shadow-[0_-8px_30px_rgba(167,139,250,0.08)]">
       {NAV_ITEMS.map(({ page, icon, label }) => {
         const active = activePage === page;
         return (

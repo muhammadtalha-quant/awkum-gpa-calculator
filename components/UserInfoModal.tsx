@@ -118,7 +118,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-2xl animate-in fade-in duration-500">
       <div className="w-full max-w-xl rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/5 bg-bg-surface animate-in zoom-in-95 duration-300">
         {/* Header */}
-        <div className="p-10 text-center relative overflow-hidden bg-gradient-to-b from-primary/5 to-transparent">
+        <div className="p-6 sm:p-10 text-center relative overflow-hidden bg-gradient-to-b from-primary/5 to-transparent">
           <div className="relative z-10">
             <h3 className="text-2xl font-black font-headline text-white uppercase tracking-[0.2em] mb-2">
               {title}
@@ -132,9 +132,9 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
           </div>
         </div>
 
-        <form
+          <form
           onSubmit={handleSubmit}
-          className="px-10 pb-10 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar"
+          className="px-6 sm:px-10 pb-10 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar"
         >
           {/* Identity Section */}
           <section className="space-y-6">
@@ -183,7 +183,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
                     placeholder="Enter full name"
                     value={info.name}
                     onChange={(e) => setInfo({ ...info, name: sanitizeName(e.target.value) })}
-                    className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-xl outline-none focus:border-primary focus:ring-1 focus:ring-primary text-sm font-bold text-white transition-all placeholder:text-zinc-600"
+                    className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-xl outline-none focus:border-primary focus:ring-1 focus:ring-primary text-sm font-bold text-on-surface transition-all placeholder:text-zinc-600"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -195,7 +195,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
                     placeholder="Enter father's name"
                     value={info.fatherName}
                     onChange={(e) => setInfo({ ...info, fatherName: sanitizeName(e.target.value) })}
-                    className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-xl outline-none focus:border-primary focus:ring-1 focus:ring-primary text-sm font-bold text-white transition-all placeholder:text-zinc-600"
+                    className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-xl outline-none focus:border-primary focus:ring-1 focus:ring-primary text-sm font-bold text-on-surface transition-all placeholder:text-zinc-600"
                   />
                 </div>
               </div>
@@ -217,7 +217,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
                   onChange={(e) =>
                     setInfo({ ...info, registrationNumber: e.target.value.replace(/\D/g, '') })
                   }
-                  className="flex-1 bg-transparent px-5 py-3.5 outline-none text-sm font-black tracking-[0.3em] text-white"
+                  className="flex-1 bg-transparent px-5 py-3.5 outline-none text-sm font-black tracking-[0.3em] text-on-surface"
                 />
               </div>
             </div>
@@ -240,7 +240,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
                 <select
                   value={info.programme}
                   onChange={(e) => setInfo({ ...info, programme: e.target.value })}
-                  className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-xl outline-none focus:border-primary text-sm font-bold text-white appearance-none cursor-pointer hover:bg-white/5 transition-all"
+                  className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-xl outline-none focus:border-primary text-sm font-bold text-on-surface appearance-none cursor-pointer hover:bg-white/5 transition-all"
                 >
                   {PROGRAMMES.map((p) => (
                     <option key={p} value={p} className="bg-zinc-900">
@@ -262,14 +262,14 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
                     placeholder="Semesters"
                     value={info.totalDuration}
                     onChange={(e) => setInfo({ ...info, totalDuration: e.target.value })}
-                    className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-xl outline-none focus:border-primary text-sm font-black text-center text-white"
+                    className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-xl outline-none focus:border-primary text-sm font-black text-center text-on-surface"
                   />
                 ) : (
                   <select
                     disabled={info.isCompleted && info.programme === 'Undergraduate (BS)'}
                     value={info.semester}
                     onChange={(e) => setInfo({ ...info, semester: e.target.value })}
-                    className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-xl outline-none focus:border-primary text-sm disabled:opacity-30 font-bold text-white appearance-none cursor-pointer"
+                    className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-xl outline-none focus:border-primary text-sm disabled:opacity-30 font-bold text-on-surface appearance-none cursor-pointer"
                   >
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((s) => (
                       <option key={s} value={s.toString()} className="bg-zinc-900">
@@ -291,7 +291,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
                   placeholder="e.g. Computing"
                   value={info.subject}
                   onChange={(e) => setInfo({ ...info, subject: sanitizeName(e.target.value) })}
-                  className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-xl outline-none focus:border-primary text-sm font-bold text-white transition-all placeholder:text-zinc-800"
+                  className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-xl outline-none focus:border-primary text-sm font-bold text-on-surface transition-all placeholder:text-zinc-600"
                 />
               </div>
               <div className="space-y-1.5">
@@ -303,7 +303,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
                   placeholder="A"
                   value={info.section}
                   onChange={(e) => setInfo({ ...info, section: sanitizeSection(e.target.value) })}
-                  className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-xl outline-none focus:border-primary text-center font-black text-sm text-white transition-all"
+                  className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-xl outline-none focus:border-primary text-center font-black text-sm text-on-surface transition-all"
                 />
               </div>
             </div>

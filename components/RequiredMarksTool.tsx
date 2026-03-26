@@ -61,7 +61,7 @@ const RequiredMarksTool: React.FC<Props> = ({ subjects }) => {
                   placeholder="e.g. 3.50"
                   value={targetSGPA}
                   onChange={(e) => setTargetSGPA(e.target.value.replace(/[^0-9.]/g, ''))}
-                  className="flex-1 px-4 py-3 bg-bg-surface-lowest border border-white/5 rounded-xl outline-none focus:border-primary text-sm font-bold text-white transition-all placeholder:text-zinc-800"
+                  className="flex-1 px-4 py-3 bg-bg-surface-lowest border border-white/5 rounded-xl outline-none focus:border-primary text-sm font-bold text-on-surface transition-all placeholder:text-zinc-600"
                 />
                 <button
                   onClick={handleCalculate}

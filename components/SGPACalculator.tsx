@@ -86,7 +86,7 @@ const SGPACalculator: React.FC<Props> = ({ onExportReady }) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 space-y-8">
-          <section className="bg-bg-surface rounded-3xl p-8 flex flex-col md:flex-row justify-between items-center gap-6 border border-white/5 shadow-2xl">
+          <section className="bg-bg-surface rounded-3xl p-4 sm:p-8 flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-6 border border-white/5 shadow-2xl">
             <div>
               <h1 className="text-3xl font-black font-headline text-white tracking-tight">
                 SGPA Utility
@@ -167,7 +167,7 @@ const SGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                       >
                         <td className="px-8 py-6">
                           <input
-                            className="bg-transparent border-none outline-none text-white font-black font-headline text-sm w-full placeholder:text-zinc-800 focus:text-primary transition-colors pr-8"
+                            className="bg-transparent border-none outline-none text-on-surface font-black font-headline text-sm w-full placeholder:text-zinc-600 focus:text-primary transition-colors pr-8"
                             value={sub.name}
                             onChange={(e) => updateSubject(sub.id, 'name', e.target.value)}
                             placeholder="e.g. Advanced AI Models"
@@ -180,7 +180,7 @@ const SGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                               value={sub.code || ''}
                               onChange={(e) => updateSubject(sub.id, 'code', e.target.value)}
                               placeholder="CS-101"
-                              className="bg-transparent border-none outline-none text-center w-20 font-black font-mono text-xs text-primary transition-all placeholder:text-zinc-800 uppercase"
+                              className="bg-transparent border-none outline-none text-center w-20 font-black font-mono text-xs text-on-surface transition-all placeholder:text-zinc-600 uppercase"
                             />
                           </div>
                         </td>
@@ -192,7 +192,7 @@ const SGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                               max={6}
                               value={sub.credits}
                               onChange={(e) => updateSubject(sub.id, 'credits', e.target.value)}
-                              className="bg-transparent border-none outline-none text-center w-12 font-black font-mono text-xs text-primary transition-all"
+                              className="bg-transparent border-none outline-none text-center w-12 font-black font-mono text-xs text-on-surface transition-all"
                             />
                           </div>
                         </td>
@@ -205,7 +205,7 @@ const SGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                               value={sub.marks === '' ? '' : sub.marks}
                               onChange={(e) => updateSubject(sub.id, 'marks', e.target.value)}
                               placeholder="00"
-                              className="bg-transparent border-none outline-none text-center w-12 font-black font-mono text-xs text-primary transition-all placeholder:text-zinc-800"
+                              className="bg-transparent border-none outline-none text-center w-12 font-black font-mono text-xs text-on-surface transition-all placeholder:text-zinc-600"
                             />
                           </div>
                         </td>
@@ -236,7 +236,7 @@ const SGPACalculator: React.FC<Props> = ({ onExportReady }) => {
         </div>
 
         <div className="lg:col-span-4 space-y-8">
-          <section className="bg-bg-surface rounded-3xl p-10 border border-white/5 shadow-glow relative overflow-hidden group">
+          <section className="bg-bg-surface rounded-3xl p-6 sm:p-10 border border-white/5 shadow-glow relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-8 opacity-0 group-hover:opacity-10 transition-opacity">
               <span className="material-symbols-outlined text-8xl text-primary">data_usage</span>
             </div>
@@ -246,7 +246,7 @@ const SGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                 Current Performance Mean
               </p>
               <div className="relative group/score">
-                <span className="text-8xl font-black font-headline text-white tracking-tighter text-shadow-glow drop-shadow-2xl transition-transform duration-700 group-hover/score:scale-105 inline-block">
+                <span className="text-6xl sm:text-8xl font-black font-headline text-white tracking-tighter text-shadow-glow drop-shadow-2xl transition-transform duration-700 group-hover/score:scale-105 inline-block">
                   {sgpaNum.toFixed(2)}
                 </span>
                 <div className="absolute -top-4 -right-8">
@@ -283,7 +283,7 @@ const SGPACalculator: React.FC<Props> = ({ onExportReady }) => {
             </div>
           </section>
 
-          <section className="bg-bg-surface rounded-3xl p-8 border border-white/5 shadow-2xl space-y-8">
+          <section className="bg-bg-surface rounded-3xl p-4 sm:p-8 border border-white/5 shadow-2xl space-y-6 sm:space-y-8">
             <div className="flex items-center gap-3 border-b border-white/5 pb-6">
               <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                 <span className="material-symbols-outlined text-[16px]">psychology</span>
@@ -304,7 +304,7 @@ const SGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                   placeholder="0.00"
                   value={prevCgpa}
                   onChange={(e) => setPrevCgpa(e.target.value)}
-                  className="w-full bg-bg-surface-lowest border border-white/5 rounded-2xl p-4 text-center font-black font-mono text-zinc-400 outline-none focus:border-primary/50 transition-all shadow-inner-glow"
+                  className="w-full bg-bg-surface-lowest border border-white/5 rounded-2xl p-4 text-center font-black font-mono text-on-surface outline-none focus:border-primary/50 transition-all shadow-inner-glow"
                 />
               </div>
               <div className="space-y-3">
@@ -316,7 +316,7 @@ const SGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                   placeholder="00"
                   value={prevCredits}
                   onChange={(e) => setPrevCredits(e.target.value)}
-                  className="w-full bg-bg-surface-lowest border border-white/5 rounded-2xl p-4 text-center font-black font-mono text-zinc-400 outline-none focus:border-primary/50 transition-all shadow-inner-glow"
+                  className="w-full bg-bg-surface-lowest border border-white/5 rounded-2xl p-4 text-center font-black font-mono text-on-surface outline-none focus:border-primary/50 transition-all shadow-inner-glow"
                 />
               </div>
             </div>

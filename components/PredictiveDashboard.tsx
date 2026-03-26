@@ -2,11 +2,7 @@ import React from 'react';
 import { useAcademicStore } from '../src/domain/store';
 import { calculateProjectedCGPA } from '../src/domain/gpa/engine';
 
-interface Props {
-  children?: React.ReactNode;
-}
-
-const PredictiveDashboard: React.FC<Props> = () => {
+const PredictiveDashboard: React.FC = () => {
   const { semesters, projectionMode, setProjectionMode, futureCredits, setFutureCredits } =
     useAcademicStore();
 

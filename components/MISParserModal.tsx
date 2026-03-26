@@ -206,7 +206,7 @@ const MISParserModal: React.FC<Props> = ({ isOpen, onClose, onImport, existingSu
                     <button
                       key={cr}
                       onClick={() => applyGlobalCredits(cr)}
-                      className={`w-12 h-12 rounded-xl font-black text-xs border transition-all ${globalCredits === cr ? 'bg-primary text-on-primary border-primary shadow-lg shadow-primary/20' : 'border-white/10 text-zinc-500 hover:text-white hover:bg-white/5'}`}
+                      className={`w-12 h-12 rounded-xl font-black text-xs border transition-all ${globalCredits === cr ? 'bg-primary text-on-primary border-primary shadow-lg shadow-glow-sm' : 'border-white/10 text-zinc-500 hover:text-white hover:bg-white/5'}`}
                     >
                       {cr}
                     </button>

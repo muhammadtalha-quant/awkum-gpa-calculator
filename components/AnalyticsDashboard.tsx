@@ -1,31 +1,23 @@
 import React from 'react';
 import { useAcademicStore } from '../src/domain/store';
+import { CGPASemester } from '../src/domain/types';
 import GPATrendChart from '../src/features/analytics/GPATrendChart';
 import GradeDistributionChart from '../src/features/analytics/GradeDistributionChart';
 
-interface Props {
-  children?: React.ReactNode;
-}
-
-const AnalyticsDashboard: React.FC<Props> = () => {
+const AnalyticsDashboard: React.FC = () => {
   const { semesters } = useAcademicStore();
 
   // Prepare GPA Trend Data
-  const trendData = semesters
-    .filter((s) => s.sgpa > 0)
-    .map((s, idx) => ({
-      name: `Sem ${idx + 1}`,
-      sgpa: Number(s.sgpa),
-    }));
+  const trendData = semesters.map((s: CGPASemester, idx: number) => ({
+    name: `Sem ${idx + 1}`,
+    sgpa: Number(s.sgpa),
+  }));
 
   // Prepare Grade Distribution Data
+  const allSubjects = semesters.flatMap((s: CGPASemester) => s.subjects || []);
   const gradeCounts: { [key: string]: number } = {};
-  semesters.forEach((s) => {
-    if (s.subjects) {
-      s.subjects.forEach((sub) => {
-        gradeCounts[sub.gradeLetter] = (gradeCounts[sub.gradeLetter] || 0) + 1;
-      });
-    }
+  allSubjects.forEach((sub: any) => {
+    gradeCounts[sub.gradeLetter] = (gradeCounts[sub.gradeLetter] || 0) + 1;
   });
   const distributionData = Object.entries(gradeCounts)
     .sort((a, b) => a[0].localeCompare(b[0]))

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
+import { SGPASubject } from '../src/domain/types';
 import { calculateRequiredMarks } from '../src/domain/gpa/engine';
 
 interface Props {
-  subjects: any[];
+  subjects: SGPASubject[];
 }
 
 const RequiredMarksTool: React.FC<Props> = ({ subjects }) => {
@@ -102,7 +103,7 @@ const RequiredMarksTool: React.FC<Props> = ({ subjects }) => {
                     <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
                       Required Target Avg.
                     </p>
-                    <h4 className="text-4xl font-black font-headline text-primary tracking-tighter shadow-primary/20">
+                    <h4 className="text-4xl font-black font-headline text-primary tracking-tighter shadow-glow-sm">
                       {typeof result === 'number' ? result : result}
                     </h4>
                     <div className="pt-2">

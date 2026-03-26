@@ -1,5 +1,4 @@
-/* eslint-disable react-hooks/set-state-in-effect */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { UserInfo } from '../src/domain/types';
 import { PROGRAMMES } from '../constants';
 
@@ -36,14 +35,6 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (info.programme === 'Undergraduate (BS)') {
-      setInfo((prev) => ({ ...prev, semester: prev.isCompleted ? '8' : '1' }));
-    } else if (!info.isCompleted) {
-      setInfo((prev) => ({ ...prev, semester: '1' }));
-    }
-  }, [info.programme, info.isCompleted]);
 
   if (!isOpen) return null;
 
@@ -239,7 +230,16 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
                 </label>
                 <select
                   value={info.programme}
-                  onChange={(e) => setInfo({ ...info, programme: e.target.value })}
+                  onChange={(e) => {
+                    const prog = e.target.value;
+                    let sem = info.semester;
+                    if (prog === 'Undergraduate (BS)') {
+                      sem = info.isCompleted ? '8' : '1';
+                    } else if (!info.isCompleted) {
+                      sem = '1';
+                    }
+                    setInfo({ ...info, programme: prog, semester: sem });
+                  }}
                   className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-xl outline-none focus:border-primary text-sm font-bold text-on-surface appearance-none cursor-pointer hover:bg-white/5 transition-all"
                 >
                   {PROGRAMMES.map((p) => (
@@ -314,7 +314,16 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
             {isCGPA && (
               <button
                 type="button"
-                onClick={() => setInfo({ ...info, isCompleted: !info.isCompleted })}
+                onClick={() => {
+                  const compl = !info.isCompleted;
+                  let sem = info.semester;
+                  if (info.programme === 'Undergraduate (BS)') {
+                    sem = compl ? '8' : '1';
+                  } else if (!compl) {
+                    sem = '1';
+                  }
+                  setInfo({ ...info, isCompleted: compl, semester: sem });
+                }}
                 className={`w-full flex items-center justify-between p-5 rounded-2xl border transition-all ${info.isCompleted ? 'bg-primary/20 border-primary/40 text-primary' : 'bg-white/5 border-white/5 text-zinc-500 hover:border-white/10'}`}
               >
                 <span className="text-xs font-black uppercase tracking-widest">
@@ -370,7 +379,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
             <button
               type="submit"
               disabled={!isFormValid}
-              className={`flex-[2] py-4 px-6 rounded-xl font-black font-label text-[10px] uppercase tracking-[0.2em] shadow-2xl transition-all active:scale-[0.98] ${isFormValid ? 'bg-primary text-on-primary hover:shadow-primary/20' : 'bg-surface-container-highest text-zinc-600 opacity-50 cursor-not-allowed'}`}
+              className={`flex-[2] py-4 px-6 rounded-xl font-black font-label text-[10px] uppercase tracking-[0.2em] shadow-2xl transition-all active:scale-[0.98] ${isFormValid ? 'bg-primary text-on-primary hover:shadow-glow-sm' : 'bg-surface-container-highest text-zinc-600 opacity-50 cursor-not-allowed'}`}
             >
               Verify & Proceed
             </button>

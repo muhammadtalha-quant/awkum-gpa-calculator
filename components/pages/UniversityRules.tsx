@@ -1,5 +1,7 @@
 import React from 'react';
 import { GRADE_RANGES } from '../../constants';
+import GradingChart from '../GradingChart';
+import CalculationInfo from '../CalculationInfo';
 
 const UniversityRules: React.FC = () => {
   return (
@@ -199,6 +201,12 @@ const UniversityRules: React.FC = () => {
           </p>
         </div>
       </div>
+
+      {/* Visual Grade Chart */}
+      <GradingChart />
+
+      {/* Calculation Formula Reference */}
+      <CalculationInfo />
     </div>
   );
 };

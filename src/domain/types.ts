@@ -14,7 +14,6 @@ export interface SGPASubject {
   marks: Mark | '';
   gradePoint: GradePoint;
   gradeLetter: string;
-  isLocked?: boolean;
 }
 
 export interface CGPASemester {
@@ -24,7 +23,6 @@ export interface CGPASemester {
   credits: Credit;
   subjects?: SGPASubject[];
   gradeLetter?: string;
-  isLocked?: boolean;
 }
 
 export interface UserInfo {
@@ -64,9 +62,6 @@ export const asGP = (n: number): GradePoint => {
 };
 
 // UI & Theme Types
-export type ThemeType = 'tokyonight' | 'catppuccin' | 'gruvbox';
-export type ThemeMode = 'light' | 'dark';
-
 export interface GradeRange {
   label: string;
   min: number;

@@ -1,5 +1,4 @@
-/* eslint-disable react-hooks/set-state-in-effect */
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { SGPASubject, asMark, asSubjectCredit } from '../src/domain/types';
 import { calculateGradePoint, getLetterFromGP } from '../src/domain/grading/engine';
 import { isValidCourseCode, sanitizeSubjectName } from '../src/core/validation';
@@ -24,14 +23,15 @@ const SubjectEntryModal: React.FC<Props> = ({
   const [credits, setCredits] = useState(initialData?.credits?.toString() || '3');
   const [marks, setMarks] = useState(initialData?.marks?.toString() || '');
 
-  useEffect(() => {
-    if (isOpen) {
-      setName(initialData?.name || '');
-      setCode(initialData?.code || '');
-      setCredits(initialData?.credits?.toString() || '3');
-      setMarks(initialData?.marks?.toString() || '');
-    }
-  }, [isOpen, initialData]);
+  // Sync state from props when initialData changes (Synchronous update during render)
+  const [prevInitialData, setPrevInitialData] = useState(initialData);
+  if (initialData !== prevInitialData) {
+    setPrevInitialData(initialData);
+    setName(initialData?.name || '');
+    setCode(initialData?.code || '');
+    setCredits(initialData?.credits?.toString() || '3');
+    setMarks(initialData?.marks?.toString() || '');
+  }
 
   if (!isOpen) return null;
 
@@ -110,7 +110,7 @@ const SubjectEntryModal: React.FC<Props> = ({
               placeholder="e.g. Advanced Thermodynamics"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className={`w-full px-6 py-4 bg-bg-surface-lowest border rounded-2xl outline-none text-white font-black text-sm transition-all placeholder:text-zinc-800 shadow-inner-glow ${isNameInvalid ? 'border-error/40 ring-2 ring-error/5' : 'border-white/5 focus:border-primary/50'}`}
+              className={`w-full px-6 py-4 bg-bg-surface-lowest border rounded-2xl outline-none text-zinc-900 dark:text-white font-black text-sm transition-all placeholder:text-zinc-800 shadow-inner-glow ${isNameInvalid ? 'border-error/40 ring-2 ring-error/5' : 'border-white/5 focus:border-primary/50'}`}
             />
           </div>
 
@@ -131,7 +131,7 @@ const SubjectEntryModal: React.FC<Props> = ({
                 placeholder="e.g. PH-201"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                className={`w-full px-6 py-4 bg-bg-surface-lowest border rounded-2xl outline-none text-white font-black font-mono text-sm tracking-widest transition-all placeholder:text-zinc-800 shadow-inner-glow uppercase ${isCodeInvalid ? 'border-error/40 ring-2 ring-error/5' : 'border-white/5 focus:border-primary/50'}`}
+                className={`w-full px-6 py-4 bg-bg-surface-lowest border rounded-2xl outline-none text-zinc-900 dark:text-white font-black font-mono text-sm tracking-widest transition-all placeholder:text-zinc-800 shadow-inner-glow uppercase ${isCodeInvalid ? 'border-error/40 ring-2 ring-error/5' : 'border-white/5 focus:border-primary/50'}`}
               />
             </div>
           )}

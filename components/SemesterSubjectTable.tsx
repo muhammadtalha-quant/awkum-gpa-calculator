@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { SGPASubject, asMark, asSubjectCredit, Mark, GradePoint } from '../src/domain/types';
 import { getLetterFromGP, calculateGradePoint } from '../src/domain/grading/engine';
 import { isValidCourseCode, sanitizeSubjectName } from '../src/core/validation';
@@ -13,24 +13,8 @@ const SemesterSubjectTable: React.FC<Props> = ({ semesterId, subjects, onUpdate 
   const MAX_CREDITS_PER_SEM = 21;
   const MAX_ROWS = 7;
 
-  // Credit Hour Pruning logic
-  useEffect(() => {
-    const totalCredits = subjects.reduce((sum, s) => sum + (Number(s.credits) || 0), 0);
-    if (totalCredits > MAX_CREDITS_PER_SEM) {
-      let current = [...subjects];
-      // Remove subjects from the end until we are within limits
-      while (
-        current.reduce((sum, s) => sum + (Number(s.credits) || 0), 0) > MAX_CREDITS_PER_SEM &&
-        current.length > 1
-      ) {
-        current.pop();
-      }
-      // Only update if we actually removed something to avoid infinite loops if logic is slightly off
-      if (current.length < subjects.length) {
-        onUpdate(semesterId, current);
-      }
-    }
-  }, [subjects, semesterId, onUpdate]);
+  const totalCredits = subjects.reduce((sum, s) => sum + (Number(s.credits) || 0), 0);
+  const isOverLimit = totalCredits > MAX_CREDITS_PER_SEM;
 
   const addRow = () => {
     const currentTotalCredits = subjects.reduce((sum, s) => sum + (Number(s.credits) || 0), 0);
@@ -166,7 +150,7 @@ const SemesterSubjectTable: React.FC<Props> = ({ semesterId, subjects, onUpdate 
                   placeholder="Enter course name"
                   value={sub.name}
                   onChange={(e) => handleInputChange(sub.id, 'name', e.target.value)}
-                  className="w-full px-4 py-2 bg-white/5 border border-white/5 rounded-xl text-xs font-bold text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-zinc-800"
+                  className="w-full px-4 py-2 bg-black/20 border border-white/5 rounded-xl text-xs font-bold text-zinc-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-zinc-800"
                 />
               </td>
               <td className="px-4 py-3">
@@ -175,7 +159,7 @@ const SemesterSubjectTable: React.FC<Props> = ({ semesterId, subjects, onUpdate 
                   placeholder="CS-101"
                   value={sub.code || ''}
                   onChange={(e) => handleInputChange(sub.id, 'code', e.target.value)}
-                  className={`w-full px-4 py-2 bg-white/5 border rounded-xl text-xs font-mono font-bold text-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-zinc-800 ${
+                  className={`w-full px-4 py-2 bg-black/20 border rounded-xl text-xs font-mono font-bold text-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-zinc-800 ${
                     sub.code && !isValidCourseCode(sub.code) ? 'border-error/50' : 'border-white/5'
                   }`}
                 />
@@ -188,7 +172,7 @@ const SemesterSubjectTable: React.FC<Props> = ({ semesterId, subjects, onUpdate 
                   value={sub.credits}
                   onChange={(e) => handleInputChange(sub.id, 'credits', e.target.value)}
                   onBlur={(e) => handleBlur(sub.id, 'credits', e.target.value)}
-                  className="w-full px-2 py-2 bg-white/5 border border-white/5 rounded-xl text-xs font-black text-center text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                  className="w-full px-2 py-2 bg-black/20 border border-white/5 rounded-xl text-xs font-black text-center text-zinc-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                 />
               </td>
               <td className="px-2 py-3">
@@ -198,7 +182,7 @@ const SemesterSubjectTable: React.FC<Props> = ({ semesterId, subjects, onUpdate 
                   placeholder="0-100"
                   value={sub.marks}
                   onChange={(e) => handleInputChange(sub.id, 'marks', e.target.value)}
-                  className="w-full px-2 py-2 bg-white/5 border border-white/5 rounded-xl text-xs font-black text-center text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:opacity-20"
+                  className="w-full px-2 py-2 bg-black/20 border border-white/5 rounded-xl text-xs font-black text-center text-zinc-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:opacity-20"
                 />
               </td>
               <td className="px-2 py-3 text-center">
@@ -244,6 +228,14 @@ const SemesterSubjectTable: React.FC<Props> = ({ semesterId, subjects, onUpdate 
             Append Registry Item
           </span>
         </button>
+        <div
+          className={`text-[9px] font-black font-label uppercase tracking-widest ${
+            isOverLimit ? 'text-warning' : 'text-zinc-600'
+          }`}
+        >
+          {totalCredits}/{MAX_CREDITS_PER_SEM} Cr
+          {isOverLimit && ' — Over Limit'}
+        </div>
       </div>
     </div>
   );

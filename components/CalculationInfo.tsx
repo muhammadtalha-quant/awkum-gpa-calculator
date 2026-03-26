@@ -1,10 +1,6 @@
 import React from 'react';
 
-interface Props {
-  children?: React.ReactNode;
-}
-
-const CalculationInfo: React.FC<Props> = () => {
+const CalculationInfo: React.FC = () => {
   return (
     <div className="bg-bg-surface rounded-3xl p-10 border border-white/5 shadow-2xl relative overflow-hidden group">
       <div className="absolute top-0 right-0 p-8 opacity-0 group-hover:opacity-10 transition-opacity">

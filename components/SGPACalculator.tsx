@@ -6,6 +6,7 @@ import { exportSGPA_PDF } from '../services/pdfService';
 import UserInfoModal from './UserInfoModal';
 import MISParserModal from './MISParserModal';
 import RequiredMarksTool from './RequiredMarksTool';
+import SubjectEntryModal from './SubjectEntryModal';
 
 interface Props {
   onExportReady?: (fn: () => void) => void;
@@ -30,6 +31,7 @@ const SGPACalculator: React.FC<Props> = ({ onExportReady }) => {
 
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isMISModalOpen, setIsMISModalOpen] = useState(false);
+  const [editingSubject, setEditingSubject] = useState<SGPASubject | null>(null);
 
   useEffect(() => {
     if (onExportReady) onExportReady(() => setIsExportModalOpen(true));
@@ -83,6 +85,19 @@ const SGPACalculator: React.FC<Props> = ({ onExportReady }) => {
         onImport={handleMISImport}
         existingSubjectCodes={subjects.map((s) => s.code || '').filter(Boolean)}
       />
+      <SubjectEntryModal
+        isOpen={!!editingSubject}
+        onClose={() => setEditingSubject(null)}
+        onSubmit={(sub) => {
+          updateSubject(editingSubject!.id, 'name', sub.name!);
+          updateSubject(editingSubject!.id, 'code', sub.code || '');
+          updateSubject(editingSubject!.id, 'credits', sub.credits!.toString());
+          updateSubject(editingSubject!.id, 'marks', sub.marks!.toString());
+          setEditingSubject(null);
+        }}
+        initialData={editingSubject || undefined}
+        enableCodes={true}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 space-y-8">
@@ -103,14 +118,6 @@ const SGPACalculator: React.FC<Props> = ({ onExportReady }) => {
               >
                 <span className="material-symbols-outlined text-[18px]">cloud_download</span>
                 Import MIS
-              </button>
-              <button
-                data-testid="add-course-btn"
-                onClick={addCourse}
-                className="flex-1 md:flex-none px-6 py-3 rounded-2xl bg-primary text-on-primary text-[10px] font-black font-label uppercase tracking-widest hover:shadow-glow transition-all flex items-center justify-center gap-3 active:scale-95"
-              >
-                <span className="material-symbols-outlined text-[18px]">add_circle</span>
-                Add Course
               </button>
             </div>
           </section>
@@ -136,7 +143,7 @@ const SGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                     <th className="px-8 py-5 font-black font-label text-[9px] tracking-[0.3em] text-zinc-600 uppercase">
                       Registry Entry
                     </th>
-                    <th className="px-6 py-5 font-black font-label text-[9px] tracking-[0.3em] text-zinc-600 uppercase text-center w-32">
+                    <th className="px-6 py-5 font-black font-label text-[9px] tracking-[0.3em] text-zinc-600 uppercase text-center min-w-[120px]">
                       Catalog ID
                     </th>
                     <th className="px-6 py-5 font-black font-label text-[9px] tracking-[0.3em] text-zinc-600 uppercase text-center w-24">
@@ -148,14 +155,14 @@ const SGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                     <th className="px-6 py-5 font-black font-label text-[9px] tracking-[0.3em] text-zinc-600 uppercase text-center w-20">
                       GP
                     </th>
-                    <th className="px-8 py-5"></th>
+                    <th className="px-8 py-5 min-w-[120px]"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   {subjects.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={5}
+                        colSpan={6}
                         className="py-24 text-center text-zinc-700 font-label text-[10px] font-black uppercase tracking-widest"
                       >
                         Neural grid initialized. Awaiting course entry.
@@ -193,7 +200,7 @@ const SGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                             <input
                               type="number"
                               data-testid="subject-credits-input"
-                              min={2}
+                              min={1}
                               max={6}
                               value={sub.credits}
                               onChange={(e) => updateSubject(sub.id, 'credits', e.target.value)}
@@ -223,20 +230,38 @@ const SGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                           </span>
                         </td>
                         <td className="px-8">
-                          <button
-                            onClick={() => removeSubject(sub.id)}
-                            className="w-10 h-10 flex items-center justify-center rounded-xl bg-error/0 text-error/30 hover:bg-error/10 hover:text-error transition-all group-hover:text-error/60"
-                          >
-                            <span className="material-symbols-outlined text-[18px]">
-                              delete_sweep
-                            </span>
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => setEditingSubject(sub)}
+                              className="w-10 h-10 flex items-center justify-center rounded-xl bg-primary/0 text-primary/30 hover:bg-primary/10 hover:text-primary transition-all"
+                            >
+                              <span className="material-symbols-outlined text-[18px]">edit</span>
+                            </button>
+                            <button
+                              onClick={() => removeSubject(sub.id)}
+                              className="w-10 h-10 flex items-center justify-center rounded-xl bg-error/0 text-error/30 hover:bg-error/10 hover:text-error transition-all group-hover:text-error/60"
+                            >
+                              <span className="material-symbols-outlined text-[18px]">
+                                delete_sweep
+                              </span>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
                   )}
                 </tbody>
               </table>
+              <div className="p-6 border-t border-white/5 flex gap-4 w-full sm:w-auto">
+                <button
+                  data-testid="add-course-btn"
+                  onClick={addCourse}
+                  className="flex-1 sm:flex-none px-6 py-3 rounded-2xl bg-primary text-on-primary text-[10px] font-black font-label uppercase tracking-widest hover:shadow-glow transition-all flex items-center justify-center gap-3 active:scale-95"
+                >
+                  <span className="material-symbols-outlined text-[18px]">add_circle</span>
+                  Add Course
+                </button>
+              </div>
             </div>
           </section>
         </div>

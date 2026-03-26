@@ -51,8 +51,8 @@ const App: React.FC = () => {
         />
 
         {/* Main area */}
-        <main className="lg:ml-64 pt-24 pb-32 lg:pb-8 px-4 md:px-8 max-w-7xl mx-auto min-h-screen min-w-0">
-          <div className="py-8">
+        <main className="flex-1 lg:pl-64 pt-24 pb-24 lg:pb-8 min-h-screen min-w-0 overflow-x-hidden">
+          <div className="px-4 md:px-8 max-w-screen-xl mx-auto py-8">
             {activePage === 'sgpa' && (
               <SGPACalculator
                 onExportReady={(fn) => {

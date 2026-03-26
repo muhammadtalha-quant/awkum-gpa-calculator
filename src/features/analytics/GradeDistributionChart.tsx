@@ -12,7 +12,6 @@ import {
 
 interface Props {
   data: { grade: string; count: number }[];
-  theme?: any;
 }
 
 const GradeDistributionChart: React.FC<Props> = ({ data }) => {

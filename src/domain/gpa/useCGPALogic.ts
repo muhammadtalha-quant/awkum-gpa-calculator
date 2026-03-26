@@ -1,5 +1,4 @@
-/* eslint-disable react-hooks/set-state-in-effect */
-import { useState, useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useAcademicStore } from '../store';
 import { calculateCGPA, calculateSGPA } from './engine';
 import { SGPASubject, asProgramCredit } from '../types';
@@ -13,25 +12,19 @@ export const useCGPALogic = (
 ) => {
   const { semesters, addSemester, removeSemester, updateSemester, setSemesters } =
     useAcademicStore();
-  const [errorMsg, setErrorMsg] = useState('');
-
-  useEffect(() => {
+  const errorMsg = useMemo(() => {
     const total = semesters.reduce(
       (s: number, sem: CGPASemester) => s + (Number(sem.credits) || 0),
       0,
     );
     if (total > MAX_CREDITS) {
-      const copy = [...semesters];
-      while (
-        copy.reduce((s: number, sem: CGPASemester) => s + (Number(sem.credits) || 0), 0) >
-          MAX_CREDITS &&
-        copy.length > 1
-      )
-        copy.pop();
-      setSemesters(copy);
-      setErrorMsg('Adjusted semesters to maintain global credit limit.');
+      return (
+        `Warning: Total program credits (${total}) exceed the ${MAX_CREDITS}-credit limit. ` +
+        `Review semester credit assignments.`
+      );
     }
-  }, [semesters, setSemesters, MAX_CREDITS]);
+    return '';
+  }, [semesters, MAX_CREDITS]);
 
   const cgpaValue = useMemo(
     () => calculateCGPA(semesters.map((s) => ({ sgpa: s.sgpa, credits: s.credits }))),
@@ -57,12 +50,10 @@ export const useCGPALogic = (
 
   const handleAddSemester = () => {
     if (semesters.length >= MAX_ROWS || MAX_CREDITS - totalCredits < MIN_ROOM) return;
-    setErrorMsg('');
     addSemester();
   };
 
   const handleRemoveSemester = (id: string) => {
-    setErrorMsg('');
     if (semesters.length <= 1) setSemesters([]);
     else removeSemester(id);
   };
@@ -83,7 +74,6 @@ export const useCGPALogic = (
     semesters,
     setSemesters,
     errorMsg,
-    setErrorMsg,
     cgpaValue,
     cgpaNum,
     overallGrade,

@@ -235,8 +235,8 @@ describe('GPA Engine', () => {
           ],
         },
       ];
-      // Current QP: 1.0*6 = 6? Error in test setup: 0 + 0 = 0.
-      // Actually distributeRetakeMarks re-calculates based on CGPA target: Target 2.0 * 6 = 12 QP
+      // Current QP for this specific test case reflects a 0.00 base.
+      // distributeRetakeMarks re-calculates based on CGPA target: Target 2.0 * 6 = 12 QP
       // Need 12 QP. Each gives 6 QP -> GP 2.0 -> Marks 50
       const result = distributeRetakeMarks(sems, 2.0);
       expect(Array.isArray(result)).toBe(true);

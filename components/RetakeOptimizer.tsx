@@ -1,21 +1,18 @@
 import React, { useState } from 'react';
 import { useAcademicStore } from '../src/domain/store';
 import {
-  calculateCGPA,
   distributeRetakeMarks,
   RetakeDistributionResult,
 } from '../src/domain/gpa/engine';
 
 interface Props {
-  children?: React.ReactNode;
+  currentCGPA: number;
+  currentCredits: number;
 }
 
-const RetakeOptimizer: React.FC<Props> = () => {
+const RetakeOptimizer: React.FC<Props> = ({ currentCGPA }) => {
   const { semesters } = useAcademicStore();
 
-  const currentCGPA = Number(
-    calculateCGPA(semesters.map((s) => ({ sgpa: s.sgpa, credits: s.credits }))).toFixed(2),
-  );
   const [targetCGPA, setTargetCGPA] = useState<string>(Math.min(4.0, currentCGPA + 0.5).toFixed(2));
 
   const hasSubjects = semesters.some((s) => s.subjects && s.subjects.length > 0);
@@ -135,7 +132,7 @@ const RetakeOptimizer: React.FC<Props> = () => {
               return (
                 <div
                   key={rec.subjectId}
-                  className={`relative overflow-hidden group flex flex-col sm:grid sm:grid-cols-6 gap-4 items-center p-6 sm:p-8 rounded-[2rem] border bg-bg-surface-lowest transition-all duration-500 ${!rec.feasible ? 'border-error/20 opacity-60' : 'border-white/5 hover:border-primary/30 hover:shadow-primary/5 hover:-translate-y-1'}`}
+                  className={`relative overflow-hidden group flex flex-col sm:grid sm:grid-cols-6 gap-4 items-center p-6 sm:p-8 rounded-[2rem] border bg-bg-surface-lowest transition-all duration-500 ${!rec.feasible ? 'border-error/20 opacity-60' : 'border-white/5 hover:border-primary/30 hover:shadow-glow-sm hover:-translate-y-1'}`}
                 >
                   {/* Subject Identity */}
                   <div className="col-span-2 w-full flex items-center gap-6">

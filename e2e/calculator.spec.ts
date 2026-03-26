@@ -3,6 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('GPA Calculator Core User Journeys', () => {
     test.beforeEach(async ({ page }) => {
         await page.goto('/');
+        await page.evaluate(() => localStorage.removeItem('awkum-academic-storage'));
     });
 
     test('should calculate SGPA correctly for multiple subjects', async ({ page }) => {

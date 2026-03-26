@@ -46,7 +46,7 @@ const ForecastingTool: React.FC<Props> = ({ currentCGPA, currentCredits }) => {
               placeholder="e.g. 3.00"
               value={targetCGPA}
               onChange={(e) => setTargetCGPA(e.target.value.replace(/[^0-9.]/g, ''))}
-              className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-2xl outline-none focus:border-primary text-sm font-bold text-white transition-all placeholder:text-zinc-800 shadow-inner-glow"
+              className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-2xl outline-none focus:border-primary text-sm font-bold text-zinc-900 dark:text-white transition-all placeholder:text-zinc-800 shadow-inner-glow"
             />
           </div>
           <div className="space-y-1.5">
@@ -59,7 +59,7 @@ const ForecastingTool: React.FC<Props> = ({ currentCGPA, currentCredits }) => {
               max="21"
               value={nextCredits}
               onChange={(e) => setNextCredits(Math.max(0, parseInt(e.target.value) || 0))}
-              className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-2xl outline-none focus:border-primary text-sm font-bold text-white transition-all shadow-inner-glow"
+              className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-2xl outline-none focus:border-primary text-sm font-bold text-zinc-900 dark:text-white transition-all shadow-inner-glow"
             />
           </div>
         </div>
@@ -110,7 +110,7 @@ const ForecastingTool: React.FC<Props> = ({ currentCGPA, currentCredits }) => {
                   Required Vector
                 </p>
                 <div className="relative inline-block">
-                  <h4 className="text-5xl font-black font-headline text-primary tracking-tighter shadow-primary/20">
+                  <h4 className="text-5xl font-black font-headline text-primary tracking-tighter shadow-glow-sm">
                     {typeof result === 'number' ? result.toFixed(2) : result}
                   </h4>
                   <div className="absolute -top-1 -right-6">

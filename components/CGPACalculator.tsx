@@ -5,6 +5,11 @@ import { exportCGPA_PDF } from '../services/pdfService';
 import UserInfoModal from './UserInfoModal';
 import ProbationAlert from './ProbationAlert';
 import SemesterSubjectTable from './SemesterSubjectTable';
+import ForecastingTool from './ForecastingTool';
+import RetakeOptimizer from './RetakeOptimizer';
+import PredictiveDashboard from './PredictiveDashboard';
+import AnalyticsDashboard from './AnalyticsDashboard';
+import { Credit, GradePoint } from '../src/domain/types';
 
 interface Props {
   onExportReady?: (fn: () => void) => void;
@@ -24,11 +29,11 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
     updateSemesterSubjects,
   } = useCGPALogic();
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isExpertMode, setIsExpertMode] = useState(false);
 
   useEffect(() => {
-    if (onExportReady) onExportReady(() => setIsModalOpen(true));
+    if (onExportReady) onExportReady(() => setIsExportModalOpen(true));
   }, [onExportReady]);
 
   const handlePdfExport = (userInfo: UserInfo) => {
@@ -46,10 +51,12 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
   return (
     <div className="space-y-8 animate-in">
       <UserInfoModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
         onSubmit={handlePdfExport}
-        title="Graduation Record Configuration"
+        title="Academic Export Passport"
+        isCGPA={true}
+        rowCount={semesters.length}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -93,20 +100,30 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
               </label>
             </div>
 
-            <button
-              data-testid="add-semester-btn"
-              onClick={handleAddSemester}
-              className="relative z-10 w-full md:w-auto px-10 py-4 rounded-2xl bg-primary text-on-primary text-[10px] font-black font-label uppercase tracking-widest hover:shadow-glow transition-all flex items-center justify-center gap-3 active:scale-95 group/add"
-            >
-              <div className="absolute inset-0 bg-white/10 translate-y-full group-hover/add:translate-y-0 transition-transform duration-300"></div>
-              <span className="material-symbols-outlined text-[20px] relative z-10">
-                add_moderator
-              </span>
-              <span className="relative z-10">Add Academic Block</span>
-            </button>
+            <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+              {isExpertMode && (
+                <button
+                  data-testid="import-mis-btn"
+                  className="flex-1 md:flex-none px-6 py-3 rounded-2xl bg-white/5 border border-white/5 text-zinc-400 text-[10px] font-black font-label uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-3"
+                >
+                  <span className="material-symbols-outlined text-[18px]">cloud_download</span>
+                  Import MIS
+                </button>
+              )}
+              <button
+                data-testid="add-semester-btn"
+                onClick={handleAddSemester}
+                className="relative z-10 flex-1 md:flex-none px-10 py-4 rounded-2xl bg-primary text-on-primary text-[10px] font-black font-label uppercase tracking-widest hover:shadow-glow transition-all flex items-center justify-center gap-3 active:scale-95 group/add"
+              >
+                <span className="material-symbols-outlined text-[20px] relative z-10">
+                  add_moderator
+                </span>
+                <span className="relative z-10">Add Academic Block</span>
+              </button>
+            </div>
           </section>
 
-          {cgpaNum < 2.0 && cgpaNum > 0 && (
+          {cgpaNum < 2.5 && cgpaNum > 0 && (
             <div className="animate-slide-in-top">
               <ProbationAlert cgpa={cgpaNum} />
             </div>
@@ -138,7 +155,8 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                     data-testid="semester-row"
                     className="group flex flex-col gap-4 sm:gap-6 p-4 sm:p-6 bg-bg-surface-lowest border border-white/5 rounded-2xl hover:bg-white/[0.02] transition-all duration-300 shadow-inner-glow relative overflow-hidden"
                   >
-                    <div className="flex items-center gap-4 flex-1">
+                    <div className="flex flex-col xs:flex-row gap-3 items-start xs:items-center flex-wrap">
+                      <div className="flex items-center gap-4 flex-1">
                       <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center font-black font-mono text-zinc-600 group-hover:bg-primary/10 group-hover:text-primary transition-all">
                         {idx + 1}
                       </div>
@@ -160,11 +178,13 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                           data-testid="semester-credits-input"
                           disabled={isExpertMode}
                           value={sem.credits}
-                          onChange={(e) =>
-                            updateSemester(sem.id, {
-                              credits: parseInt(e.target.value) || (0 as any),
-                            })
-                          }
+                          onChange={(e) => {
+                            const raw = e.target.value;
+                            if (raw === '') return;
+                            const v = parseInt(raw);
+                            if (!isNaN(v) && v >= 1 && v <= 99)
+                              updateSemester(sem.id, { credits: v as Credit });
+                          }}
                           className="w-20 bg-black/20 border border-white/5 rounded-xl p-3 text-center font-black font-mono text-xs text-on-surface outline-none focus:border-primary/50"
                         />
                       </div>
@@ -178,22 +198,25 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                           data-testid="semester-sgpa-input"
                           disabled={isExpertMode}
                           value={sem.sgpa}
-                          onChange={(e) =>
-                            updateSemester(sem.id, {
-                              sgpa: parseFloat(e.target.value) || (0 as any),
-                            })
-                          }
+                          onChange={(e) => {
+                            const raw = e.target.value;
+                            if (raw === '') return;
+                            const v = parseFloat(raw);
+                            if (!isNaN(v) && v >= 0 && v <= 4.0)
+                              updateSemester(sem.id, { sgpa: v as GradePoint });
+                          }}
                           className="w-24 bg-black/20 border border-white/5 rounded-xl p-3 text-center font-black font-mono text-xs text-on-surface outline-none focus:border-primary/50"
                         />
                       </div>
                       <button
                         onClick={() => handleRemoveSemester(sem.id)}
-                        className="mt-6 w-10 h-10 flex items-center justify-center rounded-xl bg-error/0 text-error/30 hover:bg-error/10 hover:text-error transition-all"
+                        className="ml-auto mt-0 w-10 h-10 flex items-center justify-center rounded-xl bg-error/0 text-error/30 hover:bg-error/10 hover:text-error transition-all"
                       >
                         <span className="material-symbols-outlined text-[18px]">close</span>
                       </button>
                     </div>
-                    {isExpertMode && (
+                  </div>
+                  {isExpertMode && (
                       <div className="w-full mt-4">
                         <SemesterSubjectTable
                           semesterId={sem.id}
@@ -237,19 +260,14 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                 {getCgpaLabel(cgpaNum)}
               </h4>
 
-              <div className="mt-10 grid grid-cols-2 gap-4 w-full h-14">
+              <div className="mt-10 flex flex-col sm:flex-row gap-4 w-full">
                 <button
-                  onClick={() => setIsModalOpen(true)}
-                  className="group/btn relative rounded-2xl bg-white/5 border border-white/5 text-zinc-400 text-[9px] font-black font-label uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-3 active:scale-95"
+                  onClick={() => setIsExportModalOpen(true)}
+                  className="group/btn relative flex-1 rounded-2xl bg-white/5 border border-white/5 text-zinc-400 text-[9px] font-black font-label uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-3 active:scale-95 py-4 sm:py-0 sm:h-14"
                 >
                   <span className="material-symbols-outlined text-[18px]">verified_user</span>
                   Export Record
                 </button>
-                <div className="flex items-center justify-center bg-bg-surface-lowest rounded-2xl border border-white/5 shadow-inner-glow px-4">
-                  <span className="text-[10px] font-black font-label uppercase tracking-widest text-zinc-600">
-                    Locked
-                  </span>
-                </div>
               </div>
             </div>
           </section>
@@ -316,8 +334,20 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
               between 12-21 credits.
             </p>
           </div>
+
+          {/* GPA Forecasting Tool */}
+          <ForecastingTool currentCGPA={cgpaNum} currentCredits={totalCredits} />
+
+          {/* Predictive Projection Dashboard */}
+          {semesters.length > 0 && <PredictiveDashboard />}
+
+          {/* Retake Strategy Engine — only in Expert Mode with subject data */}
+          {isExpertMode && <RetakeOptimizer currentCGPA={cgpaNum} currentCredits={totalCredits} />}
         </div>
       </div>
+
+      {/* Analytics Dashboard — full width below the grid */}
+      {semesters.length >= 2 && <AnalyticsDashboard />}
     </div>
   );
 };

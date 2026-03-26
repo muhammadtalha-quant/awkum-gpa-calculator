@@ -1,5 +1,4 @@
-/* eslint-disable react-hooks/set-state-in-effect */
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useAcademicStore } from '../store';
 import { calculateSGPA } from './engine';
 import { getLetterFromGP, calculateGradePoint } from '../grading/engine';
@@ -7,20 +6,13 @@ import { SGPASubject, Credit, Mark, GradePoint } from '../types';
 
 export const useSGPALogic = (MAX_CREDITS: number = 21) => {
   const { subjects, setSubjects } = useAcademicStore();
-  const [errorMsg, setErrorMsg] = useState('');
-  const [prevCgpa, setPrevCgpa] = useState('');
-  const [prevCredits, setPrevCredits] = useState('');
-
   // Credit limit warning logic
-  useEffect(() => {
+  const errorMsg = useMemo(() => {
     const total = subjects.reduce((s, c) => s + (Number(c.credits) || 0), 0);
     if (total > MAX_CREDITS) {
-      setErrorMsg(
-        `Warning: Total credits (${total}) exceed the standard ${MAX_CREDITS}-credit hour block limit.`,
-      );
-    } else {
-      setErrorMsg('');
+      return `Warning: Total credits (${total}) exceed the standard ${MAX_CREDITS}-credit hour block limit.`;
     }
+    return '';
   }, [subjects, MAX_CREDITS]);
 
   const sgpaValue = useMemo(
@@ -34,6 +26,9 @@ export const useSGPALogic = (MAX_CREDITS: number = 21) => {
     () => subjects.reduce((s, c) => s + (Number(c.credits) || 0), 0),
     [subjects],
   );
+
+  const [prevCgpa, setPrevCgpa] = useState('');
+  const [prevCredits, setPrevCredits] = useState('');
 
   const projectedCgpa = useMemo(() => {
     const pc = parseFloat(prevCgpa);
@@ -49,7 +44,6 @@ export const useSGPALogic = (MAX_CREDITS: number = 21) => {
   const addCourse = () => {
     const currentTotal = subjects.reduce((s, c) => s + (Number(c.credits) || 0), 0);
     if (currentTotal + 3 > MAX_CREDITS && currentTotal > 0) {
-      setErrorMsg(`Cannot add course: Exceeds ${MAX_CREDITS}-credit limit.`);
       return;
     }
     const newSub: SGPASubject = {
@@ -62,7 +56,6 @@ export const useSGPALogic = (MAX_CREDITS: number = 21) => {
       gradeLetter: 'F',
     };
     setSubjects([...subjects, newSub]);
-    setErrorMsg('');
   };
 
   const updateSubject = (id: string, field: keyof SGPASubject, raw: string) => {
@@ -99,7 +92,6 @@ export const useSGPALogic = (MAX_CREDITS: number = 21) => {
     subjects,
     setSubjects,
     errorMsg,
-    setErrorMsg,
     prevCgpa,
     setPrevCgpa,
     prevCredits,

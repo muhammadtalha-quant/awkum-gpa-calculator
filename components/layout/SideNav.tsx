@@ -21,14 +21,14 @@ const SideNav: React.FC<Props> = ({ activePage, onNavigate, mobileOpen, onClose 
       {/* Mobile Overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[150] lg:hidden animate-in"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150] lg:hidden animate-in transition-opacity duration-300"
           onClick={onClose}
         />
       )}
 
       {/* Sidebar Content */}
       <aside
-        className={`fixed left-0 top-0 h-full bg-[#0c0c0f] border-r border-white/5 flex-col gap-4 py-8 z-[200] lg:z-50 lg:mt-16 w-64 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed left-0 top-0 h-full bg-[#0c0c0f] border-r border-white/5 flex-col gap-4 py-8 z-[200] lg:z-50 lg:mt-16 w-64 transform-gpu transition-transform duration-300 ease-in-out will-change-transform ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         } flex`}
       >

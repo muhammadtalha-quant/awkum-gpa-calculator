@@ -94,14 +94,7 @@ const TopBar: React.FC<TopBarProps> = ({ activePage, onNavigate, onExport, onMen
         >
           <span className="material-symbols-outlined text-[20px]">share</span>
         </button>
-        {exportLabel && onExport && (
-          <button
-            onClick={onExport}
-            className="hidden sm:block bg-primary/10 text-primary px-4 py-1.5 rounded-lg font-medium text-sm border border-primary/20 active:scale-95 transition-all outline-none focus:ring-2 focus:ring-primary/50"
-          >
-            {exportLabel}
-          </button>
-        )}
+
       </div>
 
       <div className="lg:hidden flex items-center gap-4">

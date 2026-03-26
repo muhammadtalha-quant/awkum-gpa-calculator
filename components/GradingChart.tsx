@@ -1,11 +1,7 @@
 import React from 'react';
 import { GRADE_RANGES } from '../constants';
 
-interface Props {
-  children?: React.ReactNode;
-}
-
-const GradingChart: React.FC<Props> = () => {
+const GradingChart: React.FC = () => {
   return (
     <div className="bg-bg-surface rounded-3xl p-8 sm:p-10 border border-white/5 shadow-2xl relative overflow-hidden group">
       <div className="absolute top-0 right-0 p-8 opacity-0 group-hover:opacity-10 transition-opacity">
@@ -23,10 +19,10 @@ const GradingChart: React.FC<Props> = () => {
         {GRADE_RANGES.map((range) => (
           <div
             key={range.label}
-            className="group/item flex flex-col items-center p-6 rounded-2xl border border-white/5 bg-bg-surface-lowest hover:border-primary/30 transition-all duration-300 hover:shadow-primary/5 hover:translate-y-[-2px] relative overflow-hidden"
+            className="group/item flex flex-col items-center p-6 rounded-2xl border border-white/5 bg-bg-surface-lowest hover:border-primary/30 transition-all duration-300 hover:shadow-glow-sm hover:translate-y-[-2px] relative overflow-hidden"
           >
             <div className="absolute inset-x-0 bottom-0 h-0.5 bg-primary/0 group-hover/item:bg-primary transition-all"></div>
-            <span className="text-2xl font-black font-headline text-primary mb-1 tracking-tighter shadow-primary/20">
+            <span className="text-2xl font-black font-headline text-primary mb-1 tracking-tighter shadow-glow-sm">
               {range.label}
             </span>
             <div className="flex flex-col items-center">

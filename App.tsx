@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import './src/styles/design-system.css';
 import SideNav from './components/layout/SideNav';
 import TopBar from './components/layout/TopBar';

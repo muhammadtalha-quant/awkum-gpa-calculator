@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { UserInfo, SGPASubject } from '../src/domain/types';
 import { useSGPALogic } from '../src/domain/gpa/useSGPALogic';
 import { isValidCourseCode } from '../src/core/validation';
@@ -15,9 +15,7 @@ import InputField from './shared/InputField';
 import ActionButton from './shared/ActionButton';
 import ResultCard from './shared/ResultCard';
 
-interface Props {}
-
-const SGPACalculator: React.FC<Props> = () => {
+const SGPACalculator: React.FC = () => {
   const {
     subjects,
     virtualSemesterId,

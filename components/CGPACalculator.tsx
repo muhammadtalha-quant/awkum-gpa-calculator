@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { UserInfo, CGPASemester } from '../src/domain/types';
 import { useCGPALogic } from '../src/domain/gpa/useCGPALogic';
 import { exportCGPA_PDF } from '../services/pdfService';
@@ -18,9 +18,7 @@ import InputField from './shared/InputField';
 import ActionButton from './shared/ActionButton';
 import ResultCard from './shared/ResultCard';
 
-interface Props {}
-
-const CGPACalculator: React.FC<Props> = () => {
+const CGPACalculator: React.FC = () => {
   const {
     semesters,
     errorMsg,

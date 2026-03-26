@@ -7,7 +7,7 @@ import {
 } from '../src/domain/gpa/engine';
 
 interface Props {
-  theme?: any;
+  children?: React.ReactNode;
 }
 
 const RetakeOptimizer: React.FC<Props> = () => {
@@ -44,7 +44,7 @@ const RetakeOptimizer: React.FC<Props> = () => {
   const isNoEligible = result === 'NO_ELIGIBLE';
 
   return (
-    <div className="p-8 sm:p-10 rounded-[2.5rem] border border-white/5 bg-bg-surface shadow-2xl animate-in fade-in duration-700">
+    <div className="p-8 sm:p-10 rounded-[2.5rem] border border-white/5 bg-bg-surface shadow-2xl animate-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-10">
         <div className="flex items-center gap-4">
@@ -120,7 +120,7 @@ const RetakeOptimizer: React.FC<Props> = () => {
 
       {/* Strategy recommendations */}
       {recommendations.length > 0 && (
-        <div className="space-y-4 animate-in slide-in-from-bottom-6 duration-700">
+        <div className="space-y-4 animate-slide-in-top">
           <div className="hidden sm:grid grid-cols-6 gap-4 px-8 mb-2 text-[9px] font-black font-label text-zinc-600 uppercase tracking-widest">
             <span className="col-span-2">Acquisition Target</span>
             <span className="text-center">Current Scan</span>

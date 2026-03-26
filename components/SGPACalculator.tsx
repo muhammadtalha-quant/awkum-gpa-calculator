@@ -70,7 +70,7 @@ const SGPACalculator: React.FC<Props> = ({ onExportReady }) => {
     subjects.length > 0 && subjects.every((s) => s.code && isValidCourseCode(s.code));
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8 animate-in">
       <UserInfoModal
         isOpen={isExportModalOpen}
         onClose={() => setIsExportModalOpen(false)}
@@ -97,6 +97,7 @@ const SGPACalculator: React.FC<Props> = ({ onExportReady }) => {
             </div>
             <div className="flex gap-4 w-full md:w-auto">
               <button
+                data-testid="import-mis-btn"
                 onClick={() => setIsMISModalOpen(true)}
                 className="flex-1 md:flex-none px-6 py-3 rounded-2xl bg-white/5 border border-white/5 text-zinc-400 text-[10px] font-black font-label uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-3"
               >
@@ -104,6 +105,7 @@ const SGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                 Import MIS
               </button>
               <button
+                data-testid="add-course-btn"
                 onClick={addCourse}
                 className="flex-1 md:flex-none px-6 py-3 rounded-2xl bg-primary text-on-primary text-[10px] font-black font-label uppercase tracking-widest hover:shadow-glow transition-all flex items-center justify-center gap-3 active:scale-95"
               >
@@ -163,10 +165,12 @@ const SGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                     subjects.map((sub: SGPASubject) => (
                       <tr
                         key={sub.id}
+                        data-testid="subject-row"
                         className="group hover:bg-white/[0.01] transition-all duration-300"
                       >
                         <td className="px-8 py-6">
                           <input
+                            data-testid="subject-name-input"
                             className="bg-transparent border-none outline-none text-on-surface font-black font-headline text-sm w-full placeholder:text-zinc-600 focus:text-primary transition-colors pr-8"
                             value={sub.name}
                             onChange={(e) => updateSubject(sub.id, 'name', e.target.value)}
@@ -188,6 +192,7 @@ const SGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                           <div className="inline-flex items-center justify-center p-1 rounded-xl bg-bg-surface-lowest border border-white/5 shadow-inner-glow group-hover:border-white/10 transition-all">
                             <input
                               type="number"
+                              data-testid="subject-credits-input"
                               min={2}
                               max={6}
                               value={sub.credits}
@@ -200,6 +205,7 @@ const SGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                           <div className="inline-flex items-center justify-center p-1 rounded-xl bg-bg-surface-lowest border border-white/5 shadow-inner-glow group-hover:border-white/10 transition-all">
                             <input
                               type="number"
+                              data-testid="subject-marks-input"
                               min={0}
                               max={100}
                               value={sub.marks === '' ? '' : sub.marks}
@@ -246,7 +252,10 @@ const SGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                 Current Performance Mean
               </p>
               <div className="relative group/score">
-                <span className="text-6xl sm:text-8xl font-black font-headline text-white tracking-tighter text-shadow-glow drop-shadow-2xl transition-transform duration-700 group-hover/score:scale-105 inline-block">
+                <span
+                  data-testid="sgpa-score"
+                  className="text-6xl sm:text-8xl font-black font-headline text-white tracking-tighter text-shadow-glow drop-shadow-2xl transition-transform duration-700 group-hover/score:scale-105 inline-block"
+                >
                   {sgpaNum.toFixed(2)}
                 </span>
                 <div className="absolute -top-4 -right-8">
@@ -322,7 +331,7 @@ const SGPACalculator: React.FC<Props> = ({ onExportReady }) => {
             </div>
 
             {projectedCgpa && (
-              <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 flex flex-col items-center justify-center text-center animate-in zoom-in-95 duration-500 shadow-inner-glow">
+              <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 flex flex-col items-center justify-center text-center animate-zoom-in shadow-inner-glow">
                 <p className="text-[8px] font-black font-label text-zinc-600 uppercase tracking-[0.4em] mb-2">
                   Refined Graduation Vector
                 </p>

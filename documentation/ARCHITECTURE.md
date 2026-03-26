@@ -19,7 +19,7 @@ The application is a pure **Single Page Application (SPA)** that runs entirely i
 
 - **Input**: User enters marks/credits in the UI components (`SGPACalculator`, `CGPACalculator`).
 - **State**: React strict local state holds the transient data.
-- **Computation**: Grading logic (`utils/gradingLogic.ts`) transforms raw input into derived state (Grade Points, Letters) in real-time.
+- **Computation**: Grading logic (`src/domain/grading/engine.ts`) transforms raw input into derived state (Grade Points, Letters) in real-time.
 - **Output**: Data is either displayed in the UI or passed to the `pdfService` for document generation.
 
 ### 2. PDF Generation Pipeline
@@ -57,9 +57,9 @@ The PDF generation is handled by `services/pdfService.ts`. The pipeline is as fo
 │   ├── CGPACalculator.tsx    # CGPA Logic & UI
 │   ├── SemesterSubjectTable.tsx # Helper for Expert Mode
 │   └── UserInfoModal.tsx     # Student Details Form
-├── utils/            # Pure Functions
-│   ├── gradingLogic.ts       # AWKUM Grading Formulas
-│   └── validation.ts         # Regex Helpers
+├── domain/           # Domain Logic
+│   ├── gpa/engine.ts         # SGPA/CGPA Core Logic
+│   ├── grading/engine.ts     # AWKUM Grading Formulas
 ├── services/         # Side-Effects & External Libs
 │   └── pdfService.ts         # PDF Generation Logic
 ├── types.ts          # Shared TypeScript Interfaces

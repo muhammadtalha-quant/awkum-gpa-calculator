@@ -101,6 +101,9 @@
         theme: {
           extend: {
             colors: {
+              warning: '#fbbf24',
+              'on-warning': '#1c1917',
+              'warning-container': '#78350f',
               background: '#131315',
               'on-background': '#e5e1e4',
               surface: '#131315',
@@ -162,6 +165,29 @@
               lg: '0.5rem',
               xl: '0.75rem',
               full: '9999px',
+            },
+            boxShadow: {
+              glow: '0 0 20px rgba(206, 189, 255, 0.25)',
+              'inner-glow': 'inset 0 1px 0 rgba(255,255,255,0.05)',
+            },
+            keyframes: {
+              'fade-in': {
+                from: { opacity: 0, transform: 'translateY(8px)' },
+                to: { opacity: 1, transform: 'translateY(0)' },
+              },
+              'slide-in-top': {
+                from: { opacity: 0, transform: 'translateY(-16px)' },
+                to: { opacity: 1, transform: 'translateY(0)' },
+              },
+              'zoom-in': {
+                from: { opacity: 0, transform: 'scale(0.95)' },
+                to: { opacity: 1, transform: 'scale(1)' },
+              },
+            },
+            animation: {
+              in: 'fade-in 0.4s ease both',
+              'slide-in-top': 'slide-in-top 0.5s ease both',
+              'zoom-in': 'zoom-in 0.3s ease both',
             },
           },
         },
@@ -235,21 +261,11 @@
       .pwa-hide {
         display: none !important;
       }
-    </style>
 
-    <script type="importmap">
-      {
-        "imports": {
-          "react": "https://esm.sh/react@^19.2.4",
-          "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-          "react/": "https://esm.sh/react@^19.2.4/",
-          "jspdf": "https://esm.sh/jspdf@^4.1.0",
-          "jspdf-autotable": "https://esm.sh/jspdf-autotable@^5.0.7",
-          "vite": "https://esm.sh/vite@^7.3.1",
-          "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.3"
-        }
+      .text-shadow-glow {
+        text-shadow: 0 0 12px rgba(167, 139, 250, 0.5);
       }
-    </script>
+    </style>
   </head>
   <body>
     <div id="root"></div>

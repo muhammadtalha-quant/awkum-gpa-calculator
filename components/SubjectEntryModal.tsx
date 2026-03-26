@@ -1,5 +1,6 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useState, useEffect } from 'react';
-import { SGPASubject, asMark, asCredit } from '../src/domain/types';
+import { SGPASubject, asMark, asSubjectCredit } from '../src/domain/types';
 import { calculateGradePoint, getLetterFromGP } from '../src/domain/grading/engine';
 import { isValidCourseCode, sanitizeSubjectName } from '../src/core/validation';
 
@@ -55,7 +56,7 @@ const SubjectEntryModal: React.FC<Props> = ({
     onSubmit({
       name: sanitizeSubjectName(name),
       code: enableCodes ? code.toUpperCase() : '',
-      credits: asCredit(numCredits),
+      credits: asSubjectCredit(numCredits),
       marks: asMark(numMarks),
       gradePoint: gp,
       gradeLetter: getLetterFromGP(gp),
@@ -64,7 +65,7 @@ const SubjectEntryModal: React.FC<Props> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-500">
+    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in">
       <div className="bg-bg-surface w-full max-w-lg rounded-[2.5rem] p-10 sm:p-12 border border-white/5 shadow-[0_32px_64px_-16px_rgba(0,0,0,1)] relative overflow-hidden group">
         <div className="absolute top-0 right-0 p-8 opacity-0 group-hover:opacity-10 transition-opacity">
           <span className="material-symbols-outlined text-8xl text-primary">edit_note</span>

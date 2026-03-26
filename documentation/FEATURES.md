@@ -83,5 +83,5 @@ The application features a client-side PDF generator powered by `jspdf`.
 ### 5. Data Persistence & UI
 
 - **Auto-Save**: The application saves your preference for "Expert Mode" and "Course Codes" in the browser's Local Storage.
-- **Themes**: Supports multiple color themes (Catppuccin, Tokyo Night, Gruvbox) and Dark/Light modes.
+- **Themes**: Uses a unified Dark mode utilizing custom Tailwind properties for visual excellence.
 - **Responsive**: Optimized for both mobile phones and desktop screens.

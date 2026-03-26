@@ -4,7 +4,7 @@ import GPATrendChart from '../src/features/analytics/GPATrendChart';
 import GradeDistributionChart from '../src/features/analytics/GradeDistributionChart';
 
 interface Props {
-  theme?: any;
+  children?: React.ReactNode;
 }
 
 const AnalyticsDashboard: React.FC<Props> = () => {
@@ -33,7 +33,7 @@ const AnalyticsDashboard: React.FC<Props> = () => {
 
   if (semesters.length === 0 || trendData.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-16 bg-bg-surface-lowest rounded-[3rem] border-2 border-dashed border-white/5 animate-in fade-in duration-700">
+      <div className="flex flex-col items-center justify-center p-16 bg-bg-surface-lowest rounded-[3rem] border-2 border-dashed border-white/5 animate-in">
         <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center text-zinc-800 mb-6">
           <span className="material-symbols-outlined text-4xl">analytics</span>
         </div>
@@ -49,7 +49,7 @@ const AnalyticsDashboard: React.FC<Props> = () => {
   }
 
   return (
-    <div className="mt-12 space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+    <div className="mt-12 space-y-12 animate-slide-in-top">
       <div className="flex items-center gap-6">
         <div className="h-px bg-white/5 flex-1"></div>
         <div className="flex items-center gap-3">

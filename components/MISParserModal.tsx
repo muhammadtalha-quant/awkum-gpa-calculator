@@ -9,7 +9,6 @@ interface Props {
   onClose: () => void;
   onImport: (subjects: SGPASubject[]) => void;
   existingSubjectCodes: string[];
-  theme?: any;
 }
 
 type Step = 'paste' | 'credits' | 'confirm';
@@ -56,7 +55,7 @@ const MISParserModal: React.FC<Props> = ({ isOpen, onClose, onImport, existingSu
     const subjects: SGPASubject[] = drafts.map((d) => {
       const gp = calculateGradePoint(d.marks as Mark);
       return {
-        id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+        id: crypto.randomUUID(),
         name: d.name,
         code: d.code,
         credits: d.credits as Credit,
@@ -79,9 +78,9 @@ const MISParserModal: React.FC<Props> = ({ isOpen, onClose, onImport, existingSu
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-2xl animate-in fade-in duration-500">
+    <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-2xl animate-in">
       {/* Modal Container */}
-      <div className="w-full sm:max-w-2xl max-h-[95vh] sm:max-h-[85vh] flex flex-col rounded-t-[2rem] sm:rounded-[2.5rem] border-t sm:border border-white/5 bg-bg-surface shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 duration-500">
+      <div className="w-full sm:max-w-2xl max-h-[95vh] sm:max-h-[85vh] flex flex-col rounded-t-[2rem] sm:rounded-[2.5rem] border-t sm:border border-white/5 bg-bg-surface shadow-2xl overflow-hidden animate-slide-in-top">
         {/* Header */}
         <div className="flex flex-col px-8 sm:px-12 pt-10 pb-6 border-b border-white/5 relative bg-gradient-to-b from-primary/5 to-transparent">
           <div className="flex items-center justify-between mb-4">
@@ -95,6 +94,7 @@ const MISParserModal: React.FC<Props> = ({ isOpen, onClose, onImport, existingSu
             </div>
             <button
               onClick={handleClose}
+              data-testid="close-modal"
               className="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 text-zinc-500 hover:bg-white/10 hover:text-white transition-all"
             >
               <span className="material-symbols-outlined text-[20px]">close</span>
@@ -143,7 +143,7 @@ const MISParserModal: React.FC<Props> = ({ isOpen, onClose, onImport, existingSu
         <div className="flex-1 overflow-y-auto p-8 sm:p-12 space-y-8 custom-scrollbar">
           {/* Step 1: Paste Mode */}
           {step === 'paste' && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <div className="space-y-6 animate-slide-in-top">
               <div className="p-5 rounded-2xl bg-primary/5 border border-primary/10 flex gap-4">
                 <span className="material-symbols-outlined text-primary text-2xl">info</span>
                 <p className="text-xs text-zinc-400 font-body leading-relaxed">
@@ -191,7 +191,7 @@ const MISParserModal: React.FC<Props> = ({ isOpen, onClose, onImport, existingSu
 
           {/* Step 2: Credits Configuration */}
           {step === 'credits' && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+            <div className="space-y-6 animate-slide-in-top">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl bg-bg-surface-lowest border border-white/5">
                 <div>
                   <h4 className="text-xs font-black uppercase tracking-widest text-white mb-1">
@@ -252,7 +252,7 @@ const MISParserModal: React.FC<Props> = ({ isOpen, onClose, onImport, existingSu
 
           {/* Step 3: Confirmation Review */}
           {step === 'confirm' && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+            <div className="space-y-6 animate-slide-in-top">
               <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">
                 Final Dataset Preview
               </h4>

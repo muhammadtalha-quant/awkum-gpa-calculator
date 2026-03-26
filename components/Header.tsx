@@ -1,8 +1,6 @@
 import React from 'react';
 
-interface HeaderProps {
-  theme?: any;
-}
+type HeaderProps = Record<string, never>;
 
 /**
  * @deprecated Replaced by components/layout/TopBar.tsx in the Obsidian redesign.

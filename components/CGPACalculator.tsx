@@ -4,6 +4,7 @@ import { useCGPALogic } from '../src/domain/gpa/useCGPALogic';
 import { exportCGPA_PDF } from '../services/pdfService';
 import UserInfoModal from './UserInfoModal';
 import ProbationAlert from './ProbationAlert';
+import SemesterSubjectTable from './SemesterSubjectTable';
 
 interface Props {
   onExportReady?: (fn: () => void) => void;
@@ -20,9 +21,11 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
     handleAddSemester,
     handleRemoveSemester,
     updateSemester,
+    updateSemesterSubjects,
   } = useCGPALogic();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isExpertMode, setIsExpertMode] = useState(false);
 
   useEffect(() => {
     if (onExportReady) onExportReady(() => setIsModalOpen(true));
@@ -41,7 +44,7 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8 animate-in">
       <UserInfoModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -63,7 +66,35 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                 Historical academic performance aggregation
               </p>
             </div>
+            <div className="flex gap-4 items-center">
+              <label className="flex items-center cursor-pointer gap-2">
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    className="sr-only"
+                    checked={isExpertMode}
+                    onChange={() => setIsExpertMode(!isExpertMode)}
+                  />
+                  <div
+                    className={`block w-10 h-6 rounded-full transition-colors ${isExpertMode ? 'bg-primary' : 'bg-white/10'}`}
+                  ></div>
+                  <div
+                    className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${isExpertMode ? 'transform translate-x-4' : ''}`}
+                  ></div>
+                </div>
+                <div className="group relative">
+                  <span className="text-[10px] font-black font-label text-zinc-400 uppercase tracking-widest">
+                    Expert Mode
+                  </span>
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-zinc-800 text-zinc-300 text-[10px] p-2 rounded shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                    Enable subject-level tracking for Retake Optimizer and advanced forecasting.
+                  </div>
+                </div>
+              </label>
+            </div>
+
             <button
+              data-testid="add-semester-btn"
               onClick={handleAddSemester}
               className="relative z-10 w-full md:w-auto px-10 py-4 rounded-2xl bg-primary text-on-primary text-[10px] font-black font-label uppercase tracking-widest hover:shadow-glow transition-all flex items-center justify-center gap-3 active:scale-95 group/add"
             >
@@ -76,7 +107,7 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
           </section>
 
           {cgpaNum < 2.0 && cgpaNum > 0 && (
-            <div className="animate-in slide-in-from-top-4 duration-700">
+            <div className="animate-slide-in-top">
               <ProbationAlert cgpa={cgpaNum} />
             </div>
           )}
@@ -104,6 +135,7 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                 semesters.map((sem: CGPASemester, idx) => (
                   <div
                     key={sem.id}
+                    data-testid="semester-row"
                     className="group flex flex-col gap-4 sm:gap-6 p-4 sm:p-6 bg-bg-surface-lowest border border-white/5 rounded-2xl hover:bg-white/[0.02] transition-all duration-300 shadow-inner-glow relative overflow-hidden"
                   >
                     <div className="flex items-center gap-4 flex-1">
@@ -125,6 +157,8 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                         </label>
                         <input
                           type="number"
+                          data-testid="semester-credits-input"
+                          disabled={isExpertMode}
                           value={sem.credits}
                           onChange={(e) =>
                             updateSemester(sem.id, {
@@ -141,6 +175,8 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                         <input
                           type="number"
                           step="0.01"
+                          data-testid="semester-sgpa-input"
+                          disabled={isExpertMode}
                           value={sem.sgpa}
                           onChange={(e) =>
                             updateSemester(sem.id, {
@@ -157,6 +193,15 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                         <span className="material-symbols-outlined text-[18px]">close</span>
                       </button>
                     </div>
+                    {isExpertMode && (
+                      <div className="w-full mt-4">
+                        <SemesterSubjectTable
+                          semesterId={sem.id}
+                          subjects={sem.subjects || []}
+                          onUpdate={updateSemesterSubjects}
+                        />
+                      </div>
+                    )}
                   </div>
                 ))
               )}
@@ -175,7 +220,10 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
                 Cumulative Average (CGPA)
               </p>
               <div className="relative group/score">
-                <span className="text-6xl sm:text-8xl font-black font-headline text-white tracking-tighter text-shadow-glow drop-shadow-2xl transition-transform duration-700 group-hover/score:scale-105 inline-block">
+                <span
+                  data-testid="cgpa-score"
+                  className="text-6xl sm:text-8xl font-black font-headline text-white tracking-tighter text-shadow-glow drop-shadow-2xl transition-transform duration-700 group-hover/score:scale-105 inline-block"
+                >
                   {cgpaNum.toFixed(2)}
                 </span>
                 <div className="absolute -top-4 -left-1/2 translate-x-1/2 w-max">

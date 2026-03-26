@@ -4,7 +4,6 @@ import { calculateRequiredSGPA } from '../src/domain/gpa/engine';
 interface Props {
   currentCGPA: number;
   currentCredits: number;
-  theme?: any;
 }
 
 const ForecastingTool: React.FC<Props> = ({ currentCGPA, currentCredits }) => {
@@ -21,7 +20,7 @@ const ForecastingTool: React.FC<Props> = ({ currentCGPA, currentCredits }) => {
   };
 
   return (
-    <div className="p-8 sm:p-10 rounded-[2.5rem] border border-white/5 bg-bg-surface shadow-2xl animate-in zoom-in-95 h-full flex flex-col">
+    <div className="p-8 sm:p-10 rounded-[2.5rem] border border-white/5 bg-bg-surface shadow-2xl animate-zoom-in h-full flex flex-col">
       <div className="flex items-center gap-4 mb-8">
         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
           <span className="material-symbols-outlined text-[20px]">timeline</span>
@@ -76,7 +75,7 @@ const ForecastingTool: React.FC<Props> = ({ currentCGPA, currentCredits }) => {
         </button>
 
         {result !== null && (
-          <div className="mt-4 p-8 rounded-[2rem] bg-bg-surface-lowest border border-white/5 animate-in slide-in-from-bottom-4 duration-500 shadow-inner-glow">
+          <div className="mt-4 p-8 rounded-[2rem] bg-bg-surface-lowest border border-white/5 animate-slide-in-top shadow-inner-glow">
             {result === 'IMPOSSIBLE' ? (
               <div className="text-center space-y-3">
                 <div className="w-12 h-12 rounded-full bg-error/10 text-error flex items-center justify-center mx-auto">

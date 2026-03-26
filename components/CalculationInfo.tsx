@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface Props {
-  theme?: any;
+  children?: React.ReactNode;
 }
 
 const CalculationInfo: React.FC<Props> = () => {

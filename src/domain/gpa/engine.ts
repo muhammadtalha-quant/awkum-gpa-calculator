@@ -28,13 +28,14 @@ export function calculateCGPA(semesters: { sgpa: GradePoint; credits: Credit }[]
   return calculateSGPA(semesters.map((s) => ({ gradePoint: s.sgpa, credits: s.credits })));
 }
 
-export type ProbationStatus = 'GOOD' | 'WARNING' | 'PROBATION' | 'CRITICAL';
+export type ProbationStatus = 'DISTINCTION' | 'GOOD' | 'SATISFACTORY' | 'WARNING' | 'PROBATION';
 
 export function getProbationStatus(cgpa: number): ProbationStatus {
   if (cgpa < 2.0) return 'PROBATION';
-  if (cgpa < 2.2) return 'WARNING';
-  if (cgpa >= 3.5) return 'GOOD';
-  return 'GOOD';
+  if (cgpa < 2.5) return 'WARNING';
+  if (cgpa < 3.0) return 'SATISFACTORY';
+  if (cgpa < 3.75) return 'GOOD';
+  return 'DISTINCTION';
 }
 
 /**
@@ -279,10 +280,11 @@ export function distributeRetakeMarks(
     const nextUncapped: EligibleSub[] = [];
 
     for (const e of uncapped) {
-      const newGP = e.currentGP + deltaGP;
+      const currentAssigned = requiredGPs.get(e.subjectId) ?? e.currentGP;
+      const newGP = currentAssigned + deltaGP;
       if (newGP >= 4.0) {
         // Cap at 4.0, accumulate residual to redistribute
-        const allocatedQP = (4.0 - e.currentGP) * e.credits;
+        const allocatedQP = (4.0 - currentAssigned) * e.credits;
         residual += remainingQP * (e.credits / totalUncappedCredits) - allocatedQP;
         requiredGPs.set(e.subjectId, 4.0);
       } else {

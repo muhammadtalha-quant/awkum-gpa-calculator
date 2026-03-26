@@ -11,6 +11,7 @@ type Page = 'sgpa' | 'cgpa' | 'rules';
 
 const App: React.FC = () => {
   const [activePage, setActivePage] = useState<Page>('sgpa');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Refs to trigger export from child components
   const sgpaExportRef = useRef<(() => void) | null>(null);
@@ -29,13 +30,25 @@ const App: React.FC = () => {
       {/* Top Bar */}
       <TopBar
         activePage={activePage}
-        onNavigate={setActivePage}
+        onNavigate={(page) => {
+          setActivePage(page);
+          setMobileMenuOpen(false);
+        }}
         onExport={activePage !== 'rules' ? handleExport : undefined}
+        onMenuClick={() => setMobileMenuOpen(true)}
       />
 
       <div className="flex h-full">
         {/* Sidebar */}
-        <SideNav activePage={activePage} onNavigate={setActivePage} />
+        <SideNav
+          activePage={activePage}
+          onNavigate={(page) => {
+            setActivePage(page);
+            setMobileMenuOpen(false);
+          }}
+          mobileOpen={mobileMenuOpen}
+          onClose={() => setMobileMenuOpen(false)}
+        />
 
         {/* Main area */}
         <main className="lg:ml-64 pt-24 pb-32 lg:pb-8 px-4 md:px-8 max-w-7xl mx-auto min-h-screen min-w-0">

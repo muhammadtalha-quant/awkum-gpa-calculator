@@ -3,7 +3,6 @@ import { calculateRequiredMarks } from '../src/domain/gpa/engine';
 
 interface Props {
   subjects: any[];
-  theme?: any;
 }
 
 const RequiredMarksTool: React.FC<Props> = ({ subjects }) => {
@@ -38,7 +37,7 @@ const RequiredMarksTool: React.FC<Props> = ({ subjects }) => {
   // ... (JSX reflects this in previous edit style)
 
   return (
-    <div className="animate-in zoom-in-95 h-full flex flex-col">
+    <div className="animate-zoom-in h-full flex flex-col">
       <div className="flex items-center gap-3 mb-6">
         <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
           <span className="material-symbols-outlined text-[18px]">query_stats</span>
@@ -73,7 +72,7 @@ const RequiredMarksTool: React.FC<Props> = ({ subjects }) => {
             </div>
 
             {result !== null && (
-              <div className="mt-4 p-6 rounded-2xl bg-bg-surface-lowest border border-white/5 animate-in slide-in-from-bottom-4 duration-500">
+              <div className="mt-4 p-6 rounded-2xl bg-bg-surface-lowest border border-white/5 animate-slide-in-top">
                 {result === 'IMPOSSIBLE' ? (
                   <div className="text-center space-y-2">
                     <div className="w-10 h-10 rounded-full bg-error/10 text-error flex items-center justify-center mx-auto mb-2">

@@ -3,7 +3,7 @@ import { useAcademicStore } from '../src/domain/store';
 import { calculateProjectedCGPA } from '../src/domain/gpa/engine';
 
 interface Props {
-  theme?: any;
+  children?: React.ReactNode;
 }
 
 const PredictiveDashboard: React.FC<Props> = () => {
@@ -20,7 +20,7 @@ const PredictiveDashboard: React.FC<Props> = () => {
   ];
 
   return (
-    <div className="p-8 sm:p-12 rounded-[3rem] border border-white/5 bg-bg-surface shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] animate-in slide-in-from-bottom-8 duration-700 relative overflow-hidden group">
+    <div className="p-8 sm:p-12 rounded-[3rem] border border-white/5 bg-bg-surface shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] animate-slide-in-top relative overflow-hidden group">
       {/* Background Glow */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[100px] -mr-32 -mt-32 transition-colors duration-1000"></div>
 
@@ -74,7 +74,7 @@ const PredictiveDashboard: React.FC<Props> = () => {
               {mode.label}
             </span>
             {projectionMode === mode.id && (
-              <div className="absolute inset-x-0 bottom-0 h-1 bg-primary animate-in slide-in-from-left duration-700"></div>
+              <div className="absolute inset-x-0 bottom-0 h-1 bg-primary animate-slide-in-top"></div>
             )}
           </button>
         ))}

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { SGPASubject, asMark, asCredit, Mark, GradePoint } from '../src/domain/types';
+import { SGPASubject, asMark, asSubjectCredit, Mark, GradePoint } from '../src/domain/types';
 import { getLetterFromGP, calculateGradePoint } from '../src/domain/grading/engine';
 import { isValidCourseCode, sanitizeSubjectName } from '../src/core/validation';
 
@@ -39,10 +39,10 @@ const SemesterSubjectTable: React.FC<Props> = ({ semesterId, subjects, onUpdate 
 
     // Create new subject
     const newSubject: SGPASubject = {
-      id: (Date.now() + Math.random()).toString(),
+      id: crypto.randomUUID(),
       name: '',
       code: '',
-      credits: asCredit(3),
+      credits: asSubjectCredit(3),
       marks: '' as Mark | '',
       gradePoint: 0 as GradePoint,
       gradeLetter: 'F',
@@ -93,7 +93,7 @@ const SemesterSubjectTable: React.FC<Props> = ({ semesterId, subjects, onUpdate 
         const updated = { ...s };
         if (field === 'name') updated.name = finalVal;
         if (field === 'code') updated.code = finalVal;
-        if (field === 'credits') updated.credits = asCredit(Number(finalVal) || 0);
+        if (field === 'credits') updated.credits = asSubjectCredit(Number(finalVal) || 0);
         if (field === 'marks') updated.marks = finalVal === '' ? '' : asMark(Number(finalVal));
 
         // Calculate Grade Point automatically if marks change
@@ -162,6 +162,7 @@ const SemesterSubjectTable: React.FC<Props> = ({ semesterId, subjects, onUpdate 
               <td className="px-4 py-3 first:rounded-l-2xl">
                 <input
                   type="text"
+                  data-testid="subject-name-input"
                   placeholder="Enter course name"
                   value={sub.name}
                   onChange={(e) => handleInputChange(sub.id, 'name', e.target.value)}
@@ -182,6 +183,7 @@ const SemesterSubjectTable: React.FC<Props> = ({ semesterId, subjects, onUpdate 
               <td className="px-2 py-3">
                 <input
                   type="text"
+                  data-testid="subject-credits-input"
                   placeholder="3"
                   value={sub.credits}
                   onChange={(e) => handleInputChange(sub.id, 'credits', e.target.value)}
@@ -192,6 +194,7 @@ const SemesterSubjectTable: React.FC<Props> = ({ semesterId, subjects, onUpdate 
               <td className="px-2 py-3">
                 <input
                   type="text"
+                  data-testid="subject-marks-input"
                   placeholder="0-100"
                   value={sub.marks}
                   onChange={(e) => handleInputChange(sub.id, 'marks', e.target.value)}

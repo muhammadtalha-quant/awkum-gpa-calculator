@@ -48,8 +48,13 @@ export const asMark = (n: number): Mark => {
   return n as Mark;
 };
 
-export const asCredit = (n: number): Credit => {
-  if (n < 0 || n > 216) throw new Error('Invalid Credit');
+export const asSubjectCredit = (n: number): Credit => {
+  if (n < 1 || n > 6) throw new Error('Invalid subject credit hours');
+  return n as Credit;
+};
+
+export const asProgramCredit = (n: number): Credit => {
+  if (n < 0 || n > 216) throw new Error('Invalid total program credits');
   return n as Credit;
 };
 

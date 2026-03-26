@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useState, useEffect, useRef } from 'react';
 import { UserInfo } from '../src/domain/types';
 import { PROGRAMMES } from '../constants';
@@ -9,7 +10,6 @@ interface UserInfoModalProps {
   title: string;
   isCGPA?: boolean;
   rowCount?: number;
-  theme?: any;
 }
 
 const UserInfoModal: React.FC<UserInfoModalProps> = ({
@@ -115,8 +115,8 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-2xl animate-in fade-in duration-500">
-      <div className="w-full max-w-xl rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/5 bg-bg-surface animate-in zoom-in-95 duration-300">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-2xl animate-in">
+      <div className="w-full max-w-xl rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/5 bg-bg-surface animate-zoom-in">
         {/* Header */}
         <div className="p-6 sm:p-10 text-center relative overflow-hidden bg-gradient-to-b from-primary/5 to-transparent">
           <div className="relative z-10">
@@ -132,7 +132,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
           </div>
         </div>
 
-          <form
+        <form
           onSubmit={handleSubmit}
           className="px-6 sm:px-10 pb-10 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar"
         >

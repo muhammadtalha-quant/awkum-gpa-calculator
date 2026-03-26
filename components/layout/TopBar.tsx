@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import React from 'react';
 
 type Page = 'sgpa' | 'cgpa' | 'rules';
@@ -22,6 +23,19 @@ interface TopBarProps {
 const TopBar: React.FC<TopBarProps> = ({ activePage, onNavigate, onExport, onMenuClick }) => {
   const exportLabel = EXPORT_LABELS[activePage];
   const exportIcon = EXPORT_ICONS[activePage];
+
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'AWKUM GPA Calculator', url: window.location.href });
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        alert('URL copied to clipboard!');
+      }
+    } catch (err) {
+      console.log('Error sharing', err);
+    }
+  };
 
   return (
     <header className="fixed top-0 w-full z-[100] h-16 bg-zinc-950/90 backdrop-blur-xl border-b border-white/5 flex justify-between items-center px-6 max-w-full">
@@ -74,20 +88,20 @@ const TopBar: React.FC<TopBarProps> = ({ activePage, onNavigate, onExport, onMen
             Grading Rules
           </a>
         </nav>
-          <button className="text-zinc-400 hover:text-primary transition-all active:scale-95">
-            <span className="material-symbols-outlined text-[20px]">share</span>
+        <button
+          onClick={handleShare}
+          className="text-zinc-400 hover:text-primary transition-all active:scale-95"
+        >
+          <span className="material-symbols-outlined text-[20px]">share</span>
+        </button>
+        {exportLabel && onExport && (
+          <button
+            onClick={onExport}
+            className="hidden sm:block bg-primary/10 text-primary px-4 py-1.5 rounded-lg font-medium text-sm border border-primary/20 active:scale-95 transition-all outline-none focus:ring-2 focus:ring-primary/50"
+          >
+            {exportLabel}
           </button>
-          <button className="text-zinc-400 hover:text-primary transition-all active:scale-95">
-            <span className="material-symbols-outlined text-[20px]">settings</span>
-          </button>
-          {exportLabel && onExport && (
-            <button
-              onClick={onExport}
-              className="hidden sm:block bg-primary/10 text-primary px-4 py-1.5 rounded-lg font-medium text-sm border border-primary/20 active:scale-95 transition-all outline-none focus:ring-2 focus:ring-primary/50"
-            >
-              {exportLabel}
-            </button>
-          )}
+        )}
       </div>
 
       <div className="lg:hidden flex items-center gap-4">

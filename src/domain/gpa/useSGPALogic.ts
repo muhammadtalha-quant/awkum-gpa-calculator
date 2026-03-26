@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect, useMemo } from 'react';
 import { useAcademicStore } from '../store';
 import { calculateSGPA } from './engine';
@@ -10,22 +11,17 @@ export const useSGPALogic = (MAX_CREDITS: number = 21) => {
   const [prevCgpa, setPrevCgpa] = useState('');
   const [prevCredits, setPrevCredits] = useState('');
 
-  // Credit pruning logic
+  // Credit limit warning logic
   useEffect(() => {
     const total = subjects.reduce((s, c) => s + (Number(c.credits) || 0), 0);
     if (total > MAX_CREDITS) {
-      const copy = [...subjects];
-      while (
-        copy.reduce((s, c) => s + (Number(c.credits) || 0), 0) > MAX_CREDITS &&
-        copy.length > 1
-      )
-        copy.pop();
-      setSubjects(copy);
       setErrorMsg(
-        `Automatically adjusted subjects to maintain the ${MAX_CREDITS}-credit hour limit.`,
+        `Warning: Total credits (${total}) exceed the standard ${MAX_CREDITS}-credit hour block limit.`,
       );
+    } else {
+      setErrorMsg('');
     }
-  }, [subjects, setSubjects, MAX_CREDITS]);
+  }, [subjects, MAX_CREDITS]);
 
   const sgpaValue = useMemo(
     () => calculateSGPA(subjects.map((s) => ({ gradePoint: s.gradePoint, credits: s.credits }))),
@@ -51,8 +47,13 @@ export const useSGPALogic = (MAX_CREDITS: number = 21) => {
   }, [prevCgpa, prevCredits, sgpaValue, currentCredits]);
 
   const addCourse = () => {
+    const currentTotal = subjects.reduce((s, c) => s + (Number(c.credits) || 0), 0);
+    if (currentTotal + 3 > MAX_CREDITS && currentTotal > 0) {
+      setErrorMsg(`Cannot add course: Exceeds ${MAX_CREDITS}-credit limit.`);
+      return;
+    }
     const newSub: SGPASubject = {
-      id: (Date.now() + Math.random()).toString(),
+      id: crypto.randomUUID(),
       name: '',
       code: '',
       credits: 3 as Credit,

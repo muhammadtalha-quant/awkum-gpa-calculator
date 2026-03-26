@@ -10,7 +10,7 @@ const Pagination: React.FC<Props> = ({ currentPage, totalPages, onPageChange }) 
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex items-center justify-center gap-3 mt-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="flex items-center justify-center gap-3 mt-10 animate-slide-in-top">
       <button
         disabled={currentPage === 1}
         onClick={() => onPageChange(currentPage - 1)}

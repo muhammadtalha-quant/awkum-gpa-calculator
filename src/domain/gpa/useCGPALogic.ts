@@ -1,6 +1,8 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect, useMemo } from 'react';
 import { useAcademicStore } from '../store';
-import { calculateCGPA } from './engine';
+import { calculateCGPA, calculateSGPA } from './engine';
+import { SGPASubject, asProgramCredit } from '../types';
 import { getLetterFromGP } from '../grading/engine';
 import { CGPASemester } from '../types';
 
@@ -65,6 +67,18 @@ export const useCGPALogic = (
     else removeSemester(id);
   };
 
+  const updateSemesterSubjects = (id: string, subjects: SGPASubject[]) => {
+    const semGp = calculateSGPA(
+      subjects.map((s) => ({ gradePoint: s.gradePoint, credits: s.credits })),
+    );
+    const semCredits = subjects.reduce((sum, s) => sum + (Number(s.credits) || 0), 0);
+    updateSemester(id, {
+      subjects,
+      sgpa: semGp,
+      credits: asProgramCredit(Math.min(21, Math.max(0, semCredits))),
+    });
+  };
+
   return {
     semesters,
     setSemesters,
@@ -78,5 +92,6 @@ export const useCGPALogic = (
     handleAddSemester,
     handleRemoveSemester,
     updateSemester,
+    updateSemesterSubjects,
   };
 };

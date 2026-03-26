@@ -5,7 +5,7 @@ interface Props {
   subjects: SGPASubject[];
   onUpdate?: (id: string, field: string, value: string) => void;
   onRemove?: (id: string) => void;
-  theme?: any;
+
   enableCodes?: boolean;
   maxCredits?: number;
 }

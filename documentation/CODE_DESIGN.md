@@ -41,8 +41,7 @@ The application relies on strong TypeScript interfaces to ensure data integrity.
 ### 1. `App.tsx` (Root)
 
 - **Responsibility**:
-  - Holds the global UI state: `activeTab` ('sgpa' | 'cgpa'), `theme`, and `mode` (light/dark).
-  - **Persistence**: Syncs UI config to `localStorage` (`awku_app_ui_config`).
+  - Holds the global UI state: `activeTab` ('sgpa' | 'cgpa', etc.).
   - **Layout**: Renders `Header`, the active Calculator component, and `Footer`.
 - **View Transitions**: Uses the View Transitions API for smooth theme switching animations.
 
@@ -78,19 +77,17 @@ The application relies on strong TypeScript interfaces to ensure data integrity.
 ## State Management Patterns
 
 - **Local State**: Most data (subjects, semesters) is kept in local component state (`useState`) because it doesn't need to be shared globally.
-- **Prop Drilling**: Minimal. Only `theme` is passed down to styled components.
+- **Prop Drilling**: Minimal.
 - **Persistence**:
-  - `SGPACalculator` saves `enableCodes` preference.
-  - `CGPACalculator` saves `isExpertMode` preference.
-  - _Data_ (subjects/grades) is **not** persisted to encourage privacy and a fresh start on reload, though `App.tsx` implements a "Session Save" for accidental closes.s
+  - **Zustand Persist**: State is persisted to `localStorage` allowing users to resume their work, preserving privacy by keeping it client-side.
 
-## Utility Logic (`utils/`)
+## Domain Logic (`src/domain/`)
 
-### `gradingLogic.ts`
+### `grading/engine.ts`
 
 - **`calculateGradePoint(marks)`**: Implements the linear interpolation formula.
 - **`getLetterFromGP(gp)`**: Maps a GP (e.g., 3.6) to a Letter Grade (e.g., A-).
 
-### `validation.ts`
+## Core Validation (`src/core/validation.ts`)
 
-- **`isValidCourseCode(code)`**: Regex `^[A-Z]{2,}-\d{3}$` (approx) to ensure codes look like "CS-101".
+- **`isValidCourseCode(code)`**: Regex `^[A-Z]{2,6}-\d{3,4}$` to ensure codes look like "CS-101".

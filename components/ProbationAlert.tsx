@@ -8,7 +8,7 @@ interface Props {
 const ProbationAlert: React.FC<Props> = ({ cgpa }) => {
   const status = getProbationStatus(cgpa);
 
-  if (status === 'GOOD') return null;
+  if (status === 'DISTINCTION' || status === 'GOOD' || status === 'SATISFACTORY') return null;
 
   const isWarning = status === 'WARNING';
 
@@ -24,7 +24,7 @@ const ProbationAlert: React.FC<Props> = ({ cgpa }) => {
 
   return (
     <div
-      className={`mt-10 p-8 rounded-[2.5rem] border ${containerStyles} shadow-2xl animate-in fade-in slide-in-from-top-8 duration-1000 relative overflow-hidden group`}
+      className={`mt-10 p-8 rounded-[2.5rem] border ${containerStyles} shadow-2xl animate-slide-in-top relative overflow-hidden group`}
     >
       {/* Background Accent */}
       {!isWarning && (

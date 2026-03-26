@@ -37,7 +37,6 @@ export default [
             "react/react-in-jsx-scope": "off",
             "@typescript-eslint/no-unused-vars": "warn",
             "@typescript-eslint/no-explicit-any": "off",
-            "react-hooks/set-state-in-effect": "off",
             "no-console": "warn",
         },
     },

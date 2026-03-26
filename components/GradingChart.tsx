@@ -2,7 +2,7 @@ import React from 'react';
 import { GRADE_RANGES } from '../constants';
 
 interface Props {
-  theme?: any;
+  children?: React.ReactNode;
 }
 
 const GradingChart: React.FC<Props> = () => {

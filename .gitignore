@@ -176,4 +176,5 @@ stitch/
 *.txt
 # playwright generated test results
 test-results/
+playwright-report/
 # End of https://www.toptal.com/developers/gitignore/api/node,react,linux

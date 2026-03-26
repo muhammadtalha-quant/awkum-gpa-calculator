@@ -18,11 +18,9 @@ import InputField from './shared/InputField';
 import ActionButton from './shared/ActionButton';
 import ResultCard from './shared/ResultCard';
 
-interface Props {
-  onExportReady?: (fn: () => void) => void;
-}
+interface Props {}
 
-const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
+const CGPACalculator: React.FC<Props> = () => {
   const {
     semesters,
     errorMsg,
@@ -41,9 +39,7 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
   const [isExpertMode, setIsExpertMode] = useState(false);
   const [misTarget, setMisTarget] = useState<{ id: string; index: number } | null>(null);
 
-  useEffect(() => {
-    if (onExportReady) onExportReady(() => setIsExportModalOpen(true));
-  }, [onExportReady]);
+
 
   if (!hydrationReady) {
     return (

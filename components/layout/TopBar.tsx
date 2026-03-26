@@ -3,26 +3,15 @@ import React from 'react';
 
 type Page = 'sgpa' | 'cgpa' | 'rules';
 
-const EXPORT_LABELS: Partial<Record<Page, string>> = {
-  sgpa: 'Export DMC',
-  cgpa: 'Export Transcript',
-};
 
-const EXPORT_ICONS: Partial<Record<Page, string>> = {
-  sgpa: 'picture_as_pdf',
-  cgpa: 'picture_as_pdf',
-};
 
 interface TopBarProps {
   activePage: Page;
   onNavigate: (page: Page) => void;
-  onExport?: () => void;
   onMenuClick?: () => void;
 }
 
-const TopBar: React.FC<TopBarProps> = ({ activePage, onNavigate, onExport, onMenuClick }) => {
-  const exportLabel = EXPORT_LABELS[activePage];
-  const exportIcon = EXPORT_ICONS[activePage];
+const TopBar: React.FC<TopBarProps> = ({ activePage, onNavigate, onMenuClick }) => {
 
   const handleShare = async () => {
     try {
@@ -97,15 +86,7 @@ const TopBar: React.FC<TopBarProps> = ({ activePage, onNavigate, onExport, onMen
       </div>
 
       <div className="lg:hidden flex items-center gap-4">
-        {exportLabel && onExport && (
-          <button
-            onClick={onExport}
-            className="flex items-center gap-2 bg-primary-container text-on-primary font-bold px-4 py-1.5 rounded-lg text-xs hover:opacity-90 active:scale-95 transition-all"
-          >
-            <span className="material-symbols-outlined text-[16px]">{exportIcon}</span>
-            <span>{exportLabel}</span>
-          </button>
-        )}
+
       </div>
     </header>
   );

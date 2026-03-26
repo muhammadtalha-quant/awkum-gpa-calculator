@@ -15,11 +15,9 @@ import InputField from './shared/InputField';
 import ActionButton from './shared/ActionButton';
 import ResultCard from './shared/ResultCard';
 
-interface Props {
-  onExportReady?: (fn: () => void) => void;
-}
+interface Props {}
 
-const SGPACalculator: React.FC<Props> = ({ onExportReady }) => {
+const SGPACalculator: React.FC<Props> = () => {
   const {
     subjects,
     virtualSemesterId,
@@ -41,9 +39,7 @@ const SGPACalculator: React.FC<Props> = ({ onExportReady }) => {
   const [isMISModalOpen, setIsMISModalOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState<SGPASubject | null>(null);
 
-  useEffect(() => {
-    if (onExportReady) onExportReady(() => setIsExportModalOpen(true));
-  }, [onExportReady]);
+
 
   const handlePdfExport = (userInfo: UserInfo) => {
     exportSGPA_PDF(subjects, Number(sgpaValue), finalGrade, userInfo);

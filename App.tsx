@@ -13,17 +13,6 @@ const App: React.FC = () => {
   const [activePage, setActivePage] = useState<Page>('sgpa');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Refs to trigger export from child components
-  const sgpaExportRef = useRef<(() => void) | null>(null);
-  const cgpaExportRef = useRef<(() => void) | null>(null);
-
-  const handleExport = () => {
-    if (activePage === 'sgpa' && sgpaExportRef.current) {
-      sgpaExportRef.current();
-    } else if (activePage === 'cgpa' && cgpaExportRef.current) {
-      cgpaExportRef.current();
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background text-[#fafafa] selection:bg-primary/30">
@@ -34,7 +23,6 @@ const App: React.FC = () => {
           setActivePage(page);
           setMobileMenuOpen(false);
         }}
-        onExport={activePage !== 'rules' ? handleExport : undefined}
         onMenuClick={() => setMobileMenuOpen(true)}
       />
 
@@ -54,18 +42,10 @@ const App: React.FC = () => {
         <main className="flex-1 lg:pl-64 pt-24 pb-24 lg:pb-8 min-h-screen min-w-0 overflow-x-hidden">
           <div className="px-4 sm:px-12 lg:px-20 max-w-[2000px] mx-auto py-8">
             {activePage === 'sgpa' && (
-              <SGPACalculator
-                onExportReady={(fn) => {
-                  sgpaExportRef.current = fn;
-                }}
-              />
+              <SGPACalculator />
             )}
             {activePage === 'cgpa' && (
-              <CGPACalculator
-                onExportReady={(fn) => {
-                  cgpaExportRef.current = fn;
-                }}
-              />
+              <CGPACalculator />
             )}
             {activePage === 'rules' && <UniversityRules />}
           </div>

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { SGPASubject, asMark, asCredit, Credit, Mark, GradePoint } from '../src/domain/types';
+import { SGPASubject, asMark, asCredit, Mark, GradePoint } from '../src/domain/types';
 import { getLetterFromGP, calculateGradePoint } from '../src/domain/grading/engine';
 import { isValidCourseCode, sanitizeSubjectName } from '../src/core/validation';
 
@@ -7,10 +7,9 @@ interface Props {
   semesterId: string;
   subjects: SGPASubject[];
   onUpdate: (semesterId: string, updatedSubjects: SGPASubject[]) => void;
-  theme: any;
 }
 
-const SemesterSubjectTable: React.FC<Props> = ({ semesterId, subjects, onUpdate, theme }) => {
+const SemesterSubjectTable: React.FC<Props> = ({ semesterId, subjects, onUpdate }) => {
   const MAX_CREDITS_PER_SEM = 21;
   const MAX_ROWS = 7;
 
@@ -31,7 +30,7 @@ const SemesterSubjectTable: React.FC<Props> = ({ semesterId, subjects, onUpdate,
         onUpdate(semesterId, current);
       }
     }
-  }, [subjects, semesterId]);
+  }, [subjects, semesterId, onUpdate]);
 
   const addRow = () => {
     const currentTotalCredits = subjects.reduce((sum, s) => sum + (Number(s.credits) || 0), 0);

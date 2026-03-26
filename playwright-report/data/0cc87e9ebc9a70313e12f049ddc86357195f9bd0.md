@@ -1,0 +1,109 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - button "Open menu" [ref=e6]: menu
+      - generic [ref=e7]: AWKUM GPA Calculator
+    - generic [ref=e8]:
+      - navigation [ref=e9]:
+        - link "SGPA Calculator" [ref=e10] [cursor=pointer]:
+          - /url: "#"
+        - link "CGPA Calculator" [ref=e11] [cursor=pointer]:
+          - /url: "#"
+        - link "Grading Rules" [ref=e12] [cursor=pointer]:
+          - /url: "#"
+      - generic [ref=e13]: sharesettings
+    - button "picture_as_pdfExport DMC" [ref=e15]
+  - generic [ref=e16]:
+    - complementary [ref=e17]:
+      - generic [ref=e18]:
+        - heading "Obsidian Academics" [level=2] [ref=e19]
+        - paragraph [ref=e20]: AWKUM Scholar v2.0
+      - navigation [ref=e21]:
+        - generic [ref=e22]: calculateSGPA
+        - generic [ref=e23]: analyticsCGPA
+        - generic [ref=e24]: gavelRules
+    - main [ref=e25]:
+      - generic [ref=e28]:
+        - generic [ref=e29]:
+          - generic [ref=e30]:
+            - generic [ref=e31]:
+              - heading "SGPA Utility" [level=1] [ref=e32]
+              - paragraph [ref=e33]: Operational analytics for the current semester
+            - generic [ref=e34]:
+              - button "cloud_downloadImport MIS" [ref=e35]
+              - button "add_circleAdd Course" [ref=e36]
+          - generic [ref=e37]:
+            - generic [ref=e39]:
+              - text: list_alt
+              - heading "Current Vector Mapping" [level=3] [ref=e40]
+            - table [ref=e42]:
+              - rowgroup [ref=e43]:
+                - row "Registry Entry Catalog ID Units Score GP" [ref=e44]:
+                  - columnheader "Registry Entry" [ref=e45]
+                  - columnheader "Catalog ID" [ref=e46]
+                  - columnheader "Units" [ref=e47]
+                  - columnheader "Score" [ref=e48]
+                  - columnheader "GP" [ref=e49]
+                  - columnheader [ref=e50]
+              - rowgroup [ref=e51]:
+                - row "Calculus I 3 85 3.75 delete_sweep" [ref=e52]:
+                  - cell "Calculus I" [ref=e53]:
+                    - textbox "e.g. Advanced AI Models" [ref=e54]: Calculus I
+                  - cell [ref=e55]:
+                    - textbox "CS-101" [ref=e57]
+                  - cell "3" [ref=e58]:
+                    - spinbutton [ref=e60]: "3"
+                  - cell "85" [ref=e61]:
+                    - spinbutton [ref=e63]: "85"
+                  - cell "3.75" [ref=e64]
+                  - cell "delete_sweep" [ref=e65]:
+                    - button "delete_sweep" [ref=e66]
+                - row "English Comp 3 3.25 delete_sweep" [ref=e67]:
+                  - cell "English Comp" [ref=e68]:
+                    - textbox "e.g. Advanced AI Models" [ref=e69]: English Comp
+                  - cell [ref=e70]:
+                    - textbox "CS-101" [ref=e72]
+                  - cell "3" [ref=e73]:
+                    - spinbutton [ref=e75]: "3"
+                  - cell [ref=e76]:
+                    - spinbutton [active] [ref=e78]: "75"
+                  - cell "3.25" [ref=e79]
+                  - cell "delete_sweep" [ref=e80]:
+                    - button "delete_sweep" [ref=e81]
+        - generic [ref=e82]:
+          - generic [ref=e83]:
+            - generic [ref=e84]: data_usage
+            - generic [ref=e85]:
+              - paragraph [ref=e86]: Current Performance Mean
+              - generic [ref=e87]:
+                - text: "3.50"
+                - generic [ref=e89]: Excellent Progress
+              - button "picture_as_pdfGenerate Sheet" [disabled] [ref=e91]: picture_as_pdfGenerate Sheet
+              - paragraph [ref=e92]: warningCourse codes missing for generation
+          - generic [ref=e93]:
+            - generic [ref=e94]:
+              - generic [ref=e95]: psychology
+              - heading "Projection Engine" [level=3] [ref=e96]
+            - generic [ref=e97]:
+              - generic [ref=e98]:
+                - text: Previous CGPA
+                - spinbutton [ref=e99]
+              - generic [ref=e100]:
+                - text: Historical Cr
+                - spinbutton [ref=e101]
+          - generic [ref=e102]:
+            - generic [ref=e103]:
+              - generic [ref=e104]: query_stats
+              - heading "Marks Predictor" [level=3] [ref=e105]
+            - generic [ref=e106]:
+              - generic [ref=e107]: done_all
+              - paragraph [ref=e108]: Calculations Finalized
+              - paragraph [ref=e109]: All subject marks have been recorded. No further predictions are applicable.
+  - navigation [ref=e110]:
+    - generic [ref=e111]: calculateSGPA
+    - generic [ref=e112]: analyticsCGPA
+    - generic [ref=e113]: gavelRules
+```

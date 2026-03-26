@@ -2,17 +2,6 @@ import React from 'react';
 
 type Page = 'sgpa' | 'cgpa' | 'rules';
 
-interface Props {
-  activePage: Page;
-  onExport?: () => void;
-}
-
-const PAGE_TITLES: Record<Page, string> = {
-  sgpa: 'SGPA Calculator',
-  cgpa: 'CGPA Calculator',
-  rules: 'University Rules',
-};
-
 const EXPORT_LABELS: Partial<Record<Page, string>> = {
   sgpa: 'Export DMC',
   cgpa: 'Export Transcript',
@@ -25,11 +14,12 @@ const EXPORT_ICONS: Partial<Record<Page, string>> = {
 
 interface TopBarProps {
   activePage: Page;
+  onNavigate: (page: Page) => void;
   onExport?: () => void;
   onMenuClick?: () => void;
 }
 
-const TopBar: React.FC<TopBarProps> = ({ activePage, onExport, onMenuClick }) => {
+const TopBar: React.FC<TopBarProps> = ({ activePage, onNavigate, onExport, onMenuClick }) => {
   const exportLabel = EXPORT_LABELS[activePage];
   const exportIcon = EXPORT_ICONS[activePage];
 
@@ -56,18 +46,30 @@ const TopBar: React.FC<TopBarProps> = ({ activePage, onExport, onMenuClick }) =>
           <a
             className={`font-['Space_Grotesk'] font-medium tracking-tight hover:text-violet-300 transition-colors duration-300 ${activePage === 'sgpa' ? 'text-violet-400 font-semibold' : 'text-zinc-400'}`}
             href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigate('sgpa');
+            }}
           >
             SGPA Calculator
           </a>
           <a
             className={`font-['Space_Grotesk'] font-medium tracking-tight hover:text-violet-300 transition-colors duration-300 ${activePage === 'cgpa' ? 'text-violet-400 font-semibold' : 'text-zinc-400'}`}
             href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigate('cgpa');
+            }}
           >
             CGPA Calculator
           </a>
           <a
             className={`font-['Space_Grotesk'] font-medium tracking-tight hover:text-violet-300 transition-colors duration-300 ${activePage === 'rules' ? 'text-violet-400 font-semibold' : 'text-zinc-400'}`}
             href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigate('rules');
+            }}
           >
             Grading Rules
           </a>

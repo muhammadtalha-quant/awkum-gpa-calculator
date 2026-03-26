@@ -21,7 +21,7 @@ const SideNav: React.FC<Props> = ({ activePage, onNavigate }) => {
           className="text-xl font-black text-zinc-100 font-headline uppercase tracking-tight"
           style={{ fontFamily: 'var(--font-headline)' }}
         >
-          Obsidian Academic
+          Obsidian Academics
         </h2>
         <p
           className="text-[10px] font-label font-bold text-zinc-500 tracking-[0.2em] uppercase"
@@ -56,18 +56,6 @@ const SideNav: React.FC<Props> = ({ activePage, onNavigate }) => {
           );
         })}
       </nav>
-
-      <div className="mt-auto px-6">
-        <button
-          className="w-full py-3 bg-primary-container text-on-primary font-bold rounded-xl active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-          onClick={() => {
-            /* Potential reset or new calculation */
-          }}
-        >
-          <span className="material-symbols-outlined">add</span>
-          New Calculation
-        </button>
-      </div>
     </aside>
   );
 };

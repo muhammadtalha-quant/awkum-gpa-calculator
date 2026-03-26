@@ -41,7 +41,7 @@ const UniversityRules: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="text-on-surface">
-                {GRADE_RANGES.map((range, idx) => (
+                {GRADE_RANGES.map((range) => (
                   <tr
                     key={range.label}
                     className="border-b border-white/5 hover:bg-zinc-900/30 transition-colors group"

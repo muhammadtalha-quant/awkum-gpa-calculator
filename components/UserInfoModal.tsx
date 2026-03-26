@@ -175,7 +175,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
 
               <div className="flex-1 w-full space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-[9px] font-black font-label text-zinc-500 uppercase tracking-widest ml-1">
+                  <label className="text-[9px] font-black font-label text-zinc-400 uppercase tracking-widest ml-1">
                     Full Name
                   </label>
                   <input
@@ -183,11 +183,11 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
                     placeholder="Enter full name"
                     value={info.name}
                     onChange={(e) => setInfo({ ...info, name: sanitizeName(e.target.value) })}
-                    className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-xl outline-none focus:border-primary focus:ring-1 focus:ring-primary text-sm font-bold text-white transition-all placeholder:text-zinc-800"
+                    className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-xl outline-none focus:border-primary focus:ring-1 focus:ring-primary text-sm font-bold text-white transition-all placeholder:text-zinc-600"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[9px] font-black font-label text-zinc-500 uppercase tracking-widest ml-1">
+                  <label className="text-[9px] font-black font-label text-zinc-400 uppercase tracking-widest ml-1">
                     Father&apos;s Name
                   </label>
                   <input
@@ -195,18 +195,18 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
                     placeholder="Enter father's name"
                     value={info.fatherName}
                     onChange={(e) => setInfo({ ...info, fatherName: sanitizeName(e.target.value) })}
-                    className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-xl outline-none focus:border-primary focus:ring-1 focus:ring-primary text-sm font-bold text-white transition-all placeholder:text-zinc-800"
+                    className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-xl outline-none focus:border-primary focus:ring-1 focus:ring-primary text-sm font-bold text-white transition-all placeholder:text-zinc-600"
                   />
                 </div>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[9px] font-black font-label text-zinc-500 uppercase tracking-widest ml-1">
+              <label className="text-[9px] font-black font-label text-zinc-400 uppercase tracking-widest ml-1">
                 Registration Number
               </label>
               <div className="flex items-center bg-bg-surface-lowest border border-white/5 rounded-xl overflow-hidden focus-within:border-primary transition-all">
-                <div className="px-5 py-3.5 bg-white/5 text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                <div className="px-5 py-3.5 bg-white/5 text-[10px] font-black text-zinc-400 uppercase tracking-widest">
                   AWKUM -
                 </div>
                 <input
@@ -214,7 +214,6 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
                   maxLength={8}
                   placeholder="00000000"
                   value={info.registrationNumber}
-                  onFocus={() => setFormTouched(true)}
                   onChange={(e) =>
                     setInfo({ ...info, registrationNumber: e.target.value.replace(/\D/g, '') })
                   }
@@ -235,7 +234,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-1.5">
-                <label className="text-[9px] font-black font-label text-zinc-500 uppercase tracking-widest ml-1">
+                <label className="text-[9px] font-black font-label text-zinc-400 uppercase tracking-widest ml-1">
                   Academic Program
                 </label>
                 <select
@@ -252,7 +251,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[9px] font-black font-label text-zinc-500 uppercase tracking-widest ml-1">
+                <label className="text-[9px] font-black font-label text-zinc-400 uppercase tracking-widest ml-1">
                   {info.isCompleted ? 'Total Duration' : 'Target Semester'}
                 </label>
                 {isCGPA && info.isCompleted && info.programme !== 'Undergraduate (BS)' ? (
@@ -284,27 +283,25 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
 
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-1.5">
-                <label className="text-[9px] font-black font-label text-zinc-500 uppercase tracking-widest ml-1">
+                <label className="text-[9px] font-black font-label text-zinc-400 uppercase tracking-widest ml-1">
                   Major Discipline
                 </label>
                 <input
                   type="text"
                   placeholder="e.g. Computing"
                   value={info.subject}
-                  onFocus={() => setFormTouched(true)}
                   onChange={(e) => setInfo({ ...info, subject: sanitizeName(e.target.value) })}
                   className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-xl outline-none focus:border-primary text-sm font-bold text-white transition-all placeholder:text-zinc-800"
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[9px] font-black font-label text-zinc-500 uppercase tracking-widest ml-1">
+                <label className="text-[9px] font-black font-label text-zinc-400 uppercase tracking-widest ml-1">
                   Section
                 </label>
                 <input
                   type="text"
                   placeholder="A"
                   value={info.section}
-                  onFocus={() => setFormTouched(true)}
                   onChange={(e) => setInfo({ ...info, section: sanitizeSection(e.target.value) })}
                   className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-xl outline-none focus:border-primary text-center font-black text-sm text-white transition-all"
                 />
@@ -353,7 +350,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
                 />
                 <label
                   htmlFor="finalVerify"
-                  className="text-[10px] font-bold text-zinc-500 leading-relaxed cursor-pointer select-none"
+                  className="text-[10px] font-bold text-zinc-400 leading-relaxed cursor-pointer select-none"
                 >
                   I solemnly declare that all academic figures and personal credentials provided are
                   authentic and mirrored against my official AWKUM student record.

@@ -3,7 +3,6 @@ import { getProbationStatus } from '../src/domain/gpa/engine';
 
 interface Props {
   cgpa: number;
-  theme?: any;
 }
 
 const ProbationAlert: React.FC<Props> = ({ cgpa }) => {
@@ -19,7 +18,6 @@ const ProbationAlert: React.FC<Props> = ({ cgpa }) => {
     : 'bg-error border-error/20 text-on-error shadow-error/20';
 
   const iconColor = isWarning ? 'text-warning' : 'text-on-error';
-  const subtextColor = isWarning ? 'text-zinc-400' : 'text-white/80';
   const titleColor = isWarning ? 'text-warning' : 'text-white';
 
   const icon = isWarning ? 'warning' : 'report_problem';

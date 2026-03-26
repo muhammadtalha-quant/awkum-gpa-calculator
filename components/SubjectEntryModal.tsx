@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SGPASubject, Mark, Credit, asMark, asCredit } from '../src/domain/types';
+import { SGPASubject, asMark, asCredit } from '../src/domain/types';
 import { calculateGradePoint, getLetterFromGP } from '../src/domain/grading/engine';
 import { isValidCourseCode, sanitizeSubjectName } from '../src/core/validation';
 
@@ -8,7 +8,6 @@ interface Props {
   onClose: () => void;
   onSubmit: (subject: Partial<SGPASubject>) => void;
   initialData?: Partial<SGPASubject>;
-  theme?: any;
   enableCodes: boolean;
 }
 

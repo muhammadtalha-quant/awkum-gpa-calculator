@@ -29,6 +29,7 @@ const App: React.FC = () => {
       {/* Top Bar */}
       <TopBar
         activePage={activePage}
+        onNavigate={setActivePage}
         onExport={activePage !== 'rules' ? handleExport : undefined}
       />
 

@@ -78,8 +78,6 @@ const MISParserModal: React.FC<Props> = ({ isOpen, onClose, onImport, existingSu
 
   if (!isOpen) return null;
 
-  const stepNum = step === 'paste' ? 1 : step === 'credits' ? 2 : 3;
-
   return (
     <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-2xl animate-in fade-in duration-500">
       {/* Modal Container */}

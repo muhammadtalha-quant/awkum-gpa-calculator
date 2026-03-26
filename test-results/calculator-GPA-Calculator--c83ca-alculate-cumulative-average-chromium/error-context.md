@@ -1,0 +1,103 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - button "Open menu" [ref=e6]: menu
+      - generic [ref=e7]: AWKUM GPA Calculator
+    - generic [ref=e8]:
+      - navigation [ref=e9]:
+        - link "SGPA Calculator" [ref=e10] [cursor=pointer]:
+          - /url: "#"
+        - link "CGPA Calculator" [ref=e11] [cursor=pointer]:
+          - /url: "#"
+        - link "Grading Rules" [ref=e12] [cursor=pointer]:
+          - /url: "#"
+      - generic [ref=e13]: sharesettings
+    - button "picture_as_pdfExport Transcript" [ref=e15]
+  - generic [ref=e16]:
+    - complementary [ref=e17]:
+      - generic [ref=e18]:
+        - heading "Obsidian Academics" [level=2] [ref=e19]
+        - paragraph [ref=e20]: AWKUM Scholar v2.0
+      - navigation [ref=e21]:
+        - generic [ref=e22]: calculateSGPA
+        - generic [ref=e23]: analyticsCGPA
+        - generic [ref=e24]: gavelRules
+    - main [ref=e25]:
+      - generic [ref=e28]:
+        - generic [ref=e29]:
+          - generic [ref=e30]:
+            - generic [ref=e31]: analytics
+            - generic [ref=e32]:
+              - heading "CGPA Utility" [level=1] [ref=e33]
+              - paragraph [ref=e34]: Historical academic performance aggregation
+            - button "add_moderatorAdd Academic Block" [active] [ref=e35]: add_moderatorAdd Academic Block
+          - generic [ref=e36]:
+            - generic [ref=e38]:
+              - text: timeline
+              - heading "Academic Trajectory" [level=3] [ref=e39]
+            - generic [ref=e40]:
+              - generic [ref=e41]:
+                - generic [ref=e42]:
+                  - generic [ref=e43]: "1"
+                  - generic [ref=e44]:
+                    - heading "Semester 1" [level=4] [ref=e45]
+                    - paragraph [ref=e46]: Index Mapping fzqg
+                - generic [ref=e47]:
+                  - generic [ref=e48]:
+                    - text: Credits
+                    - spinbutton [ref=e49]: "15"
+                  - generic [ref=e50]:
+                    - text: SGPA
+                    - spinbutton [ref=e51]: "0"
+                  - button "close" [ref=e52]
+              - generic [ref=e53]:
+                - generic [ref=e54]:
+                  - generic [ref=e55]: "2"
+                  - generic [ref=e56]:
+                    - heading "Semester 2" [level=4] [ref=e57]
+                    - paragraph [ref=e58]: Index Mapping su5v
+                - generic [ref=e59]:
+                  - generic [ref=e60]:
+                    - text: Credits
+                    - spinbutton [ref=e61]: "15"
+                  - generic [ref=e62]:
+                    - text: SGPA
+                    - spinbutton [ref=e63]: "0"
+                  - button "close" [ref=e64]
+        - generic [ref=e65]:
+          - generic [ref=e66]:
+            - generic [ref=e67]: equalizer
+            - generic [ref=e68]:
+              - paragraph [ref=e69]: Cumulative Average (CGPA)
+              - generic [ref=e70]:
+                - text: "0.00"
+                - generic [ref=e72]: F GRADE
+              - heading "Academic Probation" [level=4] [ref=e73]
+              - generic [ref=e74]:
+                - button "verified_userExport Record" [ref=e75]
+                - generic [ref=e76]: Locked
+          - generic [ref=e77]:
+            - generic [ref=e78]:
+              - generic [ref=e79]: hub
+              - heading "Parameter Decomposition" [level=3] [ref=e80]
+            - generic [ref=e81]:
+              - generic [ref=e82]:
+                - generic [ref=e83]: history_eduQuality Points
+                - text: "0.00"
+              - generic [ref=e84]:
+                - generic [ref=e85]: bar_chart_4_barsTotal Credits
+                - text: "30"
+              - generic [ref=e86]:
+                - generic [ref=e87]: calendar_monthModules Count
+                - text: "2"
+          - generic [ref=e88]:
+            - paragraph [ref=e89]: Notice
+            - paragraph [ref=e90]: Credit hours are automatically regulated. Each academic block must maintain integrity between 12-21 credits.
+  - navigation [ref=e91]:
+    - generic [ref=e92]: calculateSGPA
+    - generic [ref=e93]: analyticsCGPA
+    - generic [ref=e94]: gavelRules
+```

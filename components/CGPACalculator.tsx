@@ -53,10 +53,12 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
         <div className="lg:col-span-8 space-y-8">
           <section className="bg-bg-surface rounded-3xl p-8 flex flex-col md:flex-row justify-between items-center gap-6 border border-white/5 shadow-2xl overflow-hidden relative group">
             <div className="absolute top-0 right-0 p-8 opacity-0 group-hover:opacity-10 transition-opacity">
-                <span className="material-symbols-outlined text-8xl text-primary">analytics</span>
+              <span className="material-symbols-outlined text-8xl text-primary">analytics</span>
             </div>
             <div className="relative z-10">
-              <h1 className="text-3xl font-black font-headline text-white tracking-tight">Cumulative Vector</h1>
+              <h1 className="text-3xl font-black font-headline text-white tracking-tight">
+                CGPA Utility
+              </h1>
               <p className="text-zinc-500 text-xs font-black font-label uppercase tracking-widest mt-2">
                 Historical academic performance aggregation
               </p>
@@ -66,7 +68,9 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
               className="relative z-10 w-full md:w-auto px-10 py-4 rounded-2xl bg-primary text-on-primary text-[10px] font-black font-label uppercase tracking-widest hover:shadow-glow transition-all flex items-center justify-center gap-3 active:scale-95 group/add"
             >
               <div className="absolute inset-0 bg-white/10 translate-y-full group-hover/add:translate-y-0 transition-transform duration-300"></div>
-              <span className="material-symbols-outlined text-[20px] relative z-10">add_moderator</span>
+              <span className="material-symbols-outlined text-[20px] relative z-10">
+                add_moderator
+              </span>
               <span className="relative z-10">Add Academic Block</span>
             </button>
           </section>
@@ -79,56 +83,79 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
 
           <section className="bg-bg-surface rounded-3xl overflow-hidden border border-white/5 shadow-2xl">
             <div className="p-8 border-b border-white/5 flex justify-between items-center bg-white/[0.01]">
-                <div className="flex items-center gap-3">
-                    <span className="material-symbols-outlined text-primary text-[20px]">timeline</span>
-                    <h3 className="font-black font-headline text-[11px] uppercase tracking-[0.3em] text-zinc-400">Academic Trajectory</h3>
-                </div>
-                {errorMsg && <span className="text-[9px] font-black text-primary animate-pulse uppercase tracking-wider">{errorMsg}</span>}
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-primary text-[20px]">timeline</span>
+                <h3 className="font-black font-headline text-[11px] uppercase tracking-[0.3em] text-zinc-400">
+                  Academic Trajectory
+                </h3>
+              </div>
+              {errorMsg && (
+                <span className="text-[9px] font-black text-primary animate-pulse uppercase tracking-wider">
+                  {errorMsg}
+                </span>
+              )}
             </div>
             <div className="p-8 space-y-6">
               {semesters.length === 0 ? (
                 <div className="py-24 text-center text-zinc-700 font-label text-[10px] font-black uppercase tracking-widest bg-bg-surface-lowest border border-dashed border-white/5 rounded-2xl">
-                    Neural history empty. Secure your first academic block.
+                  Neural history empty. Secure your first academic block.
                 </div>
               ) : (
                 semesters.map((sem: CGPASemester, idx) => (
-                  <div key={sem.id} className="group flex flex-col md:flex-row items-center gap-6 p-6 bg-bg-surface-lowest border border-white/5 rounded-2xl hover:bg-white/[0.02] transition-all duration-300 shadow-inner-glow relative overflow-hidden">
+                  <div
+                    key={sem.id}
+                    className="group flex flex-col md:flex-row items-center gap-6 p-6 bg-bg-surface-lowest border border-white/5 rounded-2xl hover:bg-white/[0.02] transition-all duration-300 shadow-inner-glow relative overflow-hidden"
+                  >
                     <div className="flex items-center gap-4 flex-1">
-                        <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center font-black font-mono text-zinc-600 group-hover:bg-primary/10 group-hover:text-primary transition-all">
-                            {idx + 1}
-                        </div>
-                        <div className="space-y-1">
-                            <h4 className="font-black font-headline text-sm text-white">{sem.name}</h4>
-                            <p className="text-[9px] font-black font-label text-zinc-700 uppercase tracking-widest">Index Mapping {sem.id.slice(0, 4)}</p>
-                        </div>
+                      <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center font-black font-mono text-zinc-600 group-hover:bg-primary/10 group-hover:text-primary transition-all">
+                        {idx + 1}
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="font-black font-headline text-sm text-white">{sem.name}</h4>
+                        <p className="text-[9px] font-black font-label text-zinc-700 uppercase tracking-widest">
+                          Index Mapping {sem.id.slice(0, 4)}
+                        </p>
+                      </div>
                     </div>
-                    
+
                     <div className="flex gap-4 items-center">
-                        <div className="space-y-2">
-                            <label className="text-[8px] font-black font-label text-zinc-600 uppercase tracking-widest ml-1">Credits</label>
-                            <input
-                                type="number"
-                                value={sem.credits}
-                                onChange={(e) => updateSemester(sem.id, { credits: parseInt(e.target.value) || 0 as any })}
-                                className="w-20 bg-black/20 border border-white/5 rounded-xl p-3 text-center font-black font-mono text-xs text-primary outline-none focus:border-primary/50"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-[8px] font-black font-label text-zinc-600 uppercase tracking-widest ml-1">SGPA</label>
-                            <input
-                                type="number"
-                                step="0.01"
-                                value={sem.sgpa}
-                                onChange={(e) => updateSemester(sem.id, { sgpa: parseFloat(e.target.value) || 0 as any })}
-                                className="w-24 bg-black/20 border border-white/5 rounded-xl p-3 text-center font-black font-mono text-xs text-primary outline-none focus:border-primary/50"
-                            />
-                        </div>
-                        <button
-                            onClick={() => handleRemoveSemester(sem.id)}
-                            className="mt-6 w-10 h-10 flex items-center justify-center rounded-xl bg-error/0 text-error/30 hover:bg-error/10 hover:text-error transition-all"
-                        >
-                            <span className="material-symbols-outlined text-[18px]">close</span>
-                        </button>
+                      <div className="space-y-2">
+                        <label className="text-[8px] font-black font-label text-zinc-600 uppercase tracking-widest ml-1">
+                          Credits
+                        </label>
+                        <input
+                          type="number"
+                          value={sem.credits}
+                          onChange={(e) =>
+                            updateSemester(sem.id, {
+                              credits: parseInt(e.target.value) || (0 as any),
+                            })
+                          }
+                          className="w-20 bg-black/20 border border-white/5 rounded-xl p-3 text-center font-black font-mono text-xs text-primary outline-none focus:border-primary/50"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[8px] font-black font-label text-zinc-600 uppercase tracking-widest ml-1">
+                          SGPA
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={sem.sgpa}
+                          onChange={(e) =>
+                            updateSemester(sem.id, {
+                              sgpa: parseFloat(e.target.value) || (0 as any),
+                            })
+                          }
+                          className="w-24 bg-black/20 border border-white/5 rounded-xl p-3 text-center font-black font-mono text-xs text-primary outline-none focus:border-primary/50"
+                        />
+                      </div>
+                      <button
+                        onClick={() => handleRemoveSemester(sem.id)}
+                        className="mt-6 w-10 h-10 flex items-center justify-center rounded-xl bg-error/0 text-error/30 hover:bg-error/10 hover:text-error transition-all"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">close</span>
+                      </button>
                     </div>
                   </div>
                 ))
@@ -140,78 +167,105 @@ const CGPACalculator: React.FC<Props> = ({ onExportReady }) => {
         <div className="lg:col-span-4 space-y-8">
           <section className="bg-bg-surface rounded-3xl p-10 border border-white/5 shadow-glow relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-8 opacity-0 group-hover:opacity-10 transition-opacity">
-                <span className="material-symbols-outlined text-8xl text-primary">equalizer</span>
+              <span className="material-symbols-outlined text-8xl text-primary">equalizer</span>
             </div>
-            
-            <div className="flex flex-col items-center justify-center text-center relative z-10">
-                <p className="text-[10px] font-black font-label text-zinc-500 uppercase tracking-[0.4em] mb-4">Cumulative Average (CGPA)</p>
-                <div className="relative group/score">
-                    <span className="text-8xl font-black font-headline text-white tracking-tighter text-shadow-glow drop-shadow-2xl transition-transform duration-700 group-hover/score:scale-105 inline-block">
-                        {cgpaNum.toFixed(2)}
-                    </span>
-                    <div className="absolute -top-4 -left-1/2 translate-x-1/2 w-max">
-                        <div className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[8px] font-black uppercase border border-primary/20 animate-pulse shadow-soft backdrop-blur-md">
-                            {overallGrade} GRADE
-                        </div>
-                    </div>
-                </div>
-                
-                <h4 className="mt-8 text-[11px] font-black font-label text-white uppercase tracking-[0.2em] bg-white/5 px-6 py-2 rounded-full border border-white/5">
-                    {getCgpaLabel(cgpaNum)}
-                </h4>
 
-                <div className="mt-10 grid grid-cols-2 gap-4 w-full h-14">
-                    <button
-                        onClick={() => setIsModalOpen(true)}
-                        className="group/btn relative rounded-2xl bg-white/5 border border-white/5 text-zinc-400 text-[9px] font-black font-label uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-3 active:scale-95"
-                    >
-                        <span className="material-symbols-outlined text-[18px]">verified_user</span>
-                        Export Record
-                    </button>
-                    <div className="flex items-center justify-center bg-bg-surface-lowest rounded-2xl border border-white/5 shadow-inner-glow px-4">
-                        <span className="text-[10px] font-black font-label uppercase tracking-widest text-zinc-600">Locked</span>
-                    </div>
+            <div className="flex flex-col items-center justify-center text-center relative z-10">
+              <p className="text-[10px] font-black font-label text-zinc-500 uppercase tracking-[0.4em] mb-4">
+                Cumulative Average (CGPA)
+              </p>
+              <div className="relative group/score">
+                <span className="text-8xl font-black font-headline text-white tracking-tighter text-shadow-glow drop-shadow-2xl transition-transform duration-700 group-hover/score:scale-105 inline-block">
+                  {cgpaNum.toFixed(2)}
+                </span>
+                <div className="absolute -top-4 -left-1/2 translate-x-1/2 w-max">
+                  <div className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[8px] font-black uppercase border border-primary/20 animate-pulse shadow-soft backdrop-blur-md">
+                    {overallGrade} GRADE
+                  </div>
                 </div>
+              </div>
+
+              <h4 className="mt-8 text-[11px] font-black font-label text-white uppercase tracking-[0.2em] bg-white/5 px-6 py-2 rounded-full border border-white/5">
+                {getCgpaLabel(cgpaNum)}
+              </h4>
+
+              <div className="mt-10 grid grid-cols-2 gap-4 w-full h-14">
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="group/btn relative rounded-2xl bg-white/5 border border-white/5 text-zinc-400 text-[9px] font-black font-label uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-3 active:scale-95"
+                >
+                  <span className="material-symbols-outlined text-[18px]">verified_user</span>
+                  Export Record
+                </button>
+                <div className="flex items-center justify-center bg-bg-surface-lowest rounded-2xl border border-white/5 shadow-inner-glow px-4">
+                  <span className="text-[10px] font-black font-label uppercase tracking-widest text-zinc-600">
+                    Locked
+                  </span>
+                </div>
+              </div>
             </div>
           </section>
 
           <section className="bg-bg-surface rounded-3xl p-8 border border-white/5 shadow-2xl space-y-8">
-             <div className="flex items-center gap-3 border-b border-white/5 pb-6">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                    <span className="material-symbols-outlined text-[16px]">hub</span>
-                </div>
-                <h3 className="font-black font-headline text-[10px] uppercase tracking-[0.3em] text-zinc-400">Parameter Decomposition</h3>
+            <div className="flex items-center gap-3 border-b border-white/5 pb-6">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                <span className="material-symbols-outlined text-[16px]">hub</span>
+              </div>
+              <h3 className="font-black font-headline text-[10px] uppercase tracking-[0.3em] text-zinc-400">
+                Parameter Decomposition
+              </h3>
             </div>
-            
+
             <div className="space-y-4">
-                <div className="p-5 bg-bg-surface-lowest border border-white/5 rounded-2xl flex justify-between items-center group/item hover:border-primary/20 transition-all">
-                    <div className="flex items-center gap-3">
-                        <span className="material-symbols-outlined text-zinc-700 group-hover/item:text-primary transition-colors">history_edu</span>
-                        <span className="text-[10px] font-black font-label text-zinc-500 uppercase tracking-widest">Quality Points</span>
-                    </div>
-                    <span className="font-black font-mono text-white tracking-widest">{qualityPoints.toFixed(2)}</span>
+              <div className="p-5 bg-bg-surface-lowest border border-white/5 rounded-2xl flex justify-between items-center group/item hover:border-primary/20 transition-all">
+                <div className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-zinc-700 group-hover/item:text-primary transition-colors">
+                    history_edu
+                  </span>
+                  <span className="text-[10px] font-black font-label text-zinc-500 uppercase tracking-widest">
+                    Quality Points
+                  </span>
                 </div>
-                <div className="p-5 bg-bg-surface-lowest border border-white/5 rounded-2xl flex justify-between items-center group/item hover:border-primary/20 transition-all">
-                    <div className="flex items-center gap-3">
-                        <span className="material-symbols-outlined text-zinc-700 group-hover/item:text-primary transition-colors">bar_chart_4_bars</span>
-                        <span className="text-[10px] font-black font-label text-zinc-500 uppercase tracking-widest">Total Credits</span>
-                    </div>
-                    <span className="font-black font-mono text-white tracking-widest">{totalCredits}</span>
+                <span className="font-black font-mono text-white tracking-widest">
+                  {qualityPoints.toFixed(2)}
+                </span>
+              </div>
+              <div className="p-5 bg-bg-surface-lowest border border-white/5 rounded-2xl flex justify-between items-center group/item hover:border-primary/20 transition-all">
+                <div className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-zinc-700 group-hover/item:text-primary transition-colors">
+                    bar_chart_4_bars
+                  </span>
+                  <span className="text-[10px] font-black font-label text-zinc-500 uppercase tracking-widest">
+                    Total Credits
+                  </span>
                 </div>
-                <div className="p-5 bg-bg-surface-lowest border border-white/5 rounded-2xl flex justify-between items-center group/item hover:border-primary/20 transition-all">
-                    <div className="flex items-center gap-3">
-                        <span className="material-symbols-outlined text-zinc-700 group-hover/item:text-primary transition-colors">calendar_month</span>
-                        <span className="text-[10px] font-black font-label text-zinc-500 uppercase tracking-widest">Modules Count</span>
-                    </div>
-                    <span className="font-black font-mono text-white tracking-widest">{semesters.length}</span>
+                <span className="font-black font-mono text-white tracking-widest">
+                  {totalCredits}
+                </span>
+              </div>
+              <div className="p-5 bg-bg-surface-lowest border border-white/5 rounded-2xl flex justify-between items-center group/item hover:border-primary/20 transition-all">
+                <div className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-zinc-700 group-hover/item:text-primary transition-colors">
+                    calendar_month
+                  </span>
+                  <span className="text-[10px] font-black font-label text-zinc-500 uppercase tracking-widest">
+                    Modules Count
+                  </span>
                 </div>
+                <span className="font-black font-mono text-white tracking-widest">
+                  {semesters.length}
+                </span>
+              </div>
             </div>
           </section>
 
           <div className="p-8 rounded-3xl bg-primary/5 border border-primary/10 shadow-inner-glow">
-            <p className="text-[9px] font-black font-label text-primary uppercase tracking-[0.3em] mb-2">Notice</p>
+            <p className="text-[9px] font-black font-label text-primary uppercase tracking-[0.3em] mb-2">
+              Notice
+            </p>
             <p className="text-[10px] text-zinc-500 leading-relaxed font-medium italic">
-                Credit hours are automatically regulated. Each academic block must maintain integrity between 12-21 credits.
+              Credit hours are automatically regulated. Each academic block must maintain integrity
+              between 12-21 credits.
             </p>
           </div>
         </div>

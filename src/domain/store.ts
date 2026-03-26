@@ -1,16 +1,7 @@
 import { create } from 'zustand';
-import {
-  SGPASubject,
-  CGPASemester,
-  GradePoint,
-  Credit,
-  Mark,
-  asMark,
-  asCredit,
-  asGP,
-} from '../domain/types';
+import { SGPASubject, CGPASemester, GradePoint, Credit, Mark, asCredit } from '../domain/types';
 import { calculateGradePoint, getLetterFromGP } from '../domain/grading/engine';
-import { calculateSGPA, calculateCGPA } from '../domain/gpa/engine';
+import { calculateSGPA } from '../domain/gpa/engine';
 
 interface AcademicState {
   subjects: SGPASubject[];
@@ -45,14 +36,15 @@ export const useAcademicStore = create<AcademicState>((set) => ({
   projectionMode: 'current',
   futureCredits: 0,
 
-  setProjectionMode: (mode) => set({ projectionMode: mode }),
-  setFutureCredits: (credits) => set({ futureCredits: credits }),
+  setProjectionMode: (mode: 'current' | 'best' | 'worst' | 'expected') =>
+    set({ projectionMode: mode }),
+  setFutureCredits: (credits: number) => set({ futureCredits: credits }),
 
-  setSubjects: (subjects) => set({ subjects }),
+  setSubjects: (subjects: SGPASubject[]) => set({ subjects }),
 
-  updateSubject: (id, updates) =>
-    set((state) => {
-      const newSubjects = state.subjects.map((s) => {
+  updateSubject: (id: string, updates: Partial<SGPASubject>) =>
+    set((state: AcademicState) => {
+      const newSubjects = state.subjects.map((s: SGPASubject) => {
         if (s.id === id) {
           const updated = { ...s, ...updates };
           // Auto-recalculate GP if marks or credits change
@@ -72,7 +64,7 @@ export const useAcademicStore = create<AcademicState>((set) => ({
     }),
 
   addSubject: () =>
-    set((state) => ({
+    set((state: AcademicState) => ({
       subjects: [
         ...state.subjects,
         {
@@ -86,23 +78,23 @@ export const useAcademicStore = create<AcademicState>((set) => ({
       ],
     })),
 
-  removeSubject: (id) =>
-    set((state) => ({
-      subjects: state.subjects.filter((s) => s.id !== id),
+  removeSubject: (id: string) =>
+    set((state: AcademicState) => ({
+      subjects: state.subjects.filter((s: SGPASubject) => s.id !== id),
     })),
 
-  setSemesters: (semesters) => set({ semesters }),
+  setSemesters: (semesters: CGPASemester[]) => set({ semesters }),
 
-  updateSemester: (id, updates) =>
-    set((state) => ({
-      semesters: state.semesters.map((s) => (s.id === id ? { ...s, ...updates } : s)),
+  updateSemester: (id: string, updates: Partial<CGPASemester>) =>
+    set((state: AcademicState) => ({
+      semesters: state.semesters.map((s: CGPASemester) => (s.id === id ? { ...s, ...updates } : s)),
     })),
 
-  updateSemesterSubject: (semesterId, subjectId, updates) =>
-    set((state) => {
-      const nextSemesters = state.semesters.map((sem) => {
+  updateSemesterSubject: (semesterId: string, subjectId: string, updates: Partial<SGPASubject>) =>
+    set((state: AcademicState) => {
+      const nextSemesters = state.semesters.map((sem: CGPASemester) => {
         if (sem.id === semesterId) {
-          const nextSubjects = (sem.subjects || []).map((sub) => {
+          const nextSubjects = (sem.subjects || []).map((sub: SGPASubject) => {
             if (sub.id === subjectId) {
               const updated = { ...sub, ...updates };
               if (updates.marks !== undefined && updates.marks !== '') {
@@ -120,9 +112,15 @@ export const useAcademicStore = create<AcademicState>((set) => ({
 
           // Auto-recalculate semester SGPA and Credits
           const semGp = calculateSGPA(
-            nextSubjects.map((s) => ({ gradePoint: s.gradePoint, credits: s.credits })),
+            nextSubjects.map((s: SGPASubject) => ({
+              gradePoint: s.gradePoint,
+              credits: s.credits,
+            })),
           );
-          const semCredits = nextSubjects.reduce((sum, s) => sum + (Number(s.credits) || 0), 0);
+          const semCredits = nextSubjects.reduce(
+            (sum: number, s: SGPASubject) => sum + (Number(s.credits) || 0),
+            0,
+          );
 
           return {
             ...sem,
@@ -137,7 +135,7 @@ export const useAcademicStore = create<AcademicState>((set) => ({
     }),
 
   addSemester: () =>
-    set((state) => ({
+    set((state: AcademicState) => ({
       semesters: [
         ...state.semesters,
         {
@@ -150,10 +148,10 @@ export const useAcademicStore = create<AcademicState>((set) => ({
       ],
     })),
 
-  removeSemester: (id) =>
-    set((state) => ({
+  removeSemester: (id: string) =>
+    set((state: AcademicState) => ({
       semesters: state.semesters
-        .filter((s) => s.id !== id)
-        .map((s, idx) => ({ ...s, name: `Semester ${idx + 1}` })),
+        .filter((s: CGPASemester) => s.id !== id)
+        .map((s: CGPASemester, idx: number) => ({ ...s, name: `Semester ${idx + 1}` })),
     })),
 }));

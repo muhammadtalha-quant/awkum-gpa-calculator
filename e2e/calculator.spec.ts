@@ -7,7 +7,7 @@ test.describe('GPA Calculator Core User Journeys', () => {
 
     test('should calculate SGPA correctly for multiple subjects', async ({ page }) => {
         await page.click('text=SGPA Calculator');
-        await expect(page.locator('h1')).toContainText('SGPA Simulator');
+        await expect(page.locator('h1')).toContainText('SGPA Utility');
 
         // Add subjects
         await page.click('text=Add Course');
@@ -28,16 +28,14 @@ test.describe('GPA Calculator Core User Journeys', () => {
         await secondRow.locator('input[type="number"]').nth(0).fill('3'); // Credits
         await secondRow.locator('input[type="number"]').nth(1).fill('75'); // Marks
 
-        // Check SGPA (85 -> 4.0, 75 -> 3.3 approx)
-        // (4.0 * 3 + 3.0 * 3) / 6 = 3.5 ?
-        // 85 -> 4.00, 75 -> 3.00 (In AWKUM 75-79 is 3.00)
-        // (12 + 9) / 6 = 21 / 6 = 3.50
+        // Check SGPA (85 -> 4.0, 75 -> 3.0 approx)
+        // (4.0 * 3 + 3.0 * 3) / 6 = 3.50
         await expect(page.locator('span.text-8xl')).toContainText('3.50');
     });
 
     test('should manage CGPA semesters and calculate cumulative average', async ({ page }) => {
         await page.click('text=CGPA Calculator');
-        await expect(page.locator('h1')).toContainText('Cumulative Vector');
+        await expect(page.locator('h1')).toContainText('CGPA Utility');
 
         // Add semesters
         await page.click('text=Add Academic Block');
@@ -63,8 +61,8 @@ test.describe('GPA Calculator Core User Journeys', () => {
     test('should open MIS parser and handle imports', async ({ page }) => {
         await page.click('text=SGPA Calculator');
         await page.click('text=Import MIS');
-        await expect(page.locator('h3:has-text("MIS Protocol Integration")')).toBeVisible();
+        await expect(page.locator('h2:has-text("MIS Intelligent Import")')).toBeVisible();
         await page.click('text=close');
-        await expect(page.locator('h3:has-text("MIS Protocol Integration")')).not.toBeVisible();
+        await expect(page.locator('h2:has-text("MIS Intelligent Import")')).not.toBeVisible();
     });
 });

@@ -1,7 +1,5 @@
 import React from 'react';
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -13,7 +11,6 @@ import {
 
 interface Props {
   data: { name: string; sgpa: number }[];
-  theme?: any;
 }
 
 const GPATrendChart: React.FC<Props> = ({ data }) => {

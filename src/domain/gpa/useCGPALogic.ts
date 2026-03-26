@@ -2,68 +2,81 @@ import { useState, useEffect, useMemo } from 'react';
 import { useAcademicStore } from '../store';
 import { calculateCGPA } from './engine';
 import { getLetterFromGP } from '../grading/engine';
-import { Credit, GradePoint, CGPASemester } from '../types';
+import { CGPASemester } from '../types';
 
-export const useCGPALogic = (MAX_CREDITS: number = 216, MIN_ROOM: number = 12, MAX_ROWS: number = 12) => {
-    const { semesters, addSemester, removeSemester, updateSemester, setSemesters } = useAcademicStore();
-    const [errorMsg, setErrorMsg] = useState('');
+export const useCGPALogic = (
+  MAX_CREDITS: number = 216,
+  MIN_ROOM: number = 12,
+  MAX_ROWS: number = 12,
+) => {
+  const { semesters, addSemester, removeSemester, updateSemester, setSemesters } =
+    useAcademicStore();
+  const [errorMsg, setErrorMsg] = useState('');
 
-    useEffect(() => {
-        const total = semesters.reduce((s: number, sem: CGPASemester) => s + (Number(sem.credits) || 0), 0);
-        if (total > MAX_CREDITS) {
-            const copy = [...semesters];
-            while (
-                copy.reduce((s: number, sem: CGPASemester) => s + (Number(sem.credits) || 0), 0) > MAX_CREDITS &&
-                copy.length > 1
-            )
-            copy.pop();
-            setSemesters(copy);
-            setErrorMsg('Adjusted semesters to maintain global credit limit.');
-        }
-    }, [semesters, setSemesters, MAX_CREDITS]);
-
-    const cgpaValue = useMemo(() => 
-        calculateCGPA(semesters.map((s) => ({ sgpa: s.sgpa, credits: s.credits }))),
-        [semesters]
+  useEffect(() => {
+    const total = semesters.reduce(
+      (s: number, sem: CGPASemester) => s + (Number(sem.credits) || 0),
+      0,
     );
+    if (total > MAX_CREDITS) {
+      const copy = [...semesters];
+      while (
+        copy.reduce((s: number, sem: CGPASemester) => s + (Number(sem.credits) || 0), 0) >
+          MAX_CREDITS &&
+        copy.length > 1
+      )
+        copy.pop();
+      setSemesters(copy);
+      setErrorMsg('Adjusted semesters to maintain global credit limit.');
+    }
+  }, [semesters, setSemesters, MAX_CREDITS]);
 
-    const overallGrade = useMemo(() => getLetterFromGP(cgpaValue), [cgpaValue]);
-    const cgpaNum = Number(cgpaValue);
+  const cgpaValue = useMemo(
+    () => calculateCGPA(semesters.map((s) => ({ sgpa: s.sgpa, credits: s.credits }))),
+    [semesters],
+  );
 
-    const totalCredits = useMemo(() => 
-        semesters.reduce((s, sem) => s + (Number(sem.credits) || 0), 0),
-        [semesters]
-    );
+  const overallGrade = useMemo(() => getLetterFromGP(cgpaValue), [cgpaValue]);
+  const cgpaNum = Number(cgpaValue);
 
-    const qualityPoints = useMemo(() => 
-        semesters.reduce((s: number, sem: CGPASemester) => s + Number(sem.sgpa) * Number(sem.credits), 0),
-        [semesters]
-    );
+  const totalCredits = useMemo(
+    () => semesters.reduce((s, sem) => s + (Number(sem.credits) || 0), 0),
+    [semesters],
+  );
 
-    const handleAddSemester = () => {
-        if (semesters.length >= MAX_ROWS || MAX_CREDITS - totalCredits < MIN_ROOM) return;
-        setErrorMsg('');
-        addSemester();
-    };
+  const qualityPoints = useMemo(
+    () =>
+      semesters.reduce(
+        (s: number, sem: CGPASemester) => s + Number(sem.sgpa) * Number(sem.credits),
+        0,
+      ),
+    [semesters],
+  );
 
-    const handleRemoveSemester = (id: string) => {
-        setErrorMsg('');
-        if (semesters.length <= 1) setSemesters([]);
-        else removeSemester(id);
-    };
+  const handleAddSemester = () => {
+    if (semesters.length >= MAX_ROWS || MAX_CREDITS - totalCredits < MIN_ROOM) return;
+    setErrorMsg('');
+    addSemester();
+  };
 
-    return {
-        semesters,
-        setSemesters,
-        errorMsg,
-        setErrorMsg,
-        cgpaValue,
-        cgpaNum,
-        overallGrade,
-        totalCredits,
-        qualityPoints,
-        handleAddSemester,
-        handleRemoveSemester,
-        updateSemester,
-    };
+  const handleRemoveSemester = (id: string) => {
+    setErrorMsg('');
+    if (semesters.length <= 1) setSemesters([]);
+    else removeSemester(id);
+  };
+
+  return {
+    semesters,
+    setSemesters,
+    errorMsg,
+    setErrorMsg,
+    cgpaValue,
+    cgpaNum,
+    overallGrade,
+    totalCredits,
+    qualityPoints,
+    handleAddSemester,
+    handleRemoveSemester,
+    updateSemester,
+  };
 };

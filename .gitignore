@@ -174,5 +174,6 @@ stitch/
 
 # Antigravity generated text files
 *.txt
-tests_results/
+# playwright generated test results
+test-results/
 # End of https://www.toptal.com/developers/gitignore/api/node,react,linux

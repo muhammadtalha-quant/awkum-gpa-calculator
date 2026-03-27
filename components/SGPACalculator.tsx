@@ -1,13 +1,9 @@
 import React, { useState } from 'react';
-import { UserInfo, SGPASubject } from '../src/domain/types';
+import { SGPASubject } from '../src/domain/types';
 import { useSGPALogic } from '../src/domain/gpa/useSGPALogic';
-import { isValidCourseCode } from '../src/core/validation';
 import { useAcademicStore } from '../src/domain/store';
-import { exportSGPA_PDF } from '../services/pdfService';
-import UserInfoModal from './UserInfoModal';
 import MISParserModal from './MISParserModal';
 import RequiredMarksTool from './RequiredMarksTool';
-import SubjectEntryModal from './SubjectEntryModal';
 
 // Shared Components
 import SectionCard from './shared/SectionCard';
@@ -25,7 +21,6 @@ const SGPACalculator: React.FC = () => {
     prevCredits,
     setPrevCredits,
     sgpaValue,
-    finalGrade,
     projectedCgpa,
     addCourse,
     updateSubject,
@@ -33,15 +28,7 @@ const SGPACalculator: React.FC = () => {
     hydrationReady,
   } = useSGPALogic();
 
-  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isMISModalOpen, setIsMISModalOpen] = useState(false);
-  const [editingSubject, setEditingSubject] = useState<SGPASubject | null>(null);
-
-
-
-  const handlePdfExport = (userInfo: UserInfo) => {
-    exportSGPA_PDF(subjects, Number(sgpaValue), finalGrade, userInfo);
-  };
 
   if (!hydrationReady) {
     return (
@@ -68,21 +55,18 @@ const SGPACalculator: React.FC = () => {
 
   const sgpaNum = Number(sgpaValue);
   const badge = sgpaNum > 0 ? getGpaBadge(sgpaNum) : null;
-  const isExportUnlocked =
-    subjects.length > 0 && subjects.every((s) => s.code && isValidCourseCode(s.code));
 
   return (
     <div className="space-y-8 animate-in">
-      <UserInfoModal
-        isOpen={isExportModalOpen}
-        onClose={() => setIsExportModalOpen(false)}
-        onSubmit={handlePdfExport}
-        title="Semester Grade Sheet Details"
-      />
       <MISParserModal
         isOpen={isMISModalOpen}
         onClose={() => setIsMISModalOpen(false)}
         onImport={(subs) => {
+          const strippedSubs = subs.map((s) => ({
+            ...s,
+            name: `Course ${Math.floor(Math.random() * 1000)}`,
+            code: '',
+          }));
           const state = useAcademicStore.getState();
           let targetId = virtualSemesterId;
 
@@ -98,25 +82,14 @@ const SGPACalculator: React.FC = () => {
             const finalState = useAcademicStore.getState();
             finalState.setSemesters(
               finalState.semesters.map((sem) =>
-                sem.id === targetId ? { ...sem, subjects: [...sem.subjects, ...subs] } : sem,
+                sem.id === targetId
+                  ? { ...sem, subjects: [...sem.subjects, ...strippedSubs] }
+                  : sem,
               ),
             );
           }
         }}
         existingSubjectCodes={subjects.map((s) => s.code || '').filter(Boolean)}
-      />
-      <SubjectEntryModal
-        isOpen={!!editingSubject}
-        onClose={() => setEditingSubject(null)}
-        onSubmit={(sub) => {
-          updateSubject(editingSubject!.id, 'name', sub.name!);
-          updateSubject(editingSubject!.id, 'code', sub.code || '');
-          updateSubject(editingSubject!.id, 'credits', sub.credits!.toString());
-          updateSubject(editingSubject!.id, 'marks', sub.marks!.toString());
-          setEditingSubject(null);
-        }}
-        initialData={editingSubject || undefined}
-        enableCodes={true}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -154,12 +127,6 @@ const SGPACalculator: React.FC = () => {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-bg-surface-lowest">
-                    <th className="px-8 py-5 font-black font-label text-[9px] tracking-[0.3em] text-zinc-600 uppercase">
-                      Course Name
-                    </th>
-                    <th className="px-6 py-5 font-black font-label text-[9px] tracking-[0.3em] text-zinc-600 uppercase text-center min-w-[120px]">
-                      Course Code
-                    </th>
                     <th className="px-6 py-5 font-black font-label text-[9px] tracking-[0.3em] text-zinc-600 uppercase text-center w-24">
                       Credit Hours
                     </th>
@@ -189,26 +156,6 @@ const SGPACalculator: React.FC = () => {
                         data-testid="subject-row"
                         className="group hover:bg-white/[0.01] transition-all duration-300"
                       >
-                        <td className="px-8 py-6">
-                          <InputField
-                            value={sub.name}
-                            onChange={(val) => updateSubject(sub.id, 'name', val)}
-                            placeholder="e.g. Advanced AI Models"
-                            className="!p-0"
-                            dataTestId="subject-name-input"
-                          />
-                        </td>
-                        <td className="px-6 py-6 text-center">
-                          <InputField
-                            value={sub.code || ''}
-                            onChange={(val) => updateSubject(sub.id, 'code', val)}
-                            placeholder="CS-101"
-                            align="center"
-                            mono
-                            className="w-24 mx-auto"
-                            dataTestId="subject-code-input"
-                          />
-                        </td>
                         <td className="px-6 py-6 text-center">
                           <InputField
                             type="number"
@@ -242,14 +189,6 @@ const SGPACalculator: React.FC = () => {
                         <td className="px-8">
                           <div className="flex items-center gap-2">
                             <ActionButton
-                              onClick={() => setEditingSubject(sub)}
-                              variant="ghost"
-                              icon="edit"
-                              className="w-10 h-10 !p-0"
-                            >
-                              {null}
-                            </ActionButton>
-                            <ActionButton
                               onClick={() => removeSubject(sub.id)}
                               variant="ghost"
                               icon="delete_sweep"
@@ -280,59 +219,43 @@ const SGPACalculator: React.FC = () => {
             badge={badge}
             icon="data_usage"
             dataTestId="sgpa-score"
-            action={
-              <div className="space-y-4">
-                <ActionButton
-                  onClick={() => setIsExportModalOpen(true)}
-                  disabled={!isExportUnlocked}
-                  icon="picture_as_pdf"
-                  fullWidth
-                >
-                  Generate Sheet
-                </ActionButton>
-                {!isExportUnlocked && subjects.length > 0 && (
-                  <p className="text-[8px] font-black font-label text-error/60 uppercase tracking-widest flex items-center justify-center gap-2">
-                    <span className="material-symbols-outlined text-[14px]">warning</span>
-                    Course codes missing for generation
-                  </p>
-                )}
-              </div>
-            }
           />
 
-          <SectionCard title="Projection Engine" icon="psychology">
-            <div className="grid grid-cols-2 gap-4">
-              <InputField
-                label="Previous CGPA"
-                type="number"
-                placeholder="0.00"
-                value={prevCgpa}
-                onChange={setPrevCgpa}
-                align="center"
-                mono
-              />
-              <InputField
-                label="Historical Cr"
-                type="number"
-                placeholder="00"
-                value={prevCredits}
-                onChange={setPrevCredits}
-                align="center"
-                mono
-              />
-            </div>
-
-            {projectedCgpa && (
-              <div className="mt-8 p-6 rounded-2xl bg-white/[0.02] border border-white/5 flex flex-col items-center justify-center text-center animate-zoom-in shadow-inner-glow">
-                <p className="text-[8px] font-black font-label text-zinc-600 uppercase tracking-[0.4em] mb-2">
-                  Refined Graduation Vector
-                </p>
-                <span className="text-4xl font-black font-headline text-primary-fixed-dim tracking-tight shadow-glow">
-                  {projectedCgpa}
-                </span>
+          {sgpaNum > 0 && (
+            <SectionCard title="Projection Engine" icon="psychology">
+              <div className="grid grid-cols-2 gap-4">
+                <InputField
+                  label="Previous CGPA"
+                  type="number"
+                  placeholder="0.00"
+                  value={prevCgpa}
+                  onChange={setPrevCgpa}
+                  align="center"
+                  mono
+                />
+                <InputField
+                  label="Historical Cr"
+                  type="number"
+                  placeholder="00"
+                  value={prevCredits}
+                  onChange={setPrevCredits}
+                  align="center"
+                  mono
+                />
               </div>
-            )}
-          </SectionCard>
+
+              {projectedCgpa && (
+                <div className="mt-8 p-6 rounded-2xl bg-white/[0.02] border border-white/5 flex flex-col items-center justify-center text-center animate-zoom-in shadow-inner-glow">
+                  <p className="text-[8px] font-black font-label text-zinc-600 uppercase tracking-[0.4em] mb-2">
+                    Refined Graduation Vector
+                  </p>
+                  <span className="text-4xl font-black font-headline text-primary-fixed-dim tracking-tight shadow-glow">
+                    {projectedCgpa}
+                  </span>
+                </div>
+              )}
+            </SectionCard>
+          )}
 
           <RequiredMarksTool subjects={subjects} />
         </div>

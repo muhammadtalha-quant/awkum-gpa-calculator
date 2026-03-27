@@ -120,3 +120,78 @@ export function parseMISText(raw: string, targetSemester?: number): ParsedSubjec
 
   return Array.from(seen.values());
 }
+
+export interface ParsedSemester {
+  semesterIndex: number;
+  subjects: ParsedSubject[];
+}
+
+export function parseAllMISText(raw: string): ParsedSemester[] {
+  const lines = raw.split(/[\r\n]+/);
+  // Map semester index to a Map of subjects (code -> ParsedSubject)
+  const semestersData = new Map<number, Map<string, ParsedSubject>>();
+
+  let activeSemester = 1;
+  let i = 0;
+
+  while (i < lines.length) {
+    const semMatch = lines[i].match(SEMESTER_HEADER);
+    if (semMatch) {
+      activeSemester = parseInt(semMatch[1], 10);
+    }
+
+    if (!semestersData.has(activeSemester)) {
+      semestersData.set(activeSemester, new Map<string, ParsedSubject>());
+    }
+
+    const info = extractCourseInfo(lines[i]);
+
+    if (info) {
+      const candidates: number[] = [];
+      let j = i + 1;
+      let linesScanned = 0;
+
+      while (j < lines.length && linesScanned < 8) {
+        const trimmed = lines[j].trim();
+
+        if (MARK_VALUE.test(trimmed)) {
+          candidates.push(normalizeMark(trimmed));
+        } else if (
+          trimmed !== '' &&
+          (extractCourseInfo(lines[j]) || SEMESTER_HEADER.test(lines[j]))
+        ) {
+          break;
+        }
+
+        if (trimmed !== '') linesScanned++;
+        j++;
+      }
+
+      const rawMax = candidates.length > 0 ? Math.max(...candidates) : 0;
+
+      if (info.code && rawMax > 0 && rawMax <= 100) {
+        semestersData.get(activeSemester)!.set(info.code, {
+          code: info.code,
+          name: info.name || `COURSE ${info.code}`,
+          marks: rawMax,
+        });
+      }
+      i = j;
+      continue;
+    }
+
+    i++;
+  }
+
+  // Convert the map to an array of ParsedSemester, sorted by semesterIndex
+  const result: ParsedSemester[] = Array.from(semestersData.entries())
+    .map(([index, subjectsMap]) => ({
+      semesterIndex: index,
+      subjects: Array.from(subjectsMap.values()),
+    }))
+    .filter((s) => s.subjects.length > 0)
+    .sort((a, b) => a.semesterIndex - b.semesterIndex);
+
+  // Re-index to be perfectly sequential (1, 2, 3...) in case of gaps
+  return result.map((sem, idx) => ({ ...sem, semesterIndex: idx + 1 }));
+}

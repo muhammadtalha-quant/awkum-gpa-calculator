@@ -112,6 +112,7 @@ const SemesterSubjectTable: React.FC<Props> = ({ semesterId, subjects, onUpdate 
                     align="center"
                     mono
                     className="w-16 mx-auto"
+                    dataTestId="subject-credits-input"
                   />
                 </td>
                 <td className="px-2 py-3 text-center">
@@ -123,6 +124,7 @@ const SemesterSubjectTable: React.FC<Props> = ({ semesterId, subjects, onUpdate 
                     align="center"
                     mono
                     className="w-16 mx-auto"
+                    dataTestId="subject-marks-input"
                   />
                 </td>
                 <td className="px-2 py-3 text-center">
@@ -166,6 +168,7 @@ const SemesterSubjectTable: React.FC<Props> = ({ semesterId, subjects, onUpdate 
           icon="add_circle"
           className="w-full sm:w-auto"
           disabled={totalCredits >= MAX_CREDITS_PER_SEM}
+          dataTestId="add-course-btn"
         >
           Append Registry Item
         </ActionButton>

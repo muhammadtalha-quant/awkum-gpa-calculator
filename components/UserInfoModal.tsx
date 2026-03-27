@@ -34,11 +34,36 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
     photo: undefined,
   });
 
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
+    if (isOpen) {
+      let newSem = info.semester;
+      let newCompleted = info.isCompleted;
+
+      if (isCGPA) {
+        if (!info.isCompleted) {
+          newSem = String(rowCount);
+        }
+      } else {
+        newSem = '1';
+      }
+
+      setInfo({
+        ...info,
+        semester: newSem,
+        isCompleted: newCompleted,
+      });
+    }
+  }
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
 
   const sanitizeName = (val: string) => val.replace(/[^A-Za-z\s]/g, '');
+  const sanitizeDiscipline = (val: string) => val.replace(/[^A-Za-z\s-]/g, '');
   const sanitizeSection = (val: string) =>
     val
       .replace(/[^A-Za-z]/g, '')
@@ -60,22 +85,20 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
   const isFatherValid = info.fatherName.trim().length > 2;
   const isRegValid = info.registrationNumber.length === 8;
   const isSectionValid = info.section.length === 1;
-  const isSubjectValid = info.subject.trim().length >= 2;
+  const isSubjectValid = /^[A-Za-z\s]{2,}(-[A-Za-z\s]{2,})?$/.test(info.subject.trim());
 
   let cgpaConstraintError = '';
-  if (isCGPA) {
-    if (info.isCompleted) {
-      if (info.programme === 'Undergraduate (BS)') {
-        if (rowCount !== 8) cgpaConstraintError = `BS requires 8 semesters (Provided: ${rowCount})`;
-      } else {
-        const duration = parseInt(info.totalDuration || '0');
-        if (!duration || rowCount !== duration)
-          cgpaConstraintError = `${duration ? `Required: ${duration}` : 'Total duration needed'}`;
-      }
-    } else {
-      const currentSem = parseInt(info.semester);
-      if (rowCount !== currentSem - 1)
-        cgpaConstraintError = `Sem ${currentSem} requires ${currentSem - 1} records (Found: ${rowCount})`;
+  if (isCGPA && info.isCompleted) {
+    const prog = info.programme;
+    if (prog === 'Undergraduate (BS)') {
+      if (rowCount < 8)
+        cgpaConstraintError = `BS requires minimum 8 semesters (Found: ${rowCount})`;
+    } else if (prog === 'Graduation(MS)' || prog === 'M.Phil') {
+      if (rowCount < 3)
+        cgpaConstraintError = `MS/MPhil requires minimum 3 semesters (Found: ${rowCount})`;
+    } else if (prog === 'Ph.D') {
+      if (rowCount < 6)
+        cgpaConstraintError = `PhD requires minimum 6 semesters (Found: ${rowCount})`;
     }
   }
 
@@ -86,7 +109,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
     isSectionValid &&
     isSubjectValid &&
     info.isVerified &&
-    !cgpaConstraintError;
+    (!isCGPA || !info.isCompleted || !cgpaConstraintError);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,10 +118,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
     const finalInfo = {
       ...info,
       registrationNumber: `AWKUM-${info.registrationNumber}`,
-      semester:
-        info.isCompleted && info.programme !== 'Undergraduate (BS)'
-          ? info.totalDuration
-          : info.semester,
+      semester: isCGPA ? (info.isCompleted ? info.totalDuration : String(rowCount)) : info.semester,
     };
 
     onSubmit(finalInfo as UserInfo);
@@ -232,9 +252,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
                   onChange={(e) => {
                     const prog = e.target.value;
                     let sem = info.semester;
-                    if (prog === 'Undergraduate (BS)') {
-                      sem = info.isCompleted ? '8' : '1';
-                    } else if (!info.isCompleted) {
+                    if (!isCGPA) {
                       sem = '1';
                     }
                     setInfo({ ...info, programme: prog, semester: sem });
@@ -249,48 +267,55 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
                 </select>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[9px] font-black font-label text-zinc-400 uppercase tracking-widest ml-1">
-                  {info.isCompleted ? 'Total Duration' : 'Target Semester'}
-                </label>
-                {isCGPA && info.isCompleted && info.programme !== 'Undergraduate (BS)' ? (
-                  <input
-                    type="number"
-                    min="1"
-                    max="12"
-                    placeholder="Semesters"
-                    value={info.totalDuration}
-                    onChange={(e) => setInfo({ ...info, totalDuration: e.target.value })}
-                    className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-xl outline-none focus:border-primary text-sm font-black text-center text-on-surface"
-                  />
-                ) : (
-                  <select
-                    disabled={info.isCompleted && info.programme === 'Undergraduate (BS)'}
-                    value={info.semester}
-                    onChange={(e) => setInfo({ ...info, semester: e.target.value })}
-                    className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-xl outline-none focus:border-primary text-sm disabled:opacity-30 font-bold text-on-surface appearance-none cursor-pointer"
-                  >
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((s) => (
-                      <option key={s} value={s.toString()} className="bg-zinc-900">
-                        Semester {s}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </div>
+              {(!isCGPA || info.isCompleted) && (
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black font-label text-zinc-400 uppercase tracking-widest ml-1">
+                    {info.isCompleted ? 'Total Duration (Semesters)' : 'Target Semester'}
+                  </label>
+                  {isCGPA && info.isCompleted ? (
+                    <input
+                      type="number"
+                      min="1"
+                      max="12"
+                      placeholder="e.g. 8"
+                      value={info.totalDuration}
+                      onChange={(e) => setInfo({ ...info, totalDuration: e.target.value })}
+                      className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-xl outline-none focus:border-primary text-sm font-black text-center text-on-surface transition-all placeholder:text-zinc-600 focus:ring-1 focus:ring-primary"
+                    />
+                  ) : (
+                    <select
+                      value={info.semester}
+                      onChange={(e) => setInfo({ ...info, semester: e.target.value })}
+                      className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-xl outline-none focus:border-primary text-sm disabled:opacity-30 font-bold text-on-surface appearance-none cursor-pointer"
+                    >
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((s) => (
+                        <option key={s} value={s.toString()} className="bg-zinc-900">
+                          Semester {s}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-1.5">
                 <label className="text-[9px] font-black font-label text-zinc-400 uppercase tracking-widest ml-1">
-                  Major Discipline
+                  Discipline
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Computing"
+                  placeholder="e.g. Science-Biology"
                   value={info.subject}
-                  onChange={(e) => setInfo({ ...info, subject: sanitizeName(e.target.value) })}
-                  className="w-full px-5 py-3.5 bg-bg-surface-lowest border border-white/5 rounded-xl outline-none focus:border-primary text-sm font-bold text-on-surface transition-all placeholder:text-zinc-600"
+                  onChange={(e) =>
+                    setInfo({ ...info, subject: sanitizeDiscipline(e.target.value) })
+                  }
+                  className={`w-full px-5 py-3.5 bg-bg-surface-lowest border rounded-xl outline-none focus:ring-1 focus:ring-primary text-sm font-bold text-on-surface transition-all placeholder:text-zinc-600 ${
+                    info.subject && !isSubjectValid
+                      ? 'border-error/50'
+                      : 'border-white/5 focus:border-primary'
+                  }`}
                 />
               </div>
               <div className="space-y-1.5">
@@ -316,9 +341,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
                 onClick={() => {
                   const compl = !info.isCompleted;
                   let sem = info.semester;
-                  if (info.programme === 'Undergraduate (BS)') {
-                    sem = compl ? '8' : '1';
-                  } else if (!compl) {
+                  if (!isCGPA) {
                     sem = '1';
                   }
                   setInfo({ ...info, isCompleted: compl, semester: sem });

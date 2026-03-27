@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { parseMISText, ParsedSubject } from '../src/core/misParser';
+import { parseMISText, parseAllMISText, ParsedSubject } from '../src/core/misParser';
 import { calculateGradePoint } from '../src/domain/grading/engine';
 import { getLetterFromGP } from '../src/domain/grading/engine';
 import { SGPASubject, Credit, Mark } from '../src/domain/types';
@@ -7,9 +7,9 @@ import { SGPASubject, Credit, Mark } from '../src/domain/types';
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onImport: (subjects: SGPASubject[]) => void;
+  onImport?: (subjects: SGPASubject[]) => void;
+  onGlobalImport?: (semesters: { index: number; subjects: SGPASubject[] }[]) => void;
   existingSubjectCodes: string[];
-  targetSemester?: number;
 }
 
 type Step = 'paste' | 'credits' | 'confirm';
@@ -17,6 +17,7 @@ type Step = 'paste' | 'credits' | 'confirm';
 interface SubjectDraft extends ParsedSubject {
   credits: number;
   isDuplicate: boolean;
+  semesterIndex?: number;
 }
 
 const DEFAULT_CREDITS = 3;
@@ -25,25 +26,50 @@ const MISParserModal: React.FC<Props> = ({
   isOpen,
   onClose,
   onImport,
+  onGlobalImport,
   existingSubjectCodes,
-  targetSemester,
 }) => {
   const [step, setStep] = useState<Step>('paste');
   const [rawText, setRawText] = useState('');
   const [drafts, setDrafts] = useState<SubjectDraft[]>([]);
   const [globalCredits, setGlobalCredits] = useState(DEFAULT_CREDITS);
 
-  const detected = useMemo(() => parseMISText(rawText, targetSemester), [rawText, targetSemester]);
+  const detectedSubjects = useMemo(() => {
+    if (onGlobalImport) return [];
+    return parseMISText(rawText);
+  }, [rawText, onGlobalImport]);
+
+  const detectedSemesters = useMemo(() => {
+    if (!onGlobalImport) return [];
+    return parseAllMISText(rawText);
+  }, [rawText, onGlobalImport]);
+
+  const totalDetectedCount = onGlobalImport
+    ? detectedSemesters.reduce((acc, sem) => acc + sem.subjects.length, 0)
+    : detectedSubjects.length;
 
   const toStep = (next: Step) => {
     if (next === 'credits') {
-      setDrafts(
-        detected.map((sub) => ({
-          ...sub,
-          credits: DEFAULT_CREDITS,
-          isDuplicate: existingSubjectCodes.includes(sub.code),
-        })),
-      );
+      if (onGlobalImport) {
+        setDrafts(
+          detectedSemesters.flatMap((sem) =>
+            sem.subjects.map((sub) => ({
+              ...sub,
+              credits: DEFAULT_CREDITS,
+              isDuplicate: false,
+              semesterIndex: sem.semesterIndex,
+            })),
+          ),
+        );
+      } else {
+        setDrafts(
+          detectedSubjects.map((sub) => ({
+            ...sub,
+            credits: DEFAULT_CREDITS,
+            isDuplicate: existingSubjectCodes.includes(sub.code),
+          })),
+        );
+      }
       setGlobalCredits(DEFAULT_CREDITS);
     }
     setStep(next);
@@ -59,19 +85,43 @@ const MISParserModal: React.FC<Props> = ({
   };
 
   const handleImport = () => {
-    const subjects: SGPASubject[] = drafts.map((d) => {
-      const gp = calculateGradePoint(d.marks as Mark);
-      return {
-        id: crypto.randomUUID(),
-        name: d.name,
-        code: d.code || '',
-        credits: d.credits as Credit,
-        marks: d.marks as Mark,
-        gradePoint: gp,
-        gradeLetter: getLetterFromGP(gp),
-      };
-    });
-    onImport(subjects);
+    if (onGlobalImport) {
+      const grouped = new Map<number, SGPASubject[]>();
+      drafts.forEach((d) => {
+        const gp = calculateGradePoint(d.marks as Mark);
+        const sub: SGPASubject = {
+          id: crypto.randomUUID(),
+          name: d.name,
+          code: d.code || '',
+          credits: d.credits as Credit,
+          marks: d.marks as Mark,
+          gradePoint: gp,
+          gradeLetter: getLetterFromGP(gp),
+        };
+        const idx = d.semesterIndex || 1;
+        if (!grouped.has(idx)) grouped.set(idx, []);
+        grouped.get(idx)!.push(sub);
+      });
+      const semesters = Array.from(grouped.entries()).map(([index, subjects]) => ({
+        index,
+        subjects,
+      }));
+      onGlobalImport(semesters);
+    } else if (onImport) {
+      const subjects: SGPASubject[] = drafts.map((d) => {
+        const gp = calculateGradePoint(d.marks as Mark);
+        return {
+          id: crypto.randomUUID(),
+          name: d.name,
+          code: d.code || '',
+          credits: d.credits as Credit,
+          marks: d.marks as Mark,
+          gradePoint: gp,
+          gradeLetter: getLetterFromGP(gp),
+        };
+      });
+      onImport(subjects);
+    }
     handleClose();
   };
 
@@ -169,27 +219,27 @@ const MISParserModal: React.FC<Props> = ({
               />
               {rawText.length > 0 && (
                 <div
-                  className={`p-6 rounded-2xl border flex items-center justify-between transition-all ${detected.length > 0 ? 'bg-primary/10 border-primary/20' : 'bg-zinc-950 border-white/5 opacity-50'}`}
+                  className={`p-6 rounded-2xl border flex items-center justify-between transition-all ${totalDetectedCount > 0 ? 'bg-primary/10 border-primary/20' : 'bg-zinc-950 border-white/5 opacity-50'}`}
                 >
                   <div className="flex items-center gap-4">
                     <span className="text-4xl font-black font-headline text-primary">
-                      {detected.length}
+                      {totalDetectedCount}
                     </span>
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
                         Analysis Result
                       </p>
                       <p className="text-sm font-bold text-white">
-                        {detected.length === 0
+                        {totalDetectedCount === 0
                           ? 'No courses identified'
-                          : `${detected.length} Courses Extracted`}
+                          : `${totalDetectedCount} Courses Extracted${onGlobalImport ? ` across ${detectedSemesters.length} semesters` : ''}`}
                       </p>
                     </div>
                   </div>
                   <span
-                    className={`material-symbols-outlined text-3xl ${detected.length > 0 ? 'text-primary' : 'text-zinc-800'}`}
+                    className={`material-symbols-outlined text-3xl ${totalDetectedCount > 0 ? 'text-primary' : 'text-zinc-800'}`}
                   >
-                    {detected.length > 0 ? 'task_alt' : 'error'}
+                    {totalDetectedCount > 0 ? 'task_alt' : 'error'}
                   </span>
                 </div>
               )}
@@ -232,6 +282,11 @@ const MISParserModal: React.FC<Props> = ({
                         <span className="text-[8px] font-black font-mono text-primary px-1.5 py-0.5 bg-primary/10 rounded uppercase tracking-wider">
                           {d.code}
                         </span>
+                        {d.semesterIndex && (
+                          <span className="text-[8px] font-black font-mono text-indigo-400 px-1.5 py-0.5 bg-indigo-500/10 rounded uppercase tracking-wider">
+                            SEM {d.semesterIndex}
+                          </span>
+                        )}
                         {d.isDuplicate && (
                           <span className="text-[8px] font-black text-orange-500 px-1.5 py-0.5 bg-orange-500/10 rounded">
                             EXISTING
@@ -284,6 +339,7 @@ const MISParserModal: React.FC<Props> = ({
                           </p>
                           <span className="text-[9px] font-mono text-zinc-600 uppercase tracking-wider">
                             {d.code}
+                            {d.semesterIndex ? ` • SEM ${d.semesterIndex}` : ''}
                           </span>
                         </div>
                       </div>
@@ -345,9 +401,9 @@ const MISParserModal: React.FC<Props> = ({
 
           {step === 'paste' && (
             <button
-              disabled={detected.length === 0}
+              disabled={totalDetectedCount === 0}
               onClick={() => toStep('credits')}
-              className={`px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl transition-all ${detected.length > 0 ? 'bg-primary text-on-primary hover:scale-[1.02]' : 'bg-surface-container-highest text-zinc-700 opacity-30 cursor-not-allowed'}`}
+              className={`px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl transition-all ${totalDetectedCount > 0 ? 'bg-primary text-on-primary hover:scale-[1.02]' : 'bg-surface-container-highest text-zinc-700 opacity-30 cursor-not-allowed'}`}
             >
               Analyze & Next
             </button>

@@ -28,9 +28,8 @@ const SideNav: React.FC<Props> = ({ activePage, onNavigate, mobileOpen, onClose 
 
       {/* Sidebar Content */}
       <aside
-        className={`fixed left-0 top-0 h-full bg-[#0c0c0f] border-r border-white/5 flex-col gap-4 py-8 z-[200] lg:z-50 lg:mt-16 w-64 transform-gpu transition-transform duration-300 ease-in-out will-change-transform ${
-          mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        } flex`}
+        className={`fixed left-0 top-0 h-full bg-[#0c0c0f] border-r border-white/5 flex-col gap-4 py-8 z-[200] lg:z-50 lg:mt-16 w-64 transform-gpu transition-transform duration-300 ease-in-out will-change-transform ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          } flex`}
       >
         {/* Mobile Close Button */}
         <button
@@ -50,7 +49,7 @@ const SideNav: React.FC<Props> = ({ activePage, onNavigate, mobileOpen, onClose 
             className="text-[10px] font-label font-bold text-zinc-500 tracking-[0.2em] uppercase"
             style={{ fontFamily: 'var(--font-label)' }}
           >
-            AWKUM Scholar v3.0
+            AWKUM Scholar v3.2
           </p>
         </div>
 
@@ -61,11 +60,10 @@ const SideNav: React.FC<Props> = ({ activePage, onNavigate, mobileOpen, onClose 
               <div
                 key={page}
                 onClick={() => onNavigate(page)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all cursor-pointer font-label text-sm tracking-wider uppercase ${
-                  active
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all cursor-pointer font-label text-sm tracking-wider uppercase ${active
                     ? 'bg-violet-500/10 text-violet-400 border-r-4 border-violet-500 font-bold'
                     : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900/50'
-                }`}
+                  }`}
                 style={{ fontFamily: 'var(--font-label)' }}
               >
                 <span

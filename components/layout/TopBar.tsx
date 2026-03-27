@@ -3,8 +3,6 @@ import React from 'react';
 
 type Page = 'sgpa' | 'cgpa' | 'rules';
 
-
-
 interface TopBarProps {
   activePage: Page;
   onNavigate: (page: Page) => void;
@@ -12,7 +10,6 @@ interface TopBarProps {
 }
 
 const TopBar: React.FC<TopBarProps> = ({ activePage, onNavigate, onMenuClick }) => {
-
   const handleShare = async () => {
     try {
       if (navigator.share) {
@@ -85,9 +82,7 @@ const TopBar: React.FC<TopBarProps> = ({ activePage, onNavigate, onMenuClick }) 
         </button>
       </div>
 
-      <div className="lg:hidden flex items-center gap-4">
-
-      </div>
+      <div className="lg:hidden flex items-center gap-4"></div>
     </header>
   );
 };

@@ -10,11 +10,11 @@ import ForecastingTool from './ForecastingTool';
 import RetakeOptimizer from './RetakeOptimizer';
 import PredictiveDashboard from './PredictiveDashboard';
 import AnalyticsDashboard from './AnalyticsDashboard';
-import { Credit, GradePoint } from '../src/domain/types';
+import { asProgramCredit } from '../src/domain/types';
+import { useAcademicStore } from '../src/domain/store';
+import { calculateSGPA } from '../src/domain/gpa/engine';
 
-// Shared Components
 import SectionCard from './shared/SectionCard';
-import InputField from './shared/InputField';
 import ActionButton from './shared/ActionButton';
 import ResultCard from './shared/ResultCard';
 
@@ -28,16 +28,12 @@ const CGPACalculator: React.FC = () => {
     qualityPoints,
     handleAddSemester,
     handleRemoveSemester,
-    updateSemester,
     updateSubject,
     hydrationReady,
   } = useCGPALogic();
 
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  const [isExpertMode, setIsExpertMode] = useState(false);
-  const [misTarget, setMisTarget] = useState<{ id: string; index: number } | null>(null);
-
-
+  const [isMISModalOpen, setIsMISModalOpen] = useState(false);
 
   if (!hydrationReady) {
     return (
@@ -52,10 +48,11 @@ const CGPACalculator: React.FC = () => {
   };
 
   const getCgpaLabel = (gpa: number) => {
-    if (gpa >= 3.75) return 'First Class with Distinction';
-    if (gpa >= 3.0) return 'First Class';
-    if (gpa >= 2.5) return 'Second Class';
-    if (gpa >= 2.0) return 'Pass';
+    if (gpa >= 3.8) return 'First Class with Distinction';
+    if (gpa >= 3.5) return 'First Class';
+    if (gpa >= 3.0) return 'Second Class';
+    if (gpa >= 2.5) return 'Pass';
+    if (gpa >= 2.0) return 'Conditional Pass';
     return 'Academic Probation';
   };
 
@@ -65,19 +62,28 @@ const CGPACalculator: React.FC = () => {
         isOpen={isExportModalOpen}
         onClose={() => setIsExportModalOpen(false)}
         onSubmit={handlePdfExport}
-        title="Academic Export Passport"
+        title="Unofficial Transcript Generator"
         isCGPA={true}
         rowCount={semesters.length}
       />
       <MISParserModal
-        isOpen={!!misTarget}
-        onClose={() => setMisTarget(null)}
-        targetSemester={misTarget?.index}
-        onImport={(subs) => {
-          if (misTarget) {
-            updateSemester(misTarget.id, { subjects: subs });
-            setMisTarget(null);
-          }
+        isOpen={isMISModalOpen}
+        onClose={() => setIsMISModalOpen(false)}
+        onGlobalImport={(incomingSemesters) => {
+          const newSemesters: CGPASemester[] = incomingSemesters.map((sem, i) => {
+            const sgpa = calculateSGPA(sem.subjects);
+            const totalCr = sem.subjects.reduce((sum, s) => sum + Number(s.credits), 0);
+            return {
+              id: crypto.randomUUID(),
+              name: `Semester ${i + 1}`,
+              sgpa,
+              credits: asProgramCredit(totalCr),
+              subjects: sem.subjects,
+            };
+          });
+
+          useAcademicStore.getState().setSemesters(newSemesters);
+          setIsMISModalOpen(false);
         }}
         existingSubjectCodes={[]}
       />
@@ -91,31 +97,20 @@ const CGPACalculator: React.FC = () => {
             icon="analytics"
             headerAction={
               <div className="flex flex-col md:flex-row gap-4 items-center">
-                <label className="flex items-center cursor-pointer gap-2">
-                  <div className="relative">
-                    <input
-                      type="checkbox"
-                      className="sr-only"
-                      checked={isExpertMode}
-                      onChange={() => setIsExpertMode(!isExpertMode)}
-                    />
-                    <div
-                      className={`block w-10 h-6 rounded-full transition-colors ${isExpertMode ? 'bg-primary' : 'bg-white/10'}`}
-                    ></div>
-                    <div
-                      className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${isExpertMode ? 'transform translate-x-4' : ''}`}
-                    ></div>
-                  </div>
-                  <span className="text-[10px] font-black font-label text-zinc-400 uppercase tracking-widest whitespace-nowrap">
-                    Expert Mode
-                  </span>
-                </label>
+                <ActionButton
+                  onClick={() => setIsMISModalOpen(true)}
+                  variant="secondary"
+                  icon="cloud_download"
+                  dataTestId="import-mis-btn"
+                >
+                  Import MIS
+                </ActionButton>
                 <ActionButton
                   onClick={handleAddSemester}
                   icon="add_moderator"
                   dataTestId="add-semester-btn"
                 >
-                  Add Academic Block
+                  Add Semester
                 </ActionButton>
               </div>
             }
@@ -168,55 +163,23 @@ const CGPACalculator: React.FC = () => {
                       </div>
 
                       <div className="flex flex-wrap gap-4 items-end">
-                        <InputField
-                          label="Credits"
-                          type="number"
-                          disabled={isExpertMode}
-                          value={sem.credits}
-                          onChange={(val) => {
-                            if (val === '') {
-                              updateSemester(sem.id, { credits: '' });
-                              return;
-                            }
-                            const v = parseInt(val);
-                            if (!isNaN(v) && v >= 0 && v <= 99)
-                              updateSemester(sem.id, { credits: v as Credit });
-                          }}
-                          align="center"
-                          mono
-                          className="w-20"
-                          dataTestId="semester-credits-input"
-                        />
-                        <InputField
-                          label="SGPA"
-                          type="number"
-                          disabled={isExpertMode}
-                          value={sem.sgpa}
-                          onChange={(val) => {
-                            if (val === '') {
-                              updateSemester(sem.id, { sgpa: '' });
-                              return;
-                            }
-                            const v = parseFloat(val);
-                            if (!isNaN(v) && v >= 0 && v <= 4.0)
-                              updateSemester(sem.id, { sgpa: v as GradePoint });
-                          }}
-                          align="center"
-                          mono
-                          className="w-24"
-                          dataTestId="semester-sgpa-input"
-                        />
-                        <div className="flex items-center gap-2">
-                          {isExpertMode && (
-                            <ActionButton
-                              onClick={() => setMisTarget({ id: sem.id, index: idx + 1 })}
-                              variant="ghost"
-                              icon="cloud_download"
-                              className="w-10 h-10 !p-0"
-                            >
-                              {null}
-                            </ActionButton>
-                          )}
+                        <div className="text-center bg-white/5 rounded-xl px-4 py-2 border border-white/5">
+                          <p className="text-[9px] font-black font-label text-zinc-500 uppercase tracking-widest mb-1">
+                            Credits
+                          </p>
+                          <p className="text-sm font-black font-mono text-white">
+                            {sem.credits || '0'}
+                          </p>
+                        </div>
+                        <div className="text-center bg-white/5 rounded-xl px-4 py-2 border border-white/5">
+                          <p className="text-[9px] font-black font-label text-zinc-500 uppercase tracking-widest mb-1">
+                            SGPA
+                          </p>
+                          <p className="text-sm font-black font-mono text-primary">
+                            {sem.sgpa ? Number(sem.sgpa).toFixed(2) : '0.00'}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 pb-1">
                           <ActionButton
                             onClick={() => handleRemoveSemester(sem.id)}
                             variant="ghost"
@@ -228,15 +191,13 @@ const CGPACalculator: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    {isExpertMode && (
-                      <div className="w-full mt-4 border-t border-white/5 pt-6">
-                        <SemesterSubjectTable
-                          semesterId={sem.id}
-                          subjects={sem.subjects || []}
-                          onUpdate={updateSubject}
-                        />
-                      </div>
-                    )}
+                    <div className="w-full mt-4 border-t border-white/5 pt-6">
+                      <SemesterSubjectTable
+                        semesterId={sem.id}
+                        subjects={sem.subjects || []}
+                        onUpdate={updateSubject}
+                      />
+                    </div>
                   </div>
                 ))
               )}
@@ -323,7 +284,7 @@ const CGPACalculator: React.FC = () => {
 
           <ForecastingTool currentCGPA={cgpaNum} currentCredits={totalCredits} />
           {semesters.length > 0 && <PredictiveDashboard />}
-          {isExpertMode && <RetakeOptimizer currentCGPA={cgpaNum} currentCredits={totalCredits} />}
+          <RetakeOptimizer currentCGPA={cgpaNum} currentCredits={totalCredits} />
         </div>
       </div>
 

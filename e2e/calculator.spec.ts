@@ -19,13 +19,11 @@ test.describe('GPA Calculator Core User Journeys', () => {
 
         // Fill first subject
         const firstRow = rows.nth(0);
-        await firstRow.locator('[data-testid="subject-name-input"]').fill('Calculus I');
         await firstRow.locator('[data-testid="subject-credits-input"]').fill('3'); // Credits
         await firstRow.locator('[data-testid="subject-marks-input"]').fill('85'); // Marks
 
         // Fill second subject
         const secondRow = rows.nth(1);
-        await secondRow.locator('[data-testid="subject-name-input"]').fill('English Comp');
         await secondRow.locator('[data-testid="subject-credits-input"]').fill('3'); // Credits
         await secondRow.locator('[data-testid="subject-marks-input"]').fill('75'); // Marks
 
@@ -45,18 +43,18 @@ test.describe('GPA Calculator Core User Journeys', () => {
         const rows = page.locator('[data-testid="semester-row"]'); // Select semester blocks
         await expect(rows).toHaveCount(2);
 
-        // Fill first semester
+        // Fill first semester (Subject 1)
         const firstRow = rows.nth(0);
-        await firstRow.locator('[data-testid="semester-credits-input"]').fill('18'); // Credits
-        await firstRow.locator('[data-testid="semester-sgpa-input"]').fill('3.5'); // SGPA
+        await firstRow.locator('[data-testid="subject-credits-input"]').fill('6');
+        await firstRow.locator('[data-testid="subject-marks-input"]').fill('85'); // GP 4.0 -> SGPA 4.0
 
-        // Fill second semester
+        // Fill second semester (Subject 2)
         const secondRow = rows.nth(1);
-        await secondRow.locator('[data-testid="semester-credits-input"]').fill('18'); // Credits
-        await secondRow.locator('[data-testid="semester-sgpa-input"]').fill('3.7'); // SGPA
+        await secondRow.locator('[data-testid="subject-credits-input"]').fill('6');
+        await secondRow.locator('[data-testid="subject-marks-input"]').fill('75'); // GP 3.0 -> SGPA 3.0
 
-        // CGPA = (3.5 * 18 + 3.7 * 18) / 36 = 3.6
-        await expect(page.locator('[data-testid="cgpa-score"]').first()).toContainText('3.60');
+        // CGPA = (4.0 * 18 + 3.0 * 18) / 36 = 3.50
+        await expect(page.locator('[data-testid="cgpa-score"]').first()).toContainText('3.50');
     });
 
     test('should open MIS parser and handle imports', async ({ page }) => {
